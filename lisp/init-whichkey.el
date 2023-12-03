@@ -16,6 +16,7 @@
    "'" 'execute-extended-command
 
    "e" 'treemacs
+   "q" 'save-buffers-kill-emacs
 
    ;; File
    "f" '("File" . (keymap))
@@ -35,13 +36,10 @@
    "gf" '("fetch" . magit-fetch)
    "gg" '("status" . magit-status)
 
-   "q" '("quit" . (keymap))
-   "qb" '("buffer" . kill-this-buffer)
-   "qq" '("save&quit" . save-buffers-kill-terminal)
-
-   "h" '("help" . (keymap))
+   "h" '("Help" . (keymap))
    "hf" '("function" . describe-function)
    "hk" '("key" . describe-key)
+   "ht" '("Change theme" . consult-theme)
    "hv" '("variable" . describe-variable)
 
    "w" '("window" . (keymap))
@@ -52,6 +50,7 @@
 
 ;; Set leader key to SPC
 (use-package evil-leader
+  :after evil
   :config
   (global-evil-leader-mode)
   (evil-leader/set-leader "<SPC>")

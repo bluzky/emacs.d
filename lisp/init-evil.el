@@ -1,15 +1,19 @@
-;; Changed the default :q and :wq to be killing current buffer, instead of killing the frame or subsequently killing Emacs.
 
 (use-package evil
   :diminish undo-tree-mode
   :init
   (setq evil-want-C-u-scroll t
-        evil-normal-state-cursor '("orange" box)
         evil-want-keybinding nil
         evil-shift-width ian/indent-width)
   :hook (after-init . evil-mode)
   (after-save . evil-normal-state)
   :config
+  (setq evil-emacs-state-cursor    '("red" box)
+          evil-normal-state-cursor   '("orange1" box)
+          evil-visual-state-cursor   '("orange" hollow)
+          evil-insert-state-cursor   '("deep sky blue" bar)
+          evil-replace-state-cursor  '("red" bar)
+          evil-operator-state-cursor '("red" hollow))
   (with-eval-after-load 'evil-maps ; avoid conflict with company tooltip selection
     (define-key evil-insert-state-map (kbd "C-n") nil)
     (define-key evil-insert-state-map (kbd "C-p") nil)))
