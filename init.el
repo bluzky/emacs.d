@@ -64,7 +64,11 @@
 (require 'init-better-emacs)
 (require 'init-whichkey)
 (require 'init-org)
+(require 'init-multi-cursor)
+;; (require 'init-copilot)
 
 ;; programming language
 (require 'init-elixir)
 (require 'init-typescript)
+
+(provide 'init)

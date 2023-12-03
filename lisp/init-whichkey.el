@@ -28,8 +28,18 @@
 
    ;;  Buffer
    "b" '("Buffer" . (keymap))
-   "bs" '("Save" . save-buffer)
+   ;; "bs" '("Save" . save-buffer)
+   "bs" '("Scratch buffer" . scratch-buffer)
    "bS" '("Save all" . save-some-buffers)
+   "bn" '("New" . evil-buffer-new)
+
+   ;; Code
+   "c" '("Code" . (keymap))
+   "cd" '("Find definition" . xref-find-definitions)
+   "cf" '("Format buffer" . eglot-format-buffer)
+   "cr" '("Find references" . xref-find-references)
+   "cs" '("Buffer's symbols" . consult-imenu)
+   "ca" '("Code action" . eglot-code-actions)
 
    "g" '("magit" . (keymap))
    "gc" '("commit" . magit-commit)
@@ -41,6 +51,10 @@
    "hk" '("key" . describe-key)
    "ht" '("Change theme" . consult-theme)
    "hv" '("variable" . describe-variable)
+
+   "s" '("Search" . (keymap))
+   "ss" '("Search buffer" . consult-line)
+   "sp" '("Search project" . consult-git-grep)
 
    "w" '("window" . (keymap))
    "wd" '("delete" . delete-window)

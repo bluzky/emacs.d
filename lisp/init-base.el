@@ -49,6 +49,8 @@
             (exec-path-from-shell-initialize)))
 
 ;; enable system clipboard
-(setq x-select-enable-clipboard t)
+(use-package xclip
+  :config
+  (xclip-mode 1))
 
 (provide 'init-base)
