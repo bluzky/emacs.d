@@ -14,9 +14,6 @@
   :config
   (add-hook 'magit-mode-hook 'turn-off-evil-mc-mode)
   (setq-default evil-mc-one-cursor-show-mode-line-text nil)
-  (evil-define-key 'normal evil-mc-key-map
-    "p" #'spacemacs/evil-mc-paste-after
-    "P" #'spacemacs/evil-mc-paste-before)
   (evil-define-key '(normal insert) evil-mc-key-map
     (kbd "C-<down>") #'evil-mc-make-cursor-move-next-line
     (kbd "C-<up>") #'evil-mc-make-cursor-move-prev-line

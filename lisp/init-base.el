@@ -9,6 +9,7 @@
 
   (tool-bar-mode -1)
   (menu-bar-mode -1)
+  (blink-cursor-mode 0)
   (global-display-line-numbers-mode)
 
   ;; better scrolling experience
@@ -29,6 +30,8 @@
 ;; Delete intermediate buffers when navigating through dired.
 (use-package dired
   :ensure nil
+  :hook
+  (dired-mode-hook . dired-omit-mode)
   :config
   (setq delete-by-moving-to-trash t)
   (eval-after-load "dired"

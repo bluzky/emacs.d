@@ -52,91 +52,42 @@
   (completion-category-overrides '((file (styles basic partial-completion))))
   (orderless-component-separator #'orderless-escapable-split-on-space))
 
-;; Support Pinyin
-(use-package pinyinlib
-  :after orderless
-  :autoload pinyinlib-build-regexp-string
-  :init
-  (defun completion--regex-pinyin (str)
-    (orderless-regexp (pinyinlib-build-regexp-string str)))
-  (add-to-list 'orderless-matching-styles 'completion--regex-pinyin))
-
 (use-package vertico
   :bind (:map vertico-map
-         ("RET" . vertico-directory-enter)
-         ("DEL" . vertico-directory-delete-char)
-         ("M-DEL" . vertico-directory-delete-word))
+              ("RET" . vertico-directory-enter)
+              ("DEL" . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word))
+  :custom
+  (vertico-count 13)                    ; Number of candidates to display
+  (vertico-resize t)
+  (vertico-cycle nil) ; Go from last to first candidate and first to last (cycle)?
   :hook ((after-init . vertico-mode)
+         (vertico-mode . vertico-reverse-mode)
          (rfn-eshadow-update-overlay . vertico-directory-tidy)))
+
+(use-package vertico-repeat
+  :after vertico
+  :ensure nil
+  :init
+  (add-hook 'minibuffer-setup-hook #'vertico-repeat-save))
 
 (use-package marginalia
   :hook (after-init . marginalia-mode))
 
 (use-package consult
   :bind (;; C-c bindings in `mode-specific-map'
-         ("C-c M-x" . consult-mode-command)
-         ("C-c h"   . consult-history)
-         ("C-c k"   . consult-kmacro)
-         ("C-c m"   . consult-man)
-         ("C-c i"   . consult-info)
-         ("C-c r"   . consult-ripgrep)
-
          ([remap Info-search]        . consult-info)
          ([remap imenu]              . consult-imenu)
          ([remap isearch-forward]    . consult-line)
          ([remap recentf-open-files] . consult-recent-file)
-
-
-         ;; C-x bindings in `ctl-x-map'
-         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
-         ("C-x b"   . consult-buffer)              ;; orig. switch-to-buffer
-         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
-         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
-         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
-         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
-         ;; Custom M-# bindings for fast register access
-         ("M-#"   . consult-register-load)
-         ("M-'"   . consult-register-store)        ;; orig. abbrev-prefix-mark (unrelated)
-         ("C-M-#" . consult-register)
-         ;; Other custom bindings
-         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-         ;; M-g bindings in `goto-map'
-         ("M-g e" . consult-compile-error)
-         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
-         ("M-g g" . consult-goto-line)             ;; orig. goto-line
-         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
-         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
-         ("M-g m" . consult-mark)
-         ("M-g k" . consult-global-mark)
-         ("M-g i" . consult-imenu)
-         ("M-g I" . consult-imenu-multi)
-         ;; M-s bindings in `search-map'
-         ("M-s d" . consult-find)
-         ("M-s D" . consult-locate)
-         ("M-s g" . consult-grep)
-         ("M-s G" . consult-git-grep)
-         ("M-s r" . consult-ripgrep)
-         ("M-s l" . consult-line)
-         ("M-s L" . consult-line-multi)
-         ("M-s k" . consult-keep-lines)
-         ("M-s u" . consult-focus-lines)
-         ;; Isearch integration
-         ("M-s e" . consult-isearch-history)
-         :map isearch-mode-map
-         ("M-e"   . consult-isearch-history)       ;; orig. isearch-edit-string
-         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
-         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
-
          ;; Minibuffer history
          :map minibuffer-local-map
          ("C-s" . (lambda ()
-                    "Insert the currunt symbol."
+                    "Insert the current symbol."
                     (interactive)
                     (insert (save-excursion
 		                      (set-buffer (window-buffer (minibuffer-selected-window)))
 		                      (or (thing-at-point 'symbol t) "")))))
-         ("M-s" . consult-history)                 ;; orig. next-matching-history-element
          ("M-r" . consult-history))                ;; orig. previous-matching-history-element
 
   ;; Enable automatic preview at point in the *Completions* buffer. This is
@@ -164,8 +115,8 @@
   ;; Optionally configure preview. The default value
   ;; is 'any, such that any key triggers the preview.
   ;; (setq consult-preview-key 'any)
-  (setq consult-preview-key "M-.")
-  ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
+  ;; (setq consult-preview-key "M-.")
+  (setq consult-preview-key '("S-<down>" "S-<up>"))
   ;; For some commands and buffer sources it is useful to configure the
   ;; :preview-key on a per-command basis using the `consult-customize' macro.
   (consult-customize
@@ -241,12 +192,16 @@ targets."
     (advice-add #'embark-completing-read-prompter
                 :around #'embark-hide-which-key-indicator)))
 
+(use-package wgrep
+  :hook
+  (grep-mode . wgrep-change-to-wgrep-mode))
+
 (use-package embark-consult
   :bind (:map minibuffer-mode-map
-         ("C-c C-o" . embark-export))
+              ("C-c C-o" . embark-export))
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 
-(provide 'init-autocomplete)
+(provide 'init-completion)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-completion.el ends here

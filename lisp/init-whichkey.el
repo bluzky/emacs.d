@@ -16,14 +16,15 @@
    "'" 'execute-extended-command
 
    "e" 'treemacs
-   "q" 'save-buffers-kill-emacs
+   "Q" 'save-buffers-kill-emacs
+   "R" 'restart-emacs
 
    ;; File
    "f" '("File" . (keymap))
    "ff" '("Find in project" . project-find-file)
-   "fr" '("Recent files" . recentf)
+   "fr" '("Recent files" . consult-recent-file)
    ;; "fD" '("Delete" . )
-   "fR" '("Rename" . rename-buffer)
+   "fR" '("Rename" . rename-visited-file)
    "fS" '("Save as" . write-buffer)
 
    ;;  Buffer
@@ -52,9 +53,16 @@
    "ht" '("Change theme" . consult-theme)
    "hv" '("variable" . describe-variable)
 
+   "i" '("Insert" . (keymap))
+   "ir" '("From kill ring" . yank-from-kill-ring)
+
    "s" '("Search" . (keymap))
    "ss" '("Search buffer" . consult-line)
    "sp" '("Search project" . consult-git-grep)
+   "sr" '("Resume last search" . vertico-repeat-last)
+
+   "p" '("Project" . (keymap))
+   "pp" '("Switch project" . project-switch-project)
 
    "w" '("window" . (keymap))
    "wd" '("delete" . delete-window)

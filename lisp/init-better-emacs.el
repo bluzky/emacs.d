@@ -2,10 +2,12 @@
 ;; The Emacs default split doesn't seem too intuitive for most users.
 
 (defun better-key-bindings()
-  (define-key evil-insert-state-map (kbd "C-a") 'move-beginning-of-line)
   (define-key evil-insert-state-map (kbd "C-e") 'move-end-of-line)
   (define-key evil-insert-state-map (kbd "C-k") 'kill-line)
   (define-key evil-insert-state-map (kbd "C-u") 'kill-whole-line)
+  (define-key evil-insert-state-map (kbd "C-y") 'yank)
+  (define-key evil-insert-state-map (kbd "C-a") 'move-beginning-of-line)
+  (define-key evil-insert-state-map (kbd "C-d") 'delete-char)
   )
 
 (use-package emacs
@@ -26,5 +28,5 @@
   (better-key-bindings)
   (global-set-key (kbd "C-x 2") #'ian/split-and-follow-horizontally)
   (global-set-key (kbd "C-x 3") #'ian/split-and-follow-vertically))
- 
+
 (provide 'init-better-emacs)

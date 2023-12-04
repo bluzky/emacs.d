@@ -9,6 +9,14 @@
         create-lockfiles nil ; don't create .# files (crashes 'npm start')
         make-backup-files nil))
 
+;; Enable recentf mode
+(use-package recentf
+  :init
+  (run-at-time nil (* 5 60) 'recentf-save-list)
+  :hook
+  (after-init . recentf-mode)
+  )
+
 ;; Automatically refreshes the buffer for changes outside of Emacs
 ;; Auto refreshes every 2 seconds. Don’t forget to refresh the version control status as well.
 (use-package autorevert
@@ -20,11 +28,14 @@
         global-auto-revert-non-file-buffers t
         auto-revert-verbose nil))
 
+(use-package markdown-mode)
+
 ;; Slightly shorten eldoc display delay.
 (use-package eldoc
   :ensure nil
   :diminish eldoc-mode
   :config
+  (setq eldoc-echo-area-use-multiline-p nil)
   (setq eldoc-idle-delay 0.4))
 
 
