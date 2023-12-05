@@ -61,7 +61,7 @@
   (vertico-count 13)                    ; Number of candidates to display
   (vertico-resize t)
   (vertico-cycle nil) ; Go from last to first candidate and first to last (cycle)?
-  :hook ((after-init . vertico-mode)
+  :hook ((emacs-startup . vertico-mode)
          (vertico-mode . vertico-reverse-mode)
          (rfn-eshadow-update-overlay . vertico-directory-tidy)))
 
@@ -193,12 +193,12 @@ targets."
                 :around #'embark-hide-which-key-indicator)))
 
 (use-package wgrep
-  :hook
-  (grep-mode . wgrep-change-to-wgrep-mode))
+  :bind (:map grep-mode-map
+              ("e" . wgrep-change-to-wgrep-mode)))
 
 (use-package embark-consult
   :bind (:map minibuffer-mode-map
-              ("C-c C-o" . embark-export))
+              ("C-c C-e" . embark-export))
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 (provide 'init-completion)

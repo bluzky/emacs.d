@@ -1,3 +1,7 @@
+;; The diminish package is used to hide unimportant minor modes in the modeline. It provides the :diminish keyword we’ve been using in other use-package declarations.
+(use-package diminish
+  :demand t)
+
 ;; Modernize selection behavior
 ;; Replace the active region just by typing text, just like modern editors.
 (use-package delsel
@@ -75,8 +79,13 @@
         dashboard-set-navigator t
         dashboard-set-footer nil))
 
-;; The diminish package is used to hide unimportant minor modes in the modeline. It provides the :diminish keyword we’ve been using in other use-package declarations.
-(use-package diminish
-  :demand t)
+
+(use-package all-the-icons
+    :defer t
+    :if (display-graphic-p))
+
+;; (use-package all-the-icons-dired
+;;   :straight (all-the-icons-dired :host github :repo "jtbm37/all-the-icons-dired")
+;;   :hook (dired-mode . all-the-icons-dired-mode))
 
 (provide 'init-ui)

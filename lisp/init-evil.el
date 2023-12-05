@@ -15,12 +15,18 @@
         evil-operator-state-cursor '("red" hollow))
   (with-eval-after-load 'evil-maps ; avoid conflict with company tooltip selection
     (define-key evil-insert-state-map (kbd "C-n") nil)
-    (define-key evil-insert-state-map (kbd "C-p") nil)))
+    (define-key evil-insert-state-map (kbd "C-p") nil)
+    ;; we don't need evil-commentary
+    (define-key evil-insert-state-map (kbd "s-/") 'comment-line)
+    (define-key evil-normal-state-map (kbd "s-/") 'comment-line)
+    (define-key evil-normal-state-map (kbd "gc") 'comment-line)
+    (define-key evil-visual-state-map (kbd "gc") 'comment-line)
+    ))
 
 ;; Config term cursor for terminal
 (unless (display-graphic-p)
   (use-package term-cursor
-    :quelpa (term-cursor :repo "h0d/term-cursor.el" :fetcher github)
+  :quelpa (term-cursor :repo "h0d/term-cursor.el" :fetcher github)
   :hook
   (after-init . global-term-cursor-mode)
   :config
@@ -30,16 +36,10 @@
 ;; Evil-collection covers more parts of Emacs that the original Evil doesn’t support (e.g. Packages buffer, eshell, calendar etc.)
 (use-package evil-collection
   :after evil
+  :diminish evil-collection-unimpaired-mode
   :config
   (setq evil-collection-company-use-tng nil)
   (evil-collection-init))
-
-;; Emulates tpope’s vim commentary package (Use gcc to comment out a line, gc to comment out the target of a motion (for example, gcap to comment out a paragraph), gc in visual mode to comment out the selection etc.)
-(use-package evil-commentary
-  :after evil
-  :diminish
-  :hook
-  (evil-mode . evil-commentary-mode))
 
 (use-package evil-surround
   :after evil

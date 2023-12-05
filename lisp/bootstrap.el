@@ -44,31 +44,40 @@
   (setq use-package-always-ensure t))
 
 ;; setup quelpa for install package from github
+(unless (package-installed-p 'quelpa)
+  (with-temp-buffer
+    (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
+    (eval-buffer)
+    (quelpa-self-upgrade)))
 
-(use-package quelpa
-  :init
-  (setq quelpa-update-melpa-p nil))
+(eval-and-compile
+  (setq quelpa-update-melpa-p nil)
+  (setq quelpa-self-upgrade-p nil))
 
-(use-package quelpa-use-package
-  :after quelpa)
+(quelpa
+ '(quelpa-use-package
+   :fetcher git
+   :url "https://github.com/quelpa/quelpa-use-package.git"))
+(require 'quelpa-use-package)
 
 ;; ;; Setup straight package manager
-;; (setq straight-repository-branch "develop")
 ;; (defvar bootstrap-version)
 ;; (let ((bootstrap-file
-;;        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-;;       (bootstrap-version 6))
+;;       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+;;       (bootstrap-version 5))
 ;;   (unless (file-exists-p bootstrap-file)
 ;;     (with-current-buffer
-;; 	(url-retrieve-synchronously
-;; 	 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-;; 	 'silent 'inhibit-cookies)
+;;         (url-retrieve-synchronously
+;;         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+;;         'silent 'inhibit-cookies)
 ;;       (goto-char (point-max))
 ;;       (eval-print-last-sexp)))
 ;;   (load bootstrap-file nil 'nomessage))
 
+;; (straight-use-package 'use-package)
+;; (setq straight-use-package-by-default t)
 
-;;; Emacs 28+ (native-comp) stuff
+;; ;;; Emacs 28+ (native-comp) stuff
 (when (and (fboundp 'native-comp-available-p) (native-comp-available-p))
   (progn
     (setq native-comp-async-report-warnings-errors nil)

@@ -20,7 +20,6 @@
 
 ;; -- CHAT GPT --
 ;; (use-package org-ai
-;;   :ensure t
 ;;   :commands (org-ai-mode
 ;;              org-ai-global-mode)
 ;;   :init
