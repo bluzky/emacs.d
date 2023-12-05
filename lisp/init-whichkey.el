@@ -2,11 +2,22 @@
 ;; Which-key
 (use-package which-key
   :diminish which-key-mode
+  :hook (after-init . which-key-mode)
   :config
-  (which-key-mode +1)
   (setq which-key-idle-delay 0.4
-        which-key-idle-secondary-delay 0.4))
-
+        which-key-idle-secondary-delay 0.4
+        which-key-allow-evil-operators t
+        which-key-add-column-padding 1
+        which-key-allow-multiple-replacements t
+        which-key-echo-keystrokes 0.02
+        which-key-max-description-length 32
+        which-key-max-display-columns nil
+        which-key-min-display-lines 6
+        which-key-prevent-C-h-from-cycling t
+        which-key-sort-order 'which-key-prefix-then-key-order
+        which-key-sort-uppercase-first nil
+        which-key-special-keys nil
+        which-key-use-C-h-for-paging t))
 
 (defun setup-key-bindings()
   "Setup my custom keybindings"
@@ -42,10 +53,12 @@
    "cs" '("Buffer's symbols" . consult-imenu)
    "ca" '("Code action" . eglot-code-actions)
 
-   "g" '("magit" . (keymap))
-   "gc" '("commit" . magit-commit)
-   "gf" '("fetch" . magit-fetch)
-   "gg" '("status" . magit-status)
+   "g" '("Magit" . (keymap))
+   "gs" '("status" . magit-status)
+   "gp" '("create PR" . me/visit-pull-request-url)
+   "gb" '("blame" . magit-blame-addition)
+   "gl" '("log current file" . magit-log-current)
+   "gd" '("diff changed" . magit-diff-unstaged)
 
    "h" '("Help" . (keymap))
    "hf" '("function" . describe-function)
@@ -54,7 +67,8 @@
    "hv" '("variable" . describe-variable)
 
    "i" '("Insert" . (keymap))
-   "ir" '("From kill ring" . yank-from-kill-ring)
+   "ir" '("from kill ring" . yank-from-kill-ring)
+   "is" '("snippets" . consult-yasnippet)
 
    "s" '("Search" . (keymap))
    "ss" '("Search buffer" . consult-line)

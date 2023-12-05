@@ -45,7 +45,6 @@
 ;; (load-theme 'wilmersdorf t) ; an orginal theme created by me.
 
 (use-package doom-themes
-  :ensure t
   :config
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
@@ -54,8 +53,6 @@
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
-  ;; Enable custom neotree theme (all-the-icons must be installed!)
-  (doom-themes-neotree-config)
   ;; or for treemacs users
   (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
   (doom-themes-treemacs-config)
@@ -64,11 +61,18 @@
 
 ;; Dashboard welcome page
 (use-package dashboard
+  :diminish dashboard-mode
   :config
   (dashboard-setup-startup-hook)
   (setq dashboard-startup-banner 'logo
-        dashboard-banner-logo-title "Yay Evil!"
-        dashboard-items nil
+        dashboard-banner-logo-title "Shut up and do something good!"
+        dashboard-center-content t
+        dashboard-display-icons-p t
+        dashboard-items '(
+                         (bookmarks . 5)
+                         (projects . 5))
+        dashboard-path-max-length 60
+        dashboard-set-navigator t
         dashboard-set-footer nil))
 
 ;; The diminish package is used to hide unimportant minor modes in the modeline. It provides the :diminish keyword we’ve been using in other use-package declarations.

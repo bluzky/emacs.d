@@ -8,6 +8,7 @@
   (define-key evil-insert-state-map (kbd "C-y") 'yank)
   (define-key evil-insert-state-map (kbd "C-a") 'move-beginning-of-line)
   (define-key evil-insert-state-map (kbd "C-d") 'delete-char)
+  (define-key evil-insert-state-map (kbd "M-d") 'kill-word)
   )
 
 (use-package emacs

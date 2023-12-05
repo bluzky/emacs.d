@@ -1,17 +1,15 @@
 
 (use-package
   prisma-ts-mode
+  :mode "\\.prisma\\'"
   :hook (prisma-ts-mode . eglot-ensure))
-(add-to-list 'auto-mode-alist '("\\.prisma\\'" . prisma-ts-mode))
 
 
 (use-package
   typescript-ts-mode
+  :mode ("\\.ts\\'" "\\.tsx\\'")
   :hook (typescript-ts-mode . eglot-ensure)
   (before-save . eglot-format))
-
-(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
-(add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-ts-mode))
 
 (setq-default typescript-indent-level 2)
 

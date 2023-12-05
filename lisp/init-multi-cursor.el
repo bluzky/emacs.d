@@ -1,17 +1,14 @@
-
-;; (use-package evil-mc
-;;   :after evil
-;;   :config
-;;   (global-evil-mc-mode  1))
+;; (use-package evil-mc :after evil :config (global-evil-mc-mode 1))
 
 (use-package evil-mc
   :after evil
   :init
-  (which-key-add-keymap-based-replacements evil-motion-state-map
-    "gr"  "evil-mc")
-  (add-hook 'prog-mode-hook 'turn-on-evil-mc-mode)
-  (add-hook 'text-mode-hook 'turn-on-evil-mc-mode)
+  (which-key-add-keymap-based-replacements evil-motion-state-map "gr" "evil-mc")
+  :hook
+  (prog-mode . turn-on-evil-mc-mode)
+  (text-mode . turn-on-evil-mc-mode)
   :config
+  (define-key evil-motion-state-map (kbd "gr") evil-mc-key-map)
   (add-hook 'magit-mode-hook 'turn-off-evil-mc-mode)
   (setq-default evil-mc-one-cursor-show-mode-line-text nil)
   (evil-define-key '(normal insert) evil-mc-key-map

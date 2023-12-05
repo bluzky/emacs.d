@@ -7,3 +7,8 @@ recentf
 to-be-dumped.el
 transient
 tree-sitter
+bookmarks
+eshell/
+projectile-bookmarks.eld
+quelpa/
+straight/

@@ -17,11 +17,15 @@
     (define-key evil-insert-state-map (kbd "C-n") nil)
     (define-key evil-insert-state-map (kbd "C-p") nil)))
 
-
+;; Config term cursor for terminal
 (unless (display-graphic-p)
-  (require 'term-cursor)
-  (global-term-cursor-mode)
+  (use-package term-cursor
+    :quelpa (term-cursor :repo "h0d/term-cursor.el" :fetcher github)
+  :hook
+  (after-init . global-term-cursor-mode)
+  :config
   (blink-cursor-mode 0))
+  )
 
 ;; Evil-collection covers more parts of Emacs that the original Evil doesn’t support (e.g. Packages buffer, eshell, calendar etc.)
 (use-package evil-collection

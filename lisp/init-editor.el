@@ -73,14 +73,16 @@
   :hook (prog-mode . hes-mode))
 
 
-;; Git
-;; Tell magit to automatically put us in vi-insert-mode when committing a change.
-(use-package magit
-  :bind ("C-x g" . magit-status)
-  :config (add-hook 'with-editor-mode-hook #'evil-insert-state))
 
 ;; Flycheck
 ;; A modern on-the-fly syntax checking extension – absolute essential
 (use-package flycheck :config (global-flycheck-mode +1))
+
+;; move line up/down, duplicate line/region
+(use-package move-dup
+  :bind (("M-<up>" . move-dup-move-lines-up)
+         ("M-<down>" . move-dup-move-lines-down)
+         ("C-c D" . move-dup-duplicate-up)
+         ("C-c d" . move-dup-duplicate-down)))
 
 (provide 'init-editor)

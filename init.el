@@ -10,10 +10,11 @@
 (require 'init-corfu)
 (require 'init-evil)
 (require 'init-better-emacs)
-(require 'init-whichkey)
 (require 'init-org)
+(require 'init-git)
 (require 'init-multi-cursor)
-;; (require 'init-copilot)
+(require 'init-copilot)
+(require 'init-whichkey)
 
 ;; programming language
 (require 'init-elixir)

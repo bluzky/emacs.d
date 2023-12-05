@@ -43,6 +43,15 @@
 (eval-and-compile
   (setq use-package-always-ensure t))
 
+;; setup quelpa for install package from github
+
+(use-package quelpa
+  :init
+  (setq quelpa-update-melpa-p nil))
+
+(use-package quelpa-use-package
+  :after quelpa)
+
 ;; ;; Setup straight package manager
 ;; (setq straight-repository-branch "develop")
 ;; (defvar bootstrap-version)
