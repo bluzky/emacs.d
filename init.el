@@ -4,10 +4,10 @@
 (require 'bootstrap)
 (require 'init-base)
 (require 'init-ui)
-(require 'init-treemacs)
 (require 'init-editor)
 (require 'init-completion)
 (require 'init-corfu)
+(require 'init-treemacs)
 (require 'init-evil)
 (require 'init-better-emacs)
 (require 'init-org)
@@ -19,5 +19,6 @@
 ;; programming language
 (require 'init-elixir)
 (require 'init-typescript)
+(require 'init-writing)
 
 (provide 'init)

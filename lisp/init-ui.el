@@ -38,7 +38,7 @@
       (set-face-attribute 'default nil :family "Source Code Pro"))
     (set-face-attribute 'default nil
                         :height 140
-                        :weight 'normal))
+                        :weight 'regular))
   :ensure nil
   :config
   (setq initial-frame-alist '((fullscreen . maximized)))
@@ -57,9 +57,6 @@
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
-  ;; or for treemacs users
-  (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-  (doom-themes-treemacs-config)
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
 
@@ -80,12 +77,19 @@
         dashboard-set-footer nil))
 
 
-(use-package all-the-icons
-    :defer t
-    :if (display-graphic-p))
+;; show icons for dired mode
+(use-package nerd-icons-dired
+  :hook
+  (dired-mode . nerd-icons-dired-mode))
 
-;; (use-package all-the-icons-dired
-;;   :straight (all-the-icons-dired :host github :repo "jtbm37/all-the-icons-dired")
-;;   :hook (dired-mode . all-the-icons-dired-mode))
+
+;; Add doom fancy modeline
+(use-package doom-modeline
+  :hook (emacs-startup . doom-modeline-mode))
+
+;; hydra context menu
+(use-package hydra)
+(use-package pretty-hydra
+  :after hydra)
 
 (provide 'init-ui)

@@ -1,33 +1,4 @@
 ;;; init-completion.el --- Initialize completion configurations.	-*- lexical-binding: t -*-
-
-;; Copyright (C) 2016-2023 Vincent Zhang
-
-;; Author: Vincent Zhang <seagle0128@gmail.com>
-;; URL: https://github.com/seagle0128/.emacs.d
-
-;; This file is not part of GNU Emacs.
-;;
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3, or
-;; (at your option) any later version.
-;;
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
-;;
-;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
-;; Floor, Boston, MA 02110-1301, USA.
-;;
-
-;;; Commentary:
-;;
-;; Modern completion configuration.
-;;
-
 ;;; Code:
 
 ;; A few more useful configurations...
@@ -58,43 +29,42 @@
               ("DEL" . vertico-directory-delete-char)
               ("M-DEL" . vertico-directory-delete-word))
   :custom
-  (vertico-count 13)                    ; Number of candidates to display
-  (vertico-resize t)
-  (vertico-cycle nil) ; Go from last to first candidate and first to last (cycle)?
+  (vertico-count 17)                    ; Number of candidates to display
+  ;; (vertico-resize t)
+  (vertico-cycle t) ; Go from last to first candidate and first to last (cycle)?
   :hook ((emacs-startup . vertico-mode)
-         (vertico-mode . vertico-reverse-mode)
          (rfn-eshadow-update-overlay . vertico-directory-tidy)))
 
+;; Scroll vertico minibuffer with mouse wheel
+(use-package vertico-mouse
+  :ensure nil
+  :after vertico
+  :hook (vertico-mode . vertico-mouse-mode))
+
+;; Repeat last autocomplete command
 (use-package vertico-repeat
   :after vertico
   :ensure nil
   :init
   (add-hook 'minibuffer-setup-hook #'vertico-repeat-save))
 
+;; Enable richer annotations using the Marginalia package
 (use-package marginalia
   :hook (after-init . marginalia-mode))
 
+;; Setup consult
 (use-package consult
-  :bind (;; C-c bindings in `mode-specific-map'
-         ([remap Info-search]        . consult-info)
+  :bind (([remap Info-search]        . consult-info)
          ([remap imenu]              . consult-imenu)
          ([remap isearch-forward]    . consult-line)
          ([remap recentf-open-files] . consult-recent-file)
-         ;; Minibuffer history
-         :map minibuffer-local-map
-         ("C-s" . (lambda ()
-                    "Insert the current symbol."
-                    (interactive)
-                    (insert (save-excursion
-		                      (set-buffer (window-buffer (minibuffer-selected-window)))
-		                      (or (thing-at-point 'symbol t) "")))))
-         ("M-r" . consult-history))                ;; orig. previous-matching-history-element
 
-  ;; Enable automatic preview at point in the *Completions* buffer. This is
-  ;; relevant when you use the default completion UI.
+         ;; use current symbol as search string
+         :map minibuffer-local-map
+         ("M-r" . consult-history))
+
   :hook (completion-list-mode . consult-preview-at-point-mode)
 
-  ;; The :init configuration is always executed (Not lazy)
   :init
   ;; Optionally configure the register formatting. This improves the register
   ;; preview for `consult-register', `consult-register-load',
@@ -112,37 +82,41 @@
           xref-show-definitions-function #'consult-xref))
 
   :config
-  ;; Optionally configure preview. The default value
-  ;; is 'any, such that any key triggers the preview.
-  ;; (setq consult-preview-key 'any)
-  ;; (setq consult-preview-key "M-.")
-  (setq consult-preview-key '("S-<down>" "S-<up>"))
-  ;; For some commands and buffer sources it is useful to configure the
-  ;; :preview-key on a per-command basis using the `consult-customize' macro.
+  (setq consult-preview-key '("S-<down>"))
+
+  ;; auto show preview for consult-line and consult-theme
   (consult-customize
-   consult-goto-line
+   consult-line :preview-key '(:debounce 0.1 any)
    consult-theme :preview-key '(:debounce 0.4 any))
 
-  ;; Optionally configure the narrowing key.
   ;; Both < and C-+ work reasonably well.
-  (setq consult-narrow-key "<") ;; "C-+"
+  (setq consult-narrow-key "<")
 
   ;; Optionally make narrowing help available in the minibuffer.
-  ;; You may want to use `embark-prefix-help-command' or which-key instead.
-  (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help))
+  (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+  )
 
-(use-package consult-flyspell
-  :bind ("M-g s" . consult-flyspell))
+;; Search for symbol at point with ripgrep
+(defun me/consult-ripgrep-symbol-at-point ()
+  (interactive)
+  (consult-ripgrep nil (thing-at-point 'symbol)))
 
+
+;; (use-package consult-flyspell
+;;   :bind ("M-g s" . consult-flyspell))
+
+;; yasnippet support for consult
 (use-package consult-yasnippet
   :bind ("M-g y" . consult-yasnippet))
 
+;; Embark provides a sort of context sensitive mini interface to act on
 (use-package embark
-  :bind (("s-." . embark-act)
-         ("C-s-." . embark-act)
+  :after evil
+  :bind (("C-." . embark-act)
          ("M-." . embark-dwim)
-         ("M-s-." . xref-find-definitions)
-         ([remap describe-bindings] . embark-bindings))
+         ([remap describe-bindings] . embark-bindings)
+         :map evil-normal-state-map
+         ("C-." . embark-act))
   :init
   ;; Optionally replace the key help with a completing-read interface
   (setq prefix-help-command #'embark-prefix-help-command)
@@ -192,14 +166,21 @@ targets."
     (advice-add #'embark-completing-read-prompter
                 :around #'embark-hide-which-key-indicator)))
 
-(use-package wgrep
-  :bind (:map grep-mode-map
-              ("e" . wgrep-change-to-wgrep-mode)))
-
+;; use embark with consult
 (use-package embark-consult
   :bind (:map minibuffer-mode-map
-              ("C-c C-e" . embark-export))
-  :hook (embark-collect-mode . consult-preview-at-point-mode))
+              ("C-c C-o" . embark-export)))
+
+;; Swiper for better search within buffer
+(use-package swiper :defer t)
+
+;; Edit search result buffer directly
+(use-package wgrep
+  :bind (:map grep-mode-map
+              ("e" . wgrep-change-to-wgrep-mode)
+         :map ivy-occur-mode-map
+              ("e" . wgrep-change-to-wgrep-mode)))
+
 
 (provide 'init-completion)
 

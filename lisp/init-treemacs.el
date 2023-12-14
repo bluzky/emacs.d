@@ -1,9 +1,9 @@
 (use-package treemacs
-  :defer t
   :init
   (with-eval-after-load 'winum
     (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
   :config
+  ;; (treemacs-display-current-project-exclusively)
   (progn
     (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
           treemacs-deferred-git-apply-delay        0.5
@@ -89,9 +89,10 @@
 (use-package treemacs-evil
   :after (treemacs evil))
 
-
-(use-package treemacs-icons-dired
-  :hook (dired-mode . treemacs-icons-dired-enable-once))
+(use-package treemacs-nerd-icons
+  :after (treemacs)
+  :config
+  (treemacs-load-theme "nerd-icons"))
 
 
 (provide 'init-treemacs)

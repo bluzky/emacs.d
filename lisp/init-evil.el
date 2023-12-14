@@ -25,12 +25,16 @@
 
 ;; Config term cursor for terminal
 (unless (display-graphic-p)
-  (use-package term-cursor
-  :quelpa (term-cursor :repo "h0d/term-cursor.el" :fetcher github)
-  :hook
-  (after-init . global-term-cursor-mode)
-  :config
-  (blink-cursor-mode 0))
+  (use-package evil-terminal-cursor-changer
+    :after evil
+    :hook (evil-mode . evil-terminal-cursor-changer-activate)
+    :config
+    (setq evil-motion-state-cursor 'box)  ; █
+    (setq evil-visual-state-cursor 'box)  ; █
+    (setq evil-normal-state-cursor 'box)  ; █
+    (setq evil-insert-state-cursor 'bar)  ; ⎸
+    (setq evil-emacs-state-cursor  'hbar) ; _
+    )
   )
 
 ;; Evil-collection covers more parts of Emacs that the original Evil doesn’t support (e.g. Packages buffer, eshell, calendar etc.)

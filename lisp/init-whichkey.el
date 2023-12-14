@@ -1,5 +1,5 @@
-;; Configure whichkey and setup keybindings
-;; Which-key
+;; Configure whichkey and setup keybindings Which-key ; Code:
+
 (use-package which-key
   :diminish which-key-mode
   :hook (after-init . which-key-mode)
@@ -11,8 +11,9 @@
         which-key-allow-multiple-replacements t
         which-key-echo-keystrokes 0.02
         which-key-max-description-length 32
-        which-key-max-display-columns nil
-        which-key-min-display-lines 6
+        which-key-max-display-columns 4 
+        which-key-min-display-lines 4
+        which-key-separator " : " 
         which-key-prevent-C-h-from-cycling t
         which-key-sort-order 'which-key-prefix-then-key-order
         which-key-sort-uppercase-first nil
@@ -22,11 +23,8 @@
 (defun setup-key-bindings()
   "Setup my custom keybindings"
   (evil-leader/set-key
-   "." 'find-file
-   "," 'consult-buffer
-   "'" 'execute-extended-command
-
    "e" 'treemacs
+   "o" 'treemacs-select-window
    "Q" 'save-buffers-kill-emacs
    "R" 'restart-emacs
 
@@ -36,22 +34,28 @@
    "fr" '("Recent files" . consult-recent-file)
    ;; "fD" '("Delete" . )
    "fR" '("Rename" . rename-visited-file)
-   "fS" '("Save as" . write-buffer)
+   "fS" '("Save as" . write-file)
 
    ;;  Buffer
    "b" '("Buffer" . (keymap))
    ;; "bs" '("Save" . save-buffer)
+   "bb" '("Switch buffer" . consult-buffer-other-frame)
+   "bd" '("Close current buffer" . kill-buffer)
    "bs" '("Scratch buffer" . scratch-buffer)
-   "bS" '("Save all" . save-some-buffers)
+   "bS" '("Save all buffers" . save-some-buffers)
    "bn" '("New" . evil-buffer-new)
+   "bt" '("Open in new tab" . tab-new)
 
    ;; Code
-   "c" '("Code" . (keymap))
-   "cd" '("Find definition" . xref-find-definitions)
-   "cf" '("Format buffer" . eglot-format-buffer)
-   "cr" '("Find references" . xref-find-references)
-   "cs" '("Buffer's symbols" . consult-imenu)
-   "ca" '("Code action" . eglot-code-actions)
+   "j" '("Code/jump" . (keymap))
+   "jd" '("Find definition" . xref-find-definitions)
+   "jf" '("Format buffer" . eglot-format-buffer)
+   "jr" '("Find references" . xref-find-references)
+   "ji" '("Buffer's symbols" . consult-imenu)
+   "ja" '("Code action" . eglot-code-actions)
+   "jj" '("avy jump" . avy-goto-char-timer)
+   "jl" '("avy line" . avy-goto-line)
+   "jw" '("avy word" . avy-goto-word-0)
 
    "g" '("Magit" . (keymap))
    "gs" '("status" . magit-status)
@@ -63,26 +67,33 @@
    "h" '("Help" . (keymap))
    "hf" '("function" . describe-function)
    "hk" '("key" . describe-key)
-   "ht" '("Change theme" . consult-theme)
+   "ht" '("change theme" . consult-theme)
    "hv" '("variable" . describe-variable)
+   "hl" '("absolute line number" . (lambda () (interactive) (setq display-line-numbers t)))
+   "hL" '("relative line number" . (lambda () (interactive) (setq display-line-numbers 'relative)))
 
    "i" '("Insert" . (keymap))
    "ir" '("from kill ring" . yank-from-kill-ring)
    "is" '("snippets" . consult-yasnippet)
 
    "s" '("Search" . (keymap))
-   "ss" '("Search buffer" . consult-line)
-   "sp" '("Search project" . consult-git-grep)
+   "ss" '("Search buffer" . swiper)
+   "sS" '("Search buffer" . swiper-thing-at-point)
+   "sp" '("Search project" . consult-ripgrep)
+   "sP" '("Search project" . me/consult-ripgrep-symbol-at-point)
    "sr" '("Resume last search" . vertico-repeat-last)
 
    "p" '("Project" . (keymap))
-   "pp" '("Switch project" . project-switch-project)
+   "pp" '("Switch project" . projectile-switch-project)
 
-   "w" '("window" . (keymap))
-   "wd" '("delete" . delete-window)
-   "wo" '("delete other" . delete-other-windows)
-   "ww" '("ace-window" . aw-show-dispatch-help))
-  )
+   "w" '("Window/tab" . (keymap))
+   "wt" '("switch tab" . tab-switch)
+   "ww" '("switch window" . ace-select-window)
+
+  ;;  "u" '("UI/UX" . (keymap))
+  ;;  "ul" '("Relative line number" . (lambda () (setq display-line-numbers 'relative)))
+  ;;  "uL" '("Relative line number" . (lambda () (setq display-line-numbers t)))
+  ))
 
 ;; Set leader key to SPC
 (use-package evil-leader

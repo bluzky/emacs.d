@@ -7,6 +7,7 @@
 
 (use-package
   elixir-ts-mode
+  :after consult
   :hook (elixir-ts-mode . eglot-ensure)
   (elixir-ts-mode
    .
@@ -21,6 +22,12 @@
      (push '("<-" . ?\u2190) prettify-symbols-alist)
      (push '("|>" . ?\u25B7) prettify-symbols-alist)))
   (before-save . eglot-format))
+  ;; :config
+  ;; (add-to-list 'consult-imenu-config
+  ;;               (elixir-ts-mode :toplevel "Module"
+  ;;                               :types ((?f "Functions" font-lock-function-name-face)
+  ;;                                       (?m "Module"    font-lock-function-name-face))))
+  ;; )
 
 (use-package
   eglot

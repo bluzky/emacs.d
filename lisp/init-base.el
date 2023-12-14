@@ -1,6 +1,6 @@
 (use-package emacs
   :preface
-  (defvar ian/indent-width 4) ; change this value to your preferred width
+  (defvar ian/indent-width 2) ; change this value to your preferred width
   :config
   (setq frame-title-format '("Yay-Evil") ; Yayyyyy Evil!
         ring-bell-function 'ignore       ; minimize distraction
@@ -30,14 +30,11 @@
 ;; Delete intermediate buffers when navigating through dired.
 (use-package dired
   :ensure nil
+  :defer t
   :hook
-  (dired-mode-hook . dired-omit-mode)
+  (dired-mode . dired-hide-details-mode)
   :config
-  (setq delete-by-moving-to-trash t)
-  (eval-after-load "dired"
-    #'(lambda ()
-        (put 'dired-find-alternate-file 'disabled nil)
-        (define-key dired-mode-map (kbd "RET") #'dired-find-alternate-file))))
+  (setq delete-by-moving-to-trash t))
 
 ;; Dump custom-set-variables to a garbage file and don’t load it
 (use-package cus-edit

@@ -1,6 +1,10 @@
 ;; Enable mouse
 (xterm-mouse-mode 1)
 
+;; active projectile mode
+(use-package projectile
+  :hook (after-init . projectile-mode))
+
 ;; Don’t bother confirming killing processes and don’t let backup~ files scatter around.
 (use-package files
   :ensure nil
@@ -27,8 +31,6 @@
         auto-revert-check-vc-info t
         global-auto-revert-non-file-buffers t
         auto-revert-verbose nil))
-
-(use-package markdown-mode)
 
 ;; Slightly shorten eldoc display delay.
 (use-package eldoc
@@ -80,7 +82,8 @@
 
 ;; move line up/down, duplicate line/region
 (use-package move-dup
-  :bind (("M-<up>" . move-dup-move-lines-up)
+  :bind (:map prog-mode-map
+         ("M-<up>" . move-dup-move-lines-up)
          ("M-<down>" . move-dup-move-lines-down)
          ("C-c D" . move-dup-duplicate-up)
          ("C-c d" . move-dup-duplicate-down)))
