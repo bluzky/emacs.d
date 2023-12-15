@@ -39,7 +39,7 @@
    ;;  Buffer
    "b" '("Buffer" . (keymap))
    ;; "bs" '("Save" . save-buffer)
-   "bb" '("Switch buffer" . consult-buffer-other-frame)
+   "bb" '("Switch buffer" . consult-buffer-other-window)
    "bd" '("Close current buffer" . kill-buffer)
    "bs" '("Scratch buffer" . scratch-buffer)
    "bS" '("Save all buffers" . save-some-buffers)
@@ -61,7 +61,7 @@
    "gs" '("status" . magit-status)
    "gp" '("create PR" . me/visit-pull-request-url)
    "gb" '("blame" . magit-blame-addition)
-   "gl" '("log current file" . magit-log-current)
+   "gl" '("log current file" . magit-log-buffer-file)
    "gd" '("diff changed" . magit-diff-unstaged)
 
    "h" '("Help" . (keymap))

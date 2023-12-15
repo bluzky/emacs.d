@@ -14,12 +14,6 @@
   (before-save . eglot-format)
   (typescript-ts-mode .(lambda () (setq ian/indent-width 2))))
 
-(use-package js2-mode
-  :mode ("\\.js\\'" "\\.jsx\\'")
-  :hook (js2-mode . eglot-ensure)
-  (before-save . eglot-format)
-  (js2-mode .(lambda () (setq ian/indent-width 2))))
-
 (use-package
   eglot
   :ensure nil

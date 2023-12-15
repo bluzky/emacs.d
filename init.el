@@ -19,6 +19,7 @@
 ;; programming language
 (require 'init-elixir)
 (require 'init-typescript)
+(require 'init-web)
 (require 'init-writing)
 
 (provide 'init)

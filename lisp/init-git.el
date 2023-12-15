@@ -1,8 +1,10 @@
 ;; Git
 ;; Tell magit to automatically put us in vi-insert-mode when committing a change.
 (use-package magit
-  :preface
-  :hook (with-editor-mode . evil-insert-state))
+  :hook (with-editor-mode . evil-insert-state)
+  :config
+  (setq magit-list-refs-sortby "-committerdate")
+  )
 
 (defun me/visit-pull-request-url ()
   "Visit the current branch's PR on Github."
