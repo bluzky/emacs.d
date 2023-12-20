@@ -23,8 +23,9 @@
 (defun setup-key-bindings()
   "Setup my custom keybindings"
   (evil-leader/set-key
+   "'" 'vterm-toggle
    "e" 'treemacs
-   "o" 'treemacs-select-window
+   "E" 'treemacs-select-window
    "Q" 'save-buffers-kill-emacs
    "R" 'restart-emacs
 
@@ -83,8 +84,17 @@
    "sP" '("Search project" . me/consult-ripgrep-symbol-at-point)
    "sr" '("Resume last search" . vertico-repeat-last)
 
-   "p" '("Project" . (keymap))
-   "pp" '("Switch project" . projectile-switch-project)
+   "o" '("Open" . (keymap))
+   "op" '("project" . projectile-switch-project)
+   "ob" '("bookmark" . list-bookmarks)
+
+   "l" '("Open link" . (keymap))
+   "lg" '("Github opollo" . (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo")))
+   "ld" '("Djadmin" . (lambda () (interactive) (browse-url "https://djadmin.onpoint.vn/")))
+   "la" '("Admin" . (lambda () (interactive) (browse-url "https://admin.onpoint.vn/")))
+   "ll" '("Logging" . (lambda () (interactive) (browse-url "https://logging.onpoint.vn/")))
+   "lk" '("Local kk" . (lambda () (interactive) (browse-url "http://localhost:5200/api-docs")))
+   "ls" '("Ducduck go" . (lambda () (interactive) (browse-url "https://duckduckgo.com")))
 
    "w" '("Window/tab" . (keymap))
    "wt" '("switch tab" . tab-switch)

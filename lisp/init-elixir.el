@@ -1,4 +1,3 @@
-
 (use-package
   heex-ts-mode
   :mode "\\.heex\\'"
@@ -9,19 +8,8 @@
   elixir-ts-mode
   :after consult
   :hook (elixir-ts-mode . eglot-ensure)
-  (elixir-ts-mode
-   .
-   (lambda ()
-     (push '(">=" . ?\u2265) prettify-symbols-alist)
-     (push '("<=" . ?\u2264) prettify-symbols-alist)
-     (push '("!=" . ?\u2260) prettify-symbols-alist)
-     (push '("==" . ?\u2A75) prettify-symbols-alist)
-     (push '("=~" . ?\u2245) prettify-symbols-alist)
-     (push '("<-" . ?\u2190) prettify-symbols-alist)
-     (push '("->" . ?\u2192) prettify-symbols-alist)
-     (push '("<-" . ?\u2190) prettify-symbols-alist)
-     (push '("|>" . ?\u25B7) prettify-symbols-alist)))
-  (before-save . eglot-format))
+  (before-save . eglot-format)
+  )
   ;; :config
   ;; (add-to-list 'consult-imenu-config
   ;;               (elixir-ts-mode :toplevel "Module"
@@ -34,5 +22,6 @@
   :ensure nil
   :config
   (add-to-list 'eglot-server-programs '((heex-ts-mode elixir-ts-mode elixir-mode) . ("language_server.sh"))))
+
 
 (provide 'init-elixir)

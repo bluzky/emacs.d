@@ -2,7 +2,7 @@
   :preface
   (defvar ian/indent-width 2) ; change this value to your preferred width
   :config
-  (setq frame-title-format '("Yay-Evil") ; Yayyyyy Evil!
+  (setq frame-title-format '("Do something good!") ; Yayyyyy Evil!
         ring-bell-function 'ignore       ; minimize distraction
         frame-resize-pixelwise t
         default-directory "~/")
@@ -40,17 +40,11 @@
 (use-package cus-edit
   :ensure nil
   :config
-  (setq custom-file (concat user-emacs-directory "to-be-dumped.el")))
+  (setq custom-file (concat user-emacs-directory "custom_config.el")))
 
 ;; Configure PATH on macOS
-
 (use-package exec-path-from-shell
   :config (when (memq window-system '(mac ns x))
             (exec-path-from-shell-initialize)))
-
-;; enable system clipboard
-(use-package xclip
-  :config
-  (xclip-mode 1))
 
 (provide 'init-base)

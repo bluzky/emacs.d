@@ -2,6 +2,7 @@
   :init
   (with-eval-after-load 'winum
     (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :defer t
   :config
   ;; (treemacs-display-current-project-exclusively)
   (progn
@@ -39,9 +40,9 @@
           treemacs-recenter-after-project-jump     'always
           treemacs-recenter-after-project-expand   'on-distance
           treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
-          treemacs-project-follow-into-home        nil
+          treemacs-project-follow-into-home        t
           treemacs-show-cursor                     nil
-          treemacs-show-hidden-files               t
+          treemacs-show-hidden-files               nil
           treemacs-silent-filewatch                nil
           treemacs-silent-refresh                  nil
           treemacs-sorting                         'alphabetic-asc

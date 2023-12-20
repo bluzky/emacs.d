@@ -1,6 +1,5 @@
 
-;; The Emacs default split doesn't seem too intuitive for most users.
-
+;; Override Evil key binding
 (defun better-key-bindings()
   (define-key evil-insert-state-map (kbd "C-e") 'move-end-of-line)
   (define-key evil-insert-state-map (kbd "C-k") 'kill-line)
@@ -13,6 +12,7 @@
   (define-key evil-insert-state-map (kbd "C-@") 'set-mark-command)
   )
 
+;; The Emacs default split doesn't seem too intuitive for most users.
 (use-package emacs
   :ensure nil
   :after evil

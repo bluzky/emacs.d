@@ -1,6 +1,12 @@
 ;; Enable mouse
 (xterm-mouse-mode 1)
 
+;; enable system clipboard
+(use-package xclip
+  :config
+  (xclip-mode 1))
+
+
 ;; active projectile mode
 (use-package projectile
   :hook (after-init . projectile-mode))
@@ -16,7 +22,7 @@
 ;; Enable recentf mode
 (use-package recentf
   :init
-  (run-at-time nil (* 5 60) 'recentf-save-list)
+  (run-at-time nil (* 5 60) 'recentf-save-list) ;; auto save every 5 minutes
   :hook
   (after-init . recentf-mode)
   )
@@ -31,15 +37,6 @@
         auto-revert-check-vc-info t
         global-auto-revert-non-file-buffers t
         auto-revert-verbose nil))
-
-;; Slightly shorten eldoc display delay.
-(use-package eldoc
-  :ensure nil
-  :diminish eldoc-mode
-  :config
-  (setq eldoc-echo-area-use-multiline-p nil)
-  (setq eldoc-idle-delay 0.4))
-
 
 ;; Show matching parentheses
 ;; Reduce the highlight delay to instantly.
@@ -68,22 +65,35 @@
 
 
 ;; Syntax highlighting improvement
-(use-package highlight-numbers
-  :hook (prog-mode . highlight-numbers-mode))
+;; (use-package highlight-numbers
+;;   :hook (prog-mode . highlight-numbers-mode))
 
-(use-package highlight-escape-sequences
-  :hook (prog-mode . hes-mode))
+;; (use-package highlight-escape-sequences
+;;   :hook (prog-mode . hes-mode))
 
-
+;; Highlight indentions
+;; (use-package highlight-indent-guides
+;;   :diminish
+;;   :hook (prog-mode . highlight-indent-guides-mode)
+;;   (highlight-indent-guides-mode . (lambda ()
+;;                                     (set-face-background 'highlight-indent-guides-odd-face "darkgray")
+;;                                     (set-face-background 'highlight-indent-guides-even-face "dimgray")
+;;                                     (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
+;;                                     ))
+;;   :config
+;;   (setq highlight-indent-guides-method 'character)
+;;   )
 
 ;; Flycheck
 ;; A modern on-the-fly syntax checking extension – absolute essential
-(use-package flycheck :config (global-flycheck-mode +1))
+(use-package flycheck
+  :hook (prog-mode . flycheck-mode))
+  ;; :config
+  ;; (global-flycheck-mode +1))
 
 ;; move line up/down, duplicate line/region
 (use-package move-dup
-  :bind (:map prog-mode-map
-         ("M-<up>" . move-dup-move-lines-up)
+  :bind (("M-<up>" . move-dup-move-lines-up)
          ("M-<down>" . move-dup-move-lines-down)
          ("C-c D" . move-dup-duplicate-up)
          ("C-c d" . move-dup-duplicate-down)))

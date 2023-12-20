@@ -37,7 +37,7 @@
     (when (member "Source Code Pro" (font-family-list))
       (set-face-attribute 'default nil :family "Source Code Pro"))
     (set-face-attribute 'default nil
-                        :height 140
+                        :height 150
                         :weight 'regular))
   :ensure nil
   :config
@@ -70,11 +70,19 @@
         dashboard-center-content t
         dashboard-display-icons-p t
         dashboard-items '(
-                         (bookmarks . 5)
-                         (projects . 5))
+                          (bookmarks . 5)
+                          (projects . 5))
         dashboard-path-max-length 60
         dashboard-set-navigator t
-        dashboard-set-footer nil))
+        dashboard-set-footer nil)
+  ;; Format: "(icon title help action face prefix suffix)"
+  (setq dashboard-navigator-buttons
+        `(;; line1
+          (("⚡" "Opollo"
+            "GH Opollo"
+            (lambda (&rest _) (browse-url "https://github.com/onpointvn/opollo")))
+           )))
+  )
 
 
 ;; show icons for dired mode

@@ -14,12 +14,14 @@
 (require 'init-git)
 (require 'init-multi-cursor)
 (require 'init-copilot)
+(require 'init-term)
 (require 'init-whichkey)
 
 ;; programming language
+(require 'init-prog)
 (require 'init-elixir)
 (require 'init-typescript)
-(require 'init-web)
+;; (require 'init-web)
 (require 'init-writing)
 
 (provide 'init)

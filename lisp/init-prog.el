@@ -1,0 +1,28 @@
+;; (use-package treesit-auto
+;;   :custom
+;;   (treesit-auto-install 'prompt)
+;;   :config
+;;   (treesit-auto-add-to-auto-mode-alist 'all)
+;;   (global-treesit-auto-mode))
+
+
+;; Slightly shorten eldoc display delay.
+(use-package eldoc
+  :ensure nil
+  :diminish eldoc-mode
+  :config
+  (setq eldoc-echo-area-use-multiline-p nil)
+  (setq eldoc-idle-delay 0.4))
+
+(setq treesit-language-source-alist
+      '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src"))
+        (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
+        (elixir . ("https://github.com/elixir-lang/tree-sitter-elixir"))
+        (heex . ("https://github.com/phoenixframework/tree-sitter-heex"))
+        ))
+
+(dolist (source treesit-language-source-alist)
+  (unless (treesit-language-available-p (car source))
+    (treesit-install-language-grammar (car source))))
+
+(provide 'init-prog)
