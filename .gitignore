@@ -12,3 +12,5 @@ eshell/
 projectile-bookmarks.eld
 quelpa/
 straight/
+custom_config.el
+projectile.cache

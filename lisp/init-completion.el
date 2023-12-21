@@ -117,7 +117,8 @@
 
 ;; yasnippet support for consult
 (use-package consult-yasnippet
-  :bind ("M-g y" . consult-yasnippet))
+  :bind ("M-g y" . consult-yasnippet)
+  :hook ((prog-mode org-mode) . yas-global-mode))
 
 ;; Embark provides a sort of context sensitive mini interface to act on
 (use-package embark

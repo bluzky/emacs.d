@@ -75,7 +75,7 @@
 
    "i" '("Insert" . (keymap))
    "ir" '("from kill ring" . yank-from-kill-ring)
-   "is" '("snippets" . consult-yasnippet)
+   "iy" '("snippets" . consult-yasnippet)
 
    "s" '("Search" . (keymap))
    "ss" '("Search buffer" . swiper)

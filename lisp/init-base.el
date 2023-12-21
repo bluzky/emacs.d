@@ -43,7 +43,9 @@
 (use-package cus-edit
   :ensure nil
   :config
-  (setq custom-file (concat user-emacs-directory "custom_config.el")))
+  (setq custom-file (concat user-emacs-directory "custom_config.el"))
+  (load custom-file)
+  )
 
 ;; Configure PATH on macOS
 (use-package exec-path-from-shell
