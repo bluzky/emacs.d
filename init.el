@@ -16,6 +16,7 @@
 (require 'init-copilot)
 (require 'init-term)
 (require 'init-whichkey)
+(require 'init-ai)
 
 ;; programming language
 (require 'init-prog)

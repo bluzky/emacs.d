@@ -12,6 +12,9 @@
   (blink-cursor-mode 0)
   (global-display-line-numbers-mode)
 
+  ;; only pop up window if error
+  (setq warning-minimum-level :error)
+
   ;; better scrolling experience
   (setq scroll-margin 0
         scroll-conservatively 101 ; > 100

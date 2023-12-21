@@ -65,8 +65,8 @@
 
 
 ;; Syntax highlighting improvement
-;; (use-package highlight-numbers
-;;   :hook (prog-mode . highlight-numbers-mode))
+(use-package highlight-numbers
+  :hook (prog-mode . highlight-numbers-mode))
 
 ;; (use-package highlight-escape-sequences
 ;;   :hook (prog-mode . hes-mode))

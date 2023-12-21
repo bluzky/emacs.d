@@ -67,6 +67,9 @@
      ("?" describe-mode "help" :exit t)
      ("Q" quit-window "quit" :exit t)))))
 
+(use-package prettier
+  :hook ((js-mode js2-mode css-mode sgml-mode web-mode rjsx-mode) . prettier-mode))
+
 ;; CSS
 ;; (use-package css-mode
 ;;   :init (setq css-indent-offset 2))

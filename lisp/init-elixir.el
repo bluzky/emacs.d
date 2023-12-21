@@ -2,11 +2,13 @@
   heex-ts-mode
   :mode "\\.heex\\'"
   :hook (heex-ts-mode . eglot-ensure)
-  (before-save . eglot-format))
+  (before-save . eglot-format)
+  )
 
 (use-package
   elixir-ts-mode
   :after consult
+  :mode ("\\.ex\\'" "\\.exs\\'" "\\.eex\\'")
   :hook (elixir-ts-mode . eglot-ensure)
   (before-save . eglot-format)
   )

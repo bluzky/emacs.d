@@ -63,9 +63,7 @@
     ;; using a Hi-DPI display, uncomment this to double the icon size.
     ;;(treemacs-resize-icons 44)
 
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)
-    (treemacs-fringe-indicator-mode 'always)
+    (treemacs-project-follow-mode t)
     (when treemacs-python-executable
       (treemacs-git-commit-diff-mode t))
 
@@ -74,9 +72,8 @@
       (`(t . t)
        (treemacs-git-mode 'deferred))
       (`(t . _)
-       (treemacs-git-mode 'simple)))
+       (treemacs-git-mode 'simple))))
 
-    (treemacs-hide-gitignored-files-mode nil))
   :bind
   (:map global-map
         ("M-0"       . treemacs-select-window)
