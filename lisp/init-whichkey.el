@@ -37,10 +37,18 @@
    "fR" '("Rename" . rename-visited-file)
    "fS" '("Save as" . write-file)
 
+   ;; Ask/AI
+   "a" '("Search/AI" . (keymap))
+   "ag" '("GPT prompt" . org-ai-prompt)
+   "ar" '("GPT region" . org-ai-on-region)
+   "as" '("GPT summarize" . org-ai-summarize)
+   "ax" '("GPT explain code" . org-ai-explain-code)
+   "af" '("GPT refactor code" . org-ai-refactor-code)
+   
    ;;  Buffer
    "b" '("Buffer" . (keymap))
    ;; "bs" '("Save" . save-buffer)
-   "bb" '("Switch buffer" . consult-buffer-other-window)
+   "bb" '("Switch buffer" . consult-buffer)
    "bd" '("Close current buffer" . kill-buffer)
    "bs" '("Scratch buffer" . scratch-buffer)
    "bS" '("Save all buffers" . save-some-buffers)
@@ -64,6 +72,8 @@
    "gb" '("blame" . magit-blame-addition)
    "gl" '("log current file" . magit-log-buffer-file)
    "gd" '("diff changed" . magit-diff-unstaged)
+   "gr" '("PR review" . pr-review-search)
+   "gR" '("PR review open" . pr-review)
 
    "h" '("Help" . (keymap))
    "hf" '("function" . describe-function)

@@ -73,26 +73,26 @@
          :map minibuffer-local-map
          ("M-r" . consult-history))
 
-  :hook (completion-list-mode . consult-preview-at-point-mode)
+  ;; :hook (completion-list-mode . consult-preview-at-point-mode)
 
   :init
   ;; Optionally configure the register formatting. This improves the register
   ;; preview for `consult-register', `consult-register-load',
   ;; `consult-register-store' and the Emacs built-ins.
-  (setq register-preview-delay 0.5
-        register-preview-function #'consult-register-format)
+  ;; (setq register-preview-delay 0.5
+  ;;       register-preview-function #'consult-register-format)
 
   ;; Optionally tweak the register preview window.
   ;; This adds thin lines, sorting and hides the mode line of the window.
-  (advice-add #'register-preview :override #'consult-register-window)
+  ;; (advice-add #'register-preview :override #'consult-register-window)
 
   ;; Use Consult to select xref locations with preview
-  (with-eval-after-load 'xref
-    (setq xref-show-xrefs-function #'consult-xref
-          xref-show-definitions-function #'consult-xref))
+  ;; (with-eval-after-load 'xref
+  ;;   (setq xref-show-xrefs-function #'consult-xref
+  ;;         xref-show-definitions-function #'consult-xref))
 
   :config
-  (setq consult-preview-key '("S-<down>"))
+  ;; (setq consult-preview-key '("S-<down>"))
 
   ;; auto show preview for consult-line and consult-theme
   (consult-customize
@@ -100,10 +100,10 @@
    consult-theme :preview-key '(:debounce 0.4 any))
 
   ;; Both < and C-+ work reasonably well.
-  (setq consult-narrow-key "<")
+  ;; (setq consult-narrow-key "<")
 
   ;; Optionally make narrowing help available in the minibuffer.
-  (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+  ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
   )
 
 ;; Search for symbol at point with ripgrep
@@ -111,6 +111,18 @@
   (interactive)
   (consult-ripgrep nil (thing-at-point 'symbol)))
 
+;; Search for symbol at point with ripgrep
+(defun spacemacs/compleseus-search (use-initial-input initial-directory)
+  (let* ((initial-input (if use-initial-input
+                            (rxt-quote-pcre
+                             (if (region-active-p)
+                                 (buffer-substring-no-properties
+                                  (region-beginning) (region-end))
+                               (or (thing-at-point 'symbol t) "")))
+                          ""))
+         (default-directory
+           (or initial-directory (read-directory-name "Start from directory: "))))
+    (consult-ripgrep default-directory initial-input)))
 
 ;; (use-package consult-flyspell
 ;;   :bind ("M-g s" . consult-flyspell))

@@ -1,5 +1,16 @@
 ;; Enable mouse
-(xterm-mouse-mode 1)
+(use-package emacs
+  :ensure nil
+  :hook (after-init . global-hl-line-mode)
+  :config
+  (xterm-mouse-mode 1)
+  (setq initial-major-mode 'elixir-ts-mode)
+  (setq initial-scratch-message "")
+
+  ;; disable auto-save
+  (auto-save-mode -1)
+  )
+
 
 ;; enable system clipboard
 (use-package xclip
@@ -72,17 +83,17 @@
 ;;   :hook (prog-mode . hes-mode))
 
 ;; Highlight indentions
-;; (use-package highlight-indent-guides
-;;   :diminish
-;;   :hook (prog-mode . highlight-indent-guides-mode)
-;;   (highlight-indent-guides-mode . (lambda ()
-;;                                     (set-face-background 'highlight-indent-guides-odd-face "darkgray")
-;;                                     (set-face-background 'highlight-indent-guides-even-face "dimgray")
-;;                                     (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
-;;                                     ))
-;;   :config
-;;   (setq highlight-indent-guides-method 'character)
-;;   )
+(use-package highlight-indent-guides
+  :diminish
+  :hook (prog-mode . highlight-indent-guides-mode)
+  ;; (highlight-indent-guides-mode . (lambda ()
+  ;;                                   ))
+  :config
+  (setq highlight-indent-guides-method 'character)
+  (set-face-background 'highlight-indent-guides-odd-face "darkgray")
+  (set-face-background 'highlight-indent-guides-even-face "dimgray")
+  (set-face-foreground 'highlight-indent-guides-character-face "gray90")
+  )
 
 ;; Flycheck
 ;; A modern on-the-fly syntax checking extension – absolute essential

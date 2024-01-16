@@ -1,11 +1,3 @@
-;; (use-package treesit-auto
-;;   :custom
-;;   (treesit-auto-install 'prompt)
-;;   :config
-;;   (treesit-auto-add-to-auto-mode-alist 'all)
-;;   (global-treesit-auto-mode))
-
-
 ;; Slightly shorten eldoc display delay.
 (use-package eldoc
   :ensure nil
@@ -24,5 +16,8 @@
 (dolist (source treesit-language-source-alist)
   (unless (treesit-language-available-p (car source))
     (treesit-install-language-grammar (car source))))
+
+(use-package eglot
+  :ensure nil)
 
 (provide 'init-prog)
