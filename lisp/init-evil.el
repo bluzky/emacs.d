@@ -50,4 +50,6 @@
   :hook
   (evil-mode . global-evil-surround-mode))
 
+(use-package evil-textobj-tree-sitter)
+
 (provide 'init-evil)

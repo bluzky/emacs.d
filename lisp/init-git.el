@@ -86,22 +86,4 @@
             "\\`.+bitbucket\\.org:\\(.+\\)\\.git\\'" "\\1"
             repo))))
 
-;; Github review pull request
-(use-package pr-review
-  :hook (pr-review-mode . pr-review-hydra/body)
-  :pretty-hydra
-  ((:color pink :quit-key ("q" "C-g"))
-   ("Review"
-    (("n" pr-review-next "next")
-     ("p" pr-review-prev "previous"))
-    "Comment"
-    (("c" pr-review-comment "comment")
-     ("r" pr-review-resolve-thread "resolve")
-     ("r" pr-review-reply-to-thread "reply")
-     ("e" pr-review-edit-comment "edit comment"))
-    "Other"
-    (("s" pr-review-submit-review "submit"))
-    ))
-  )
-
 (provide 'init-git)

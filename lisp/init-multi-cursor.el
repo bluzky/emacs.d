@@ -8,7 +8,7 @@
   :pretty-hydra
   ((:quit-key "q" :color "red" :idle 0.5)
    ("Match symbol"
-    (("a" evil-mc-make-all-cursors "make all")
+    (("m" evil-mc-make-all-cursors "make all")
      ("n" evil-mc-make-and-goto-next-match "add next match")
      ("N" evil-mc-skip-and-goto-next-match "skip and go to next match")
      ("p" evil-mc-make-and-goto-prev-match "add prev match")
@@ -17,8 +17,8 @@
     "Make cursor"
     (("j" evil-mc-make-cursor-move-next-line "add next line")
      ("k" evil-mc-make-cursor-move-prev-line "add prev line")
-     ("A" evil-mc-make-cursor-in-visual-selection-beg "make all cursor end")
-     ("I" evil-mc-make-cursor-in-visual-selection-end "make all cursor beginning"))
+     ("A" evil-mc-make-cursor-in-visual-selection-end "make all cursor end")
+     ("I" evil-mc-make-cursor-in-visual-selection-beg "make all cursor beginning"))
 
     "Action"
     (("u" evil-mc-undo-last-added-cursor "undo last added cursor")

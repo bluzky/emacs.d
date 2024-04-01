@@ -35,10 +35,7 @@
   (defun ian/set-default-font ()
     (interactive)
     (when (member "Source Code Pro" (font-family-list))
-      (set-face-attribute 'default nil :family "Source Code Pro"))
-    (set-face-attribute 'default nil
-                        :height 150
-                        :weight 'regular))
+      (set-face-attribute 'default nil :family "JetBrains Mono NL" :height 150 :weight 'regular)))
   :ensure nil
   :config
   (setq initial-frame-alist '((fullscreen . maximized)))
@@ -54,7 +51,7 @@
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-  (load-theme 'me-homage-white t)
+  (load-theme 'me-flatwhite t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -101,5 +98,25 @@
 (use-package hydra)
 (use-package pretty-hydra
   :after hydra)
+
+;; Highlight symbol
+
+(use-package symbol-overlay
+  :diminish
+  :hook (prog-mode . symbol-overlay-mode)
+  :config
+  (setq symbol-overlay-idle-time 0.1)
+  :pretty-hydra
+  ((:title "Symbol Overlay" :quit-key "q")
+   ("Overlays"
+    (("." symbol-overlay-put "Add/Remove at point")
+     ("k" symbol-overlay-remove-all "Remove all"))
+    "Move"
+    (("n" symbol-overlay-jump-next "Next")
+     ("p" symbol-overlay-jump-prev "Previous"))
+    "Other"
+    (("m" symbol-overlay-mode "Highlight symbol at point"))))
+  :bind ("s-." . symbol-overlay-hydra/body)
+ )
 
 (provide 'init-ui)

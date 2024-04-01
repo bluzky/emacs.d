@@ -106,15 +106,16 @@
   ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
   )
 
-;; Search for symbol at point with ripgrep
-(defun me/consult-ripgrep-symbol-at-point ()
-  (interactive)
-  (consult-ripgrep nil (thing-at-point 'symbol)))
+(defun pcre-escape-string (string)
+  "Escape the given STRING using PCRE style."
+  (let ((escaped (replace-regexp-in-string "\\([][{}()\\^$|?*+.\-\ ]\\)" "\\\\\\1" string)))
+    escaped))
 
 ;; Search for symbol at point with ripgrep
-(defun spacemacs/compleseus-search (use-initial-input initial-directory)
+;; copy from spacemacs/compleseus-search
+(defun me/ripgrep-search (use-initial-input initial-directory)
   (let* ((initial-input (if use-initial-input
-                            (rxt-quote-pcre
+                            (pcre-escape-string
                              (if (region-active-p)
                                  (buffer-substring-no-properties
                                   (region-beginning) (region-end))
@@ -123,6 +124,22 @@
          (default-directory
            (or initial-directory (read-directory-name "Start from directory: "))))
     (consult-ripgrep default-directory initial-input)))
+
+(defun me/search-projectile ()
+  "Search in current project."
+  (interactive)
+  (me/ripgrep-search t (projectile-project-root)))
+
+(defun me/search-dir ()
+  "Choose folder to search."
+  (interactive)
+  (me/ripgrep-search nil nil))
+
+(defun me/search-dir-with-input ()
+  "Choose folder to search."
+  (interactive)
+  (me/ripgrep-search t nil))
+
 
 ;; (use-package consult-flyspell
 ;;   :bind ("M-g s" . consult-flyspell))
@@ -198,12 +215,7 @@ targets."
 (use-package swiper :defer t)
 
 ;; Edit search result buffer directly
-(use-package wgrep
-  :bind (:map grep-mode-map
-              ("e" . wgrep-change-to-wgrep-mode)
-         :map ivy-occur-mode-map
-              ("e" . wgrep-change-to-wgrep-mode)))
-
+(use-package wgrep)
 
 (provide 'init-completion)
 

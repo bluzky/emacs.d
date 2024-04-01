@@ -33,7 +33,7 @@
    "f" '("File" . (keymap))
    "ff" '("Find in project" . project-find-file)
    "fr" '("Recent files" . consult-recent-file)
-   ;; "fD" '("Delete" . )
+   "fD" '("Delete" . me/delete-buffer-file)
    "fR" '("Rename" . rename-visited-file)
    "fS" '("Save as" . write-file)
 
@@ -65,6 +65,8 @@
    "jj" '("avy jump" . avy-goto-char-timer)
    "jl" '("avy line" . avy-goto-line)
    "jw" '("avy word" . avy-goto-word-0)
+   "je" '("next error" . flymake-goto-next-error)
+   "jE" '("previous error" . flymake-goto-prev-error)
 
    "g" '("Magit" . (keymap))
    "gs" '("status" . magit-status)
@@ -89,9 +91,11 @@
 
    "s" '("Search" . (keymap))
    "ss" '("Search buffer" . swiper)
-   "sS" '("Search buffer" . swiper-thing-at-point)
+   "sS" '("Search buffer with input" . swiper-thing-at-point)
    "sp" '("Search project" . consult-ripgrep)
-   "sP" '("Search project" . me/consult-ripgrep-symbol-at-point)
+   "sP" '("Search project with input" . me/search-projectile)
+   "sf" '("Search dir" . me/search-dir)
+   "sF" '("Search dir with input" . me/search-dir-with-input)
    "sr" '("Resume last search" . vertico-repeat-last)
 
    "o" '("Open" . (keymap))

@@ -6,6 +6,11 @@
   (setq eldoc-echo-area-use-multiline-p nil)
   (setq eldoc-idle-delay 0.4))
 
+;; (use-package eldoc-box
+;;   :diminish eldoc-box-hover-mode
+;;   :hook (prog-mode . eldoc-box-hover-mode))
+
+
 (setq treesit-language-source-alist
       '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src"))
         (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))

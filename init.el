@@ -22,7 +22,7 @@
 (require 'init-prog)
 (require 'init-elixir)
 (require 'init-typescript)
-;; (require 'init-web)
+(require 'init-web)
 (require 'init-go)
 (require 'init-writing)
 

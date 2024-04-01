@@ -109,4 +109,19 @@
          ("C-c D" . move-dup-duplicate-up)
          ("C-c d" . move-dup-duplicate-down)))
 
+
+;; custom functions
+
+(defun me/delete-buffer-file ()
+  "Kill the current buffer and deletes the file it is visiting."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (if filename
+        (if (y-or-n-p (concat "Do you really want to delete file " filename " ?"))
+            (progn
+              (delete-file filename)
+              (message "Deleted file %s." filename)
+              (kill-buffer)))
+      (message "Not a file visiting buffer!"))))
+
 (provide 'init-editor)
