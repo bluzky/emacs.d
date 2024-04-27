@@ -10,6 +10,32 @@
 ;;   :diminish eldoc-box-hover-mode
 ;;   :hook (prog-mode . eldoc-box-hover-mode))
 
+;; Highlight indentions
+(use-package highlight-indent-guides
+  :diminish
+  :hook (prog-mode . highlight-indent-guides-mode)
+  ;; (highlight-indent-guides-mode . (lambda ()
+  ;;                                   ))
+  :config
+  (setq highlight-indent-guides-method 'character)
+  (set-face-background 'highlight-indent-guides-odd-face "darkgray")
+  (set-face-background 'highlight-indent-guides-even-face "dimgray")
+  (set-face-foreground 'highlight-indent-guides-character-face "gray90")
+  )
+
+;; Flycheck
+;; A modern on-the-fly syntax checking extension – absolute essential
+(use-package flycheck
+  :hook (prog-mode . flycheck-mode))
+  ;; :config
+  ;; (global-flycheck-mode +1))
+
+(use-package imenu-list
+  :bind
+  ("C-c i" . imenu-list-smart-toggle)
+  :config
+  (setq imenu-list-focus-after-activation t))
+
 
 (setq treesit-language-source-alist
       '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src"))

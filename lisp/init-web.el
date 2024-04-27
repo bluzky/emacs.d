@@ -93,6 +93,24 @@
 ;;   (before-save . eglot-format)
 ;;   (js2-mode .(lambda () (setq ian/indent-width 2))))
 
+
+;; Support functions
+(defun me/search-web ()
+  "If selected region, or thing at point, is a url, go there. Otherwise,
+use region/thing as a keyword for a google search."
+  (interactive)
+  (let ((target
+         (if (use-region-p)
+             (buffer-substring (region-beginning) (region-end))
+           (thing-at-point 'symbol))))
+    (setq target (read-string "search for: " target))
+    (if (ffap-url-p target)
+        (browse-url target)
+      (browse-url (concat "https://duckduckgo.com/?q="
+                          (url-hexify-string target))))))
+
+
+
 (provide 'init-web)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-web.el ends here

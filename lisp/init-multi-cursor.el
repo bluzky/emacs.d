@@ -25,7 +25,7 @@
      ("Q" evil-mc-undo-all-cursors "clear cursor" :exit t))
     ))
   :bind
-  ("C-;" . evil-mc-hydra/body)
+  ("C-," . evil-mc-hydra/body)
   :config
   (add-hook 'magit-mode-hook 'turn-off-evil-mc-mode)
   (setq-default evil-mc-one-cursor-show-mode-line-text nil)
@@ -41,6 +41,8 @@
   ;;   (kbd "C-<down>")   #'evil-mc-make-cursor-move-next-line
   ;;   (kbd "C-<up>")   #'evil-mc-make-cursor-move-prev-line)
   )
+
+(use-package evil-iedit-state)
 
 ;; (use-package evil-multiedit
 ;;   :after evil 

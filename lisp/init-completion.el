@@ -38,12 +38,12 @@
               ("RET" . vertico-directory-enter)
               ("DEL" . vertico-directory-delete-char)
               ("M-DEL" . vertico-directory-delete-word))
-  :custom
-  (vertico-count 17)                    ; Number of candidates to display
-  ;; (vertico-resize t)
-  (vertico-cycle t) ; Go from last to first candidate and first to last (cycle)?
   :hook ((emacs-startup . vertico-mode)
-         (rfn-eshadow-update-overlay . vertico-directory-tidy)))
+         (rfn-eshadow-update-overlay . vertico-directory-tidy))
+  :config
+  (setq vertico-count 17)
+  (setq completion-category-overrides '((file (styles . (partial-completion)))))
+  )
 
 ;; Scroll vertico minibuffer with mouse wheel
 (use-package vertico-mouse
@@ -60,7 +60,8 @@
 
 ;; Enable richer annotations using the Marginalia package
 (use-package marginalia
-  :hook (after-init . marginalia-mode))
+  :after vertico
+  :config (marginalia-mode))
 
 ;; Setup consult
 (use-package consult
@@ -68,6 +69,10 @@
          ([remap imenu]              . consult-imenu)
          ([remap isearch-forward]    . consult-line)
          ([remap recentf-open-files] . consult-recent-file)
+         ("C-x b" . consult-project-buffer)                ;; orig. switch-to-buffe
+         ("C-x B" . consult-buffer)                ;; orig. switch-to-buffe
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
 
          ;; use current symbol as search string
          :map minibuffer-local-map
@@ -125,10 +130,10 @@
            (or initial-directory (read-directory-name "Start from directory: "))))
     (consult-ripgrep default-directory initial-input)))
 
-(defun me/search-projectile ()
+(defun me/search-project ()
   "Search in current project."
   (interactive)
-  (me/ripgrep-search t (projectile-project-root)))
+  (me/ripgrep-search t (project-root (projection--current-project))))
 
 (defun me/search-dir ()
   "Choose folder to search."

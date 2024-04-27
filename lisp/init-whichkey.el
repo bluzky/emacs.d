@@ -56,17 +56,21 @@
    "bt" '("Open in new tab" . tab-new)
 
    ;; Code
-   "j" '("Code/jump" . (keymap))
+   "v" '("Code" . (keymap))
+   "vf" '("Format buffer" . eglot-format-buffer)
+   "va" '("Code action" . eglot-code-actions)
+   "vi" '("Function outline" . imenu-list-smart-toggle)
+   "ve" '("next error" . flymake-goto-next-error)
+   "vE" '("previous error" . flymake-goto-prev-error)
+
+   ;; Jump
+   "j" '("Jump" . (keymap))
    "jd" '("Find definition" . xref-find-definitions)
-   "jf" '("Format buffer" . eglot-format-buffer)
    "jr" '("Find references" . xref-find-references)
    "ji" '("Buffer's symbols" . consult-imenu)
-   "ja" '("Code action" . eglot-code-actions)
    "jj" '("avy jump" . avy-goto-char-timer)
    "jl" '("avy line" . avy-goto-line)
    "jw" '("avy word" . avy-goto-word-0)
-   "je" '("next error" . flymake-goto-next-error)
-   "jE" '("previous error" . flymake-goto-prev-error)
 
    "g" '("Magit" . (keymap))
    "gs" '("status" . magit-status)
@@ -93,13 +97,14 @@
    "ss" '("Search buffer" . swiper)
    "sS" '("Search buffer with input" . swiper-thing-at-point)
    "sp" '("Search project" . consult-ripgrep)
-   "sP" '("Search project with input" . me/search-projectile)
+   "sP" '("Search project with input" . me/search-project)
    "sf" '("Search dir" . me/search-dir)
    "sF" '("Search dir with input" . me/search-dir-with-input)
    "sr" '("Resume last search" . vertico-repeat-last)
+   "sw" '("Search web" . me/search-web)
 
    "o" '("Open" . (keymap))
-   "op" '("project" . projectile-switch-project)
+   "op" '("project" . project-switch-project)
    "ob" '("bookmark" . list-bookmarks)
 
    "l" '("Open link" . (keymap))

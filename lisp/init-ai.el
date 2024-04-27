@@ -11,4 +11,16 @@
   (org-ai-install-yasnippets)
   )
 
+;; Config chat gpt
+;; Storing in ~/.authinfo. By default, “api.openai.com” is used as HOST and “apikey” as USER.
+;; machine api.openai.com login apikey password TOKEN
+;; use gemini instead 
+(use-package gptel
+  :config
+  (setq gptel-model "gemini-pro"
+        gptel-backend (gptel-make-gemini "Gemini"
+                 :key "AIzaSyAutenzBEFKNQdXOzbZsVKryptVXN9xlOg"
+                 :stream t))
+  )
+
 (provide 'init-ai)

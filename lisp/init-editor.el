@@ -9,6 +9,10 @@
 
   ;; disable auto-save
   (auto-save-mode -1)
+  (setq auto-save-default nil)
+
+  ;; config answer y/n
+  (setq use-short-answers t)
   )
 
 
@@ -18,9 +22,16 @@
   (xclip-mode 1))
 
 
-;; active projectile mode
-(use-package projectile
-  :hook (after-init . projectile-mode))
+
+(use-package projection
+  :hook (after-init . global-projection-hook-mode)
+  ;; Require projections immediately after project.el.
+  :config
+  (with-eval-after-load 'project
+    (require 'projection))
+  :bind-keymap
+  ("C-x P" . projection-map)
+  )
 
 ;; Don’t bother confirming killing processes and don’t let backup~ files scatter around.
 (use-package files
@@ -82,25 +93,6 @@
 ;; (use-package highlight-escape-sequences
 ;;   :hook (prog-mode . hes-mode))
 
-;; Highlight indentions
-(use-package highlight-indent-guides
-  :diminish
-  :hook (prog-mode . highlight-indent-guides-mode)
-  ;; (highlight-indent-guides-mode . (lambda ()
-  ;;                                   ))
-  :config
-  (setq highlight-indent-guides-method 'character)
-  (set-face-background 'highlight-indent-guides-odd-face "darkgray")
-  (set-face-background 'highlight-indent-guides-even-face "dimgray")
-  (set-face-foreground 'highlight-indent-guides-character-face "gray90")
-  )
-
-;; Flycheck
-;; A modern on-the-fly syntax checking extension – absolute essential
-(use-package flycheck
-  :hook (prog-mode . flycheck-mode))
-  ;; :config
-  ;; (global-flycheck-mode +1))
 
 ;; move line up/down, duplicate line/region
 (use-package move-dup
