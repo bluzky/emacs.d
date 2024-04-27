@@ -19,7 +19,7 @@
   :config
   (setq gptel-model "gemini-pro"
         gptel-backend (gptel-make-gemini "Gemini"
-                 :key "AIzaSyAutenzBEFKNQdXOzbZsVKryptVXN9xlOg"
+                 :key ""
                  :stream t))
   )
 
