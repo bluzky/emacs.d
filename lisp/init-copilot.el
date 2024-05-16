@@ -19,8 +19,8 @@
 available. Otherwise will try company, yasnippet or normal
 tab-indent."
     (interactive)
-    (or (copilot-accept-completion)
-        (yas-expand)
+    (or (yas-expand)
+        (copilot-accept-completion)
         (indent-for-tab-command)))
 
     (define-key copilot-completion-map (kbd "TAB") 'me/copilot-tab)

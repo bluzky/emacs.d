@@ -13,6 +13,9 @@
 
   ;; config answer y/n
   (setq use-short-answers t)
+
+  ;; auto select help window
+  (setq help-window-select t)
   )
 
 

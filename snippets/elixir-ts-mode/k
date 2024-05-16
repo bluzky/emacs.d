@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: map key
+# key: k
+# --
+$1: $1

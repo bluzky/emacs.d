@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: labelled inspect
+# key: lin
+# --
+IO.inspect($1, label: "🔥`(buffer-name (current-buffer))`:`(line-number-at-pos)`")
