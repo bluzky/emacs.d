@@ -20,6 +20,7 @@
 
 ;; programming language
 (require 'init-prog)
+(require 'init-common)
 (require 'init-elixir)
 (require 'init-typescript)
 (require 'init-web)

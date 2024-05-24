@@ -1,0 +1,27 @@
+# -*- mode: snippet -*-
+# name: Function component 
+# key: fc
+# --
+
+  @doc """
+  Render 
+  """
+  attr(:class, :string, default: nil)
+  attr(:rest, :global, include: ~w(disabled form name value))
+  slot(:inner_block, required: true)
+
+  def $1(assigns) do
+    ~H"""
+    <div
+      class={
+        classes([
+          "",
+          @class
+        ])
+      }
+      {@rest}
+    >
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
+  end

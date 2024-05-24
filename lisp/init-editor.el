@@ -119,4 +119,7 @@
               (kill-buffer)))
       (message "Not a file visiting buffer!"))))
 
+(use-package expand-region
+  :bind ("C-=" . er/expand-region))
+
 (provide 'init-editor)

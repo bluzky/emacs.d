@@ -214,6 +214,12 @@
 ;; (use-package consult-flyspell
 ;;   :bind ("M-g s" . consult-flyspell))
 
+(use-package yasnippet
+  :config
+  (yas-global-mode t)
+  )
+(use-package yasnippet-snippets)
+
 ;; yasnippet support for consult
 (use-package consult-yasnippet
   :bind ("M-g y" . consult-yasnippet)
