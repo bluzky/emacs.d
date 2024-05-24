@@ -10,6 +10,7 @@
 
 (use-package
   elixir-ts-mode
+  :ensure nil
   :after eglot
   :mode ("\\.ex\\'" "\\.exs\\'" "\\.eex\\'")
   :hook (elixir-ts-mode . eglot-ensure)

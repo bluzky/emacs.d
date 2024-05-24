@@ -14,14 +14,54 @@
 
   ;; Enable indentation+completion using the TAB key.
   ;; `completion-at-point' is often bound to M-TAB.
-  (setq tab-always-indent 'complete))
+  (setq tab-always-indent 'complete)
+  )
+
 
 ;; Optionally use the `orderless' completion style.
 (use-package orderless
-  :custom
-  (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles basic partial-completion))))
-  (orderless-component-separator #'orderless-escapable-split-on-space))
+  ;; :custom
+  ;; (completion-category-overrides '((file (styles basic partial-completion))))
+  ;; (orderless-component-separator #'orderless-escapable-split-on-space)
+
+  :config
+  (defun +orderless--consult-suffix ()
+    "Regexp which matches the end of string with Consult tofu support."
+    (if (and (boundp 'consult--tofu-char) (boundp 'consult--tofu-range))
+        (format "[%c-%c]*$"
+                consult--tofu-char
+                (+ consult--tofu-char consult--tofu-range -1))
+      "$"))
+
+  ;; Recognizes the following patterns:
+  ;; * .ext (file extension)
+  ;; * regexp$ (regexp matching at end)
+  (defun +orderless-consult-dispatch (word _index _total)
+    (cond
+     ;; Ensure that $ works with Consult commands, which add disambiguation suffixes
+     ((string-suffix-p "$" word)
+      `(orderless-regexp . ,(concat (substring word 0 -1) (+orderless--consult-suffix))))
+     ;; File extensions
+     ((and (or minibuffer-completing-file-name
+               (derived-mode-p 'eshell-mode))
+           (string-match-p "\\`\\.." word))
+      `(orderless-regexp . ,(concat "\\." (substring word 1) (+orderless--consult-suffix))))))
+
+  ;; Define orderless style with initialism by default
+  (orderless-define-completion-style +orderless-with-initialism
+    (orderless-matching-styles '(orderless-initialism orderless-literal orderless-regexp)))
+
+  (setq completion-styles '(substring orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)) ;; partial-completion is tried first
+                                        ;; enable initialism by default for symbols
+                                        (command (styles +orderless-with-initialism))
+                                        (variable (styles +orderless-with-initialism))
+                                        (symbol (styles +orderless-with-initialism)))
+        orderless-component-separator #'orderless-escapable-split-on-space ;; allow escaping space with backslash!
+        orderless-style-dispatchers (list #'+orderless-consult-dispatch
+                                          #'orderless-affix-dispatch)))
+
 
 ;; (use-package fussy
 ;;   :config
@@ -58,10 +98,35 @@
   :init
   (add-hook 'minibuffer-setup-hook #'vertico-repeat-save))
 
+(use-package vertico-quick
+  :ensure nil
+  :after vertico
+  :bind (
+         ("M-q" . 'vertico-quick-insert)
+         ("C-q" . 'vertico-quick-exit))
+  )
+
 ;; Enable richer annotations using the Marginalia package
 (use-package marginalia
   :after vertico
   :config (marginalia-mode))
+
+;;;; Prefix current candidate with arrow
+(defvar +vertico-current-arrow t)
+(cl-defmethod vertico--format-candidate :around
+  (cand prefix suffix index start &context ((and +vertico-current-arrow
+                                                 (not (bound-and-true-p vertico-flat-mode)))
+                                            (eql t)))
+  (setq cand (cl-call-next-method cand prefix suffix index start))
+  (if (bound-and-true-p vertico-grid-mode)
+      (if (= vertico--index index)
+          (concat #("▶" 0 1 (face vertico-current)) cand)
+        (concat #("_" 0 1 (display " ")) cand))
+    (if (= vertico--index index)
+        (concat
+         #(" " 0 1 (display (left-fringe right-triangle vertico-current)))
+         cand)
+      cand)))
 
 ;; Setup consult
 (use-package consult
@@ -111,6 +176,7 @@
   ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
   )
 
+
 (defun pcre-escape-string (string)
   "Escape the given STRING using PCRE style."
   (let ((escaped (replace-regexp-in-string "\\([][{}()\\^$|?*+.\-\ ]\\)" "\\\\\\1" string)))
@@ -145,9 +211,14 @@
   (interactive)
   (me/ripgrep-search t nil))
 
-
 ;; (use-package consult-flyspell
 ;;   :bind ("M-g s" . consult-flyspell))
+
+(use-package yasnippet
+  :config
+  (yas-global-mode t)
+  )
+(use-package yasnippet-snippets)
 
 ;; yasnippet support for consult
 (use-package consult-yasnippet

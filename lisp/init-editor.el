@@ -13,6 +13,9 @@
 
   ;; config answer y/n
   (setq use-short-answers t)
+
+  ;; auto select help window
+  (setq help-window-select t)
   )
 
 
@@ -115,5 +118,8 @@
               (message "Deleted file %s." filename)
               (kill-buffer)))
       (message "Not a file visiting buffer!"))))
+
+(use-package expand-region
+  :bind ("C-=" . er/expand-region))
 
 (provide 'init-editor)

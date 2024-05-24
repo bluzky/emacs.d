@@ -10,6 +10,7 @@
 
 (use-package
   typescript-ts-mode
+  :ensure nil
   :mode ("\\.ts\\'" "\\.tsx\\'")
   :hook (typescript-ts-mode . eglot-ensure)
   (before-save . eglot-format)

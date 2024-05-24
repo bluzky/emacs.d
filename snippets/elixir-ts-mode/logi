@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: log inspect
+# key: logi
+# --
+Logger.warn($1, label: "🔥`(buffer-name (current-buffer))`:`(line-number-at-pos)` $1: #{inspect($1, pretty: true)}")

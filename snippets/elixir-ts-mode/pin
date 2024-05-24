@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: piped inspect
+# key: pin
+# --
+|> IO.inspect(label: "🔥`(buffer-name (current-buffer))`:`(line-number-at-pos)`")

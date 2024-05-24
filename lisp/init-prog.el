@@ -51,4 +51,9 @@
 (use-package eglot
   :ensure nil)
 
+
+;; code folding
+(use-package origami
+  :hook (prog-mode . origami-mode))
+
 (provide 'init-prog)
