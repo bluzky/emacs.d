@@ -15,3 +15,5 @@ straight/
 custom_config.el
 projectile.cache
 elpaca/
+tutorial/
+url/
