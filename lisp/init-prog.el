@@ -56,4 +56,13 @@
 (use-package origami
   :hook (prog-mode . origami-mode))
 
+;; jump to definition
+(use-package dumb-jump
+  :bind
+  (:map prog-mode-map
+        (("C-c C-o" . dumb-jump-go-other-window)
+         ("C-c C-j" . dumb-jump-go)
+         ("C-c C-i" . dumb-jump-go-prompt)))
+  )
+
 (provide 'init-prog)

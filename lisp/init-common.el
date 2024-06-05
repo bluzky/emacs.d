@@ -25,5 +25,8 @@
     (add-to-list 'treesit-language-source-alist '(yaml "https://github.com/ikatyang/tree-sitter-yaml" "master" "src"))
   )
 
+;; typing game
+(use-package speed-type
+  :commands (speed-type-text))
 
 (provide 'init-common)
