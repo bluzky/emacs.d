@@ -18,9 +18,9 @@
   ;;                                   ))
   :config
   (setq highlight-indent-guides-method 'character)
-  (set-face-background 'highlight-indent-guides-odd-face "darkgray")
-  (set-face-background 'highlight-indent-guides-even-face "dimgray")
-  (set-face-foreground 'highlight-indent-guides-character-face "gray90")
+  ;; (set-face-background 'highlight-indent-guides-odd-face "darkgray")
+  ;; (set-face-background 'highlight-indent-guides-even-face "dimgray")
+  ;; (set-face-foreground 'highlight-indent-guides-character-face "gray90")
   )
 
 ;; Flycheck

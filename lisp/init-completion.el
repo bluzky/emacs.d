@@ -106,6 +106,12 @@
          ("C-q" . 'vertico-quick-exit))
   )
 
+;; (use-package vertico-posframe
+;;   :after vertico
+;;   :config
+;;   (vertico-posframe-mode 1)
+;;   )
+
 ;; Enable richer annotations using the Marginalia package
 (use-package marginalia
   :after vertico
@@ -134,8 +140,7 @@
          ([remap imenu]              . consult-imenu)
          ([remap isearch-forward]    . consult-line)
          ([remap recentf-open-files] . consult-recent-file)
-         ("C-x b" . consult-project-buffer)                ;; orig. switch-to-buffe
-         ("C-x B" . consult-buffer)                ;; orig. switch-to-buffe
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffe
          ;; Other custom bindings
          ("M-y" . consult-yank-pop)                ;; orig. yank-pop
 
@@ -193,7 +198,7 @@
                                (or (thing-at-point 'symbol t) "")))
                           ""))
          (default-directory
-           (or initial-directory (read-directory-name "Start from directory: "))))
+          (or initial-directory (read-directory-name "Start from directory: "))))
     (consult-ripgrep default-directory initial-input)))
 
 (defun me/search-project ()

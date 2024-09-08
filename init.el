@@ -17,6 +17,7 @@
 (require 'init-term)
 (require 'init-whichkey)
 (require 'init-ai)
+(require 'init-utils)
 
 ;; programming language
 (require 'init-prog)
@@ -24,7 +25,7 @@
 (require 'init-elixir)
 (require 'init-typescript)
 (require 'init-web)
-(require 'init-go)
-(require 'init-writing)
+;; (require 'init-go)
+;; (require 'init-writing)
 
 (provide 'init)

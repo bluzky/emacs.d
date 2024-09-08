@@ -11,7 +11,7 @@
 (use-package
   typescript-ts-mode
   :ensure nil
-  :mode ("\\.ts\\'" "\\.tsx\\'")
+  :mode ("\\.ts\\'" "\\.tsx\\'" "\\.js\\'" "\\.jsx\\'")
   :hook (typescript-ts-mode . eglot-ensure)
   (before-save . eglot-format)
   ;; (typescript-ts-mode .(lambda () (setq ian/indent-width 2)))
