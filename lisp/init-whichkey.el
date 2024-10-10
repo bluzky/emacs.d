@@ -115,12 +115,10 @@
    "ob" '("bookmark" . list-bookmarks)
 
    "l" '("Open link" . (keymap))
-   "lg" '("Github opollo" . (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo")))
-   "ld" '("Djadmin" . (lambda () (interactive) (browse-url "https://djadmin.onpoint.vn/")))
-   "la" '("Admin" . (lambda () (interactive) (browse-url "https://admin.onpoint.vn/")))
-   "ll" '("Logging" . (lambda () (interactive) (browse-url "https://logging.onpoint.vn/")))
-   "lk" '("Local kk" . (lambda () (interactive) (browse-url "http://localhost:5200/api-docs")))
+   "la" '("Github action" . (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo/actions")))
+   "lp" '("My PRs" . (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo/pulls?q=sort%3Aupdated-desc+is%3Apr+is%3Aopen+author%3Abluzky")))
    "ls" '("Ducduck go" . (lambda () (interactive) (browse-url "https://duckduckgo.com")))
+
 
    "w" '("Window/tab" . (keymap))
    "wt" '("switch tab" . tab-switch)

@@ -48,21 +48,40 @@
   (unless (treesit-language-available-p (car source))
     (treesit-install-language-grammar (car source))))
 
-(use-package eglot
-  :ensure nil)
+;; (use-package eglot
+;;   :ensure nil)
 
+;; (use-package eglot-booster
+;;   :quelpa (eglot-booster :fetcher github :repo "jdtsmith/eglot-booster")
+;;   :after eglot
+;;   :config	(eglot-booster-mode))
+
+;; lSP bridge
+(unless (package-installed-p 'yasnippet)
+  (package-install 'yasnippet))
+
+(use-package lsp-bridge
+  :quelpa (lsp-bridge :fetcher github :repo "manateelazycat/lsp-bridge"
+                      :files ("*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources"))
+  :init
+  (global-lsp-bridge-mode)
+  :custom
+  (lsp-bridge-elixir-lsp-server 'lexical)
+  (lsp-bridge-get-project-path-by-filepath #'lsp-bridge-get-project-path-by-filepath)
+  :config
+  (defun lsp-bridge-get-project-path-by-filepath (filename)
+    (if-let ((project (project-current filename)))
+        (expand-file-name (project-root project))))
+  )
+
+(unless (display-graphic-p)
+  (quelpa '(popon :fetcher git :url "https://codeberg.org/akib/emacs-popon.git"))
+  (quelpa '(acm-terminal :fetcher github :repo "twlz0ne/acm-terminal")))
+
+;; ---
 
 ;; code folding
 (use-package origami
   :hook (prog-mode . origami-mode))
-
-;; jump to definition
-(use-package dumb-jump
-  :bind
-  (:map prog-mode-map
-        (("C-c C-o" . dumb-jump-go-other-window)
-         ("C-c C-j" . dumb-jump-go)
-         ("C-c C-i" . dumb-jump-go-prompt)))
-  )
 
 (provide 'init-prog)

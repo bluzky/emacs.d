@@ -1,10 +1,12 @@
 ;; (use-package evil-mc :after evil :config (global-evil-mc-mode 1))
-
 (use-package evil-mc
   :after evil
-  :hook
-  (prog-mode . turn-on-evil-mc-mode)
-  (text-mode . turn-on-evil-mc-mode)
+  ;; :hook
+  ;; (prog-mode . turn-on-evil-mc-mode)
+  ;; (text-mode . turn-on-evil-mc-mode)
+  :init
+  (global-evil-mc-mode 1)
+
   :pretty-hydra
   ((:quit-key "q" :color "red" :idle 0.5)
    ("Match symbol"
