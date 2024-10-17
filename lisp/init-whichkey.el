@@ -7,6 +7,8 @@
 (global-set-key (kbd "C-x C-z") nil)
 (global-set-key (kbd "M-/") nil)
 
+(require 'functions)
+
 (use-package which-key
   :diminish which-key-mode
   :hook (after-init . which-key-mode)
@@ -18,9 +20,9 @@
         which-key-allow-multiple-replacements t
         which-key-echo-keystrokes 0.02
         which-key-max-description-length 32
-        which-key-max-display-columns 4 
+        which-key-max-display-columns 4
         which-key-min-display-lines 4
-        which-key-separator " : " 
+        which-key-separator " : "
         which-key-prevent-C-h-from-cycling t
         which-key-sort-order 'which-key-prefix-then-key-order
         which-key-sort-uppercase-first nil
@@ -39,6 +41,8 @@
    ;; File
    "f" '("File" . (keymap))
    "ff" '("Find in project" . project-find-file)
+   "fF" '("Find file at point" . me/find-file-at-point-with-line)
+   "fg" '("Find file with line" . me/find-file-with-line)
    "fr" '("Recent files" . consult-recent-file)
    "fD" '("Delete" . me/delete-buffer-file)
    "fR" '("Rename" . rename-visited-file)
@@ -51,7 +55,7 @@
    "as" '("GPT summarize" . org-ai-summarize)
    "ax" '("GPT explain code" . org-ai-explain-code)
    "af" '("GPT refactor code" . org-ai-refactor-code)
-   
+
    ;;  Buffer
    "b" '("Buffer" . (keymap))
    ;; "bs" '("Save" . save-buffer)
@@ -118,6 +122,9 @@
    "la" '("Github action" . (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo/actions")))
    "lp" '("My PRs" . (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo/pulls?q=sort%3Aupdated-desc+is%3Apr+is%3Aopen+author%3Abluzky")))
    "ls" '("Ducduck go" . (lambda () (interactive) (browse-url "https://duckduckgo.com")))
+
+   "x" '("Extra/execute" . (keymap))
+   "xm" '("Macro" . consult-kmacro)
 
 
    "w" '("Window/tab" . (keymap))

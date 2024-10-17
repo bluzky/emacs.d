@@ -24,18 +24,6 @@
   :config
   (xclip-mode 1))
 
-
-
-(use-package projection
-  :hook (after-init . global-projection-hook-mode)
-  ;; Require projections immediately after project.el.
-  :config
-  (with-eval-after-load 'project
-    (require 'projection))
-  :bind-keymap
-  ("C-x P" . projection-map)
-  )
-
 ;; Don’t bother confirming killing processes and don’t let backup~ files scatter around.
 (use-package files
   :ensure nil

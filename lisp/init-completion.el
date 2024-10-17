@@ -204,7 +204,9 @@
 (defun me/search-project ()
   "Search in current project."
   (interactive)
-  (me/ripgrep-search t (project-root (projection--current-project))))
+    (let* ((pr (project-current t))
+         (root (project-root pr)))
+  (me/ripgrep-search t root)))
 
 (defun me/search-dir ()
   "Choose folder to search."

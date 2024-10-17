@@ -66,6 +66,9 @@
   :init
   (global-lsp-bridge-mode)
   :custom
+  (acm-enable-copilot t)
+  ;; (lsp-bridge-enable-auto-format-code t)
+  ;; (lsp-bridge-auto-format-code-idle 3)
   (lsp-bridge-elixir-lsp-server 'lexical)
   (lsp-bridge-get-project-path-by-filepath #'lsp-bridge-get-project-path-by-filepath)
   :config
@@ -73,6 +76,10 @@
     (if-let ((project (project-current filename)))
         (expand-file-name (project-root project))))
   )
+
+
+(use-package format-all
+  :hook (elixir-ts-mode . format-all-mode))
 
 (unless (display-graphic-p)
   (quelpa '(popon :fetcher git :url "https://codeberg.org/akib/emacs-popon.git"))

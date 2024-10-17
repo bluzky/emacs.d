@@ -1,4 +1,3 @@
-
 ;; -- COPILOT --
 
 
@@ -26,11 +25,11 @@ tab-indent."
         (indent-for-tab-command)))
 
   (define-key copilot-completion-map (kbd "TAB") 'me/copilot-tab)
-  
+
   :hook
   (prog-mode . copilot-mode)
   (magit-mode . copilot-mode))
-  
+
 
 ;; (use-package codeium
 ;;   :quelpa (codeium :fetcher github
@@ -98,13 +97,13 @@ tab-indent."
 ;;   (tabnine-start-process)
 ;;   :bind
 ;;   (:map  tabnine-completion-map
-;; 	 ("<tab>" . tabnine-accept-completion)
-;; 	 ("TAB" . tabnine-accept-completion)
-;; 	 ("M-f" . tabnine-accept-completion-by-word)
-;; 	 ("M-<return>" . tabnine-accept-completion-by-line)
-;; 	 ("C-g" . tabnine-clear-overlay)
-;; 	 ("M-[" . tabnine-previous-completion)
-;; 	 ("M-]" . tabnine-next-completion)))
+;;   ("<tab>" . tabnine-accept-completion)
+;;   ("TAB" . tabnine-accept-completion)
+;;   ("M-f" . tabnine-accept-completion-by-word)
+;;   ("M-<return>" . tabnine-accept-completion-by-line)
+;;   ("C-g" . tabnine-clear-overlay)
+;;   ("M-[" . tabnine-previous-completion)
+;;   ("M-]" . tabnine-next-completion)))
 
 ;; (use-package ellama
 ;;   :init
@@ -112,13 +111,11 @@ tab-indent."
 ;;   (setopt ellama-keymap-prefix "C-c e")
 ;;   ;; (require 'llm-ollama)
 ;;   ;; (setopt ellama-provider
-;; 	;;   (make-llm-ollama
-;; 	;;    ;; this model should be pulled to use it
-;; 	;;    ;; value should be the same as you print in terminal during pull
-;; 	;;    :chat-model "rouge/yi-coder-9b-chat"
-;; 	;;    :default-chat-non-standard-params '(("num_ctx" . 8192))))
+;;  ;;   (make-llm-ollama
+;;  ;;    ;; this model should be pulled to use it
+;;  ;;    ;; value should be the same as you print in terminal during pull
+;;  ;;    :chat-model "rouge/yi-coder-9b-chat"
+;;  ;;    :default-chat-non-standard-params '(("num_ctx" . 8192))))
 ;;   )
 
 (provide 'init-copilot)
-
-
