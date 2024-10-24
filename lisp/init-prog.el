@@ -100,6 +100,10 @@
   (quelpa '(popon :fetcher git :url "https://codeberg.org/akib/emacs-popon.git"))
   (quelpa '(acm-terminal :fetcher github :repo "twlz0ne/acm-terminal")))
 
+
+;; quick evaluate code
+(use-package quickrun)
+
 ;; ---
 
 ;; code folding

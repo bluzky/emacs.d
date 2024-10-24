@@ -50,11 +50,13 @@
 
    ;; Ask/AI
    "a" '("Search/AI" . (keymap))
-   "ag" '("GPT prompt" . org-ai-prompt)
-   "ar" '("GPT region" . org-ai-on-region)
-   "as" '("GPT summarize" . org-ai-summarize)
-   "ax" '("GPT explain code" . org-ai-explain-code)
-   "af" '("GPT refactor code" . org-ai-refactor-code)
+   "ae" '("Explain" . copilot-chat-explain)
+   "ar" '("Review" . copilot-chat-review)
+   "ad" '("Document" . copilot-chat-doc)
+   "ac" '("Copilot chat" . copilot-chat-display)
+   "ao" '("CC Optimize" . copilot-chat-optimize)
+   "aa" '("CC add buffer" . copilot-chat-add-current-buffer)
+   "aD" '("CC delete buffer" . copilot-chat-delete-current-buffer)
 
    ;;  Buffer
    "b" '("Buffer" . (keymap))
@@ -67,12 +69,14 @@
    "bt" '("Open in new tab" . tab-new)
 
    ;; Code
-   "v" '("Code" . (keymap))
-   "vf" '("Format buffer" . eglot-format-buffer)
-   "va" '("Code action" . eglot-code-actions)
-   "vi" '("Function outline" . imenu-list-smart-toggle)
-   "ve" '("next error" . flymake-goto-next-error)
-   "vE" '("previous error" . flymake-goto-prev-error)
+   "c" '("Code" . (keymap))
+   "cf" '("Format buffer" . lsp-bridge-code-action)
+   "ca" '("Code action" . lsp-bridge-code-action)
+   "cx" '("Execute code" . quickrun)
+   "cX" '("Execute code region" . quickrun-region)
+   "ci" '("Function outline" . imenu-list-smart-toggle)
+   "ce" '("next error" . flymake-goto-next-error)
+   "cE" '("previous error" . flymake-goto-prev-error)
 
    ;; Jump
    "j" '("Jump" . (keymap))

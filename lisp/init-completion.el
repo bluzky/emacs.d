@@ -222,9 +222,16 @@
 ;;   :bind ("M-g s" . consult-flyspell))
 
 (use-package yasnippet
+  :hook
+  ;; set yasnippet for prog-mode as minor mode.
+  (prog-mode . yas-minor-mode)
   :config
-  (yas-global-mode t)
+  ;; (yas-global-mode t)
+  (yas-reload-all)
+  ;; user snippets directory
+  (setq-default yas-snippet-dirs '("~/.emacs.d/snippets"))
   )
+
 (use-package yasnippet-snippets)
 
 ;; yasnippet support for consult
