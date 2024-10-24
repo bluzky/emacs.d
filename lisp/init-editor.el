@@ -16,6 +16,10 @@
 
   ;; auto select help window
   (setq help-window-select t)
+
+  ;; prefer vertical split
+  (setq split-height-threshold nil)
+  (setq split-width-threshold 0)
   )
 
 
@@ -88,13 +92,10 @@
 ;; move line up/down, duplicate line/region
 (use-package move-dup
   :bind (("M-<up>" . move-dup-move-lines-up)
-         ("M-<down>" . move-dup-move-lines-down)
-         ("C-c D" . move-dup-duplicate-up)
-         ("C-c d" . move-dup-duplicate-down)))
+         ("M-<down>" . move-dup-move-lines-down)))
 
 
 ;; custom functions
-
 (defun me/delete-buffer-file ()
   "Kill the current buffer and deletes the file it is visiting."
   (interactive)
@@ -109,5 +110,23 @@
 
 (use-package expand-region
   :bind ("C-=" . er/expand-region))
+
+;; (use-package blamer
+;;   :quelpa (blamer :fetcher github :repo "artawower/blamer.el")
+;;   :bind (("s-i" . blamer-show-commit-info)
+;;          ("C-c i" . blamer-show-posframe-commit-info))
+;;   :custom
+;;   (blamer-idle-time 0.3)
+;;   (blamer-min-offset 70)
+;;   :custom-face
+;;   (blamer-face ((t :background nil
+;;                     :height 140
+;;                     :italic t)))
+;;   :config
+;;   (global-blamer-mode 1))
+
+;; (use-package color-rg
+;;   :quelpa (color-rg :fetcher github :repo "manateelazycat/color-rg")
+;;   )
 
 (provide 'init-editor)

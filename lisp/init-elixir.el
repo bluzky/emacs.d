@@ -19,10 +19,4 @@
   ;; (add-to-list 'eglot-server-programs '((heex-ts-mode elixir-ts-mode elixir-mode) . ("start_lexical.sh")))
   )
 
-(add-hook 'before-save-hook (lambda()
-                              (message "before-save-hook")
-                                (lsp-bridge-code-format)
-                              (message "before-save-hook done")
-                              ))
-
 (provide 'init-elixir)

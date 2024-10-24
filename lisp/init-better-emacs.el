@@ -1,4 +1,3 @@
-
 ;; Override Evil key binding
 (defun better-key-bindings()
   (define-key evil-insert-state-map (kbd "C-e") 'move-end-of-line)
@@ -10,6 +9,8 @@
   (define-key evil-insert-state-map (kbd "M-d") 'kill-word)
   (define-key evil-insert-state-map (kbd "C-w") 'kill-region)
   (define-key evil-insert-state-map (kbd "C-@") 'set-mark-command)
+  (define-key evil-insert-state-map (kbd "C-o") 'evil-open-below)
+  (define-key evil-insert-state-map (kbd "C-S-o") 'evil-open-above)
   )
 
 ;; The Emacs default split doesn't seem too intuitive for most users.

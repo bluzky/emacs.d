@@ -18,6 +18,7 @@
 (require 'init-whichkey)
 (require 'init-ai)
 (require 'init-utils)
+(require 'my-macros)
 
 ;; programming language
 (require 'init-prog)

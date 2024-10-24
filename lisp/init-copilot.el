@@ -31,6 +31,14 @@ tab-indent."
   (magit-mode . copilot-mode))
 
 
+(use-package copilot-chat
+  :after (request)
+  :bind (:map prog-mode-map
+              ("C-c C-c" . copilot-chat-ask-and-insert))
+  :custom
+  (copilot-chat-backend 'request)
+  (copilot-chat-frontend 'markdown))
+
 ;; (use-package codeium
 ;;   :quelpa (codeium :fetcher github
 ;;                    :repo "Exafunction/codeium.el"

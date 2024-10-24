@@ -27,8 +27,8 @@
 ;; A modern on-the-fly syntax checking extension – absolute essential
 (use-package flycheck
   :hook (prog-mode . flycheck-mode))
-  ;; :config
-  ;; (global-flycheck-mode +1))
+;; :config
+;; (global-flycheck-mode +1))
 
 (use-package imenu-list
   :bind
@@ -63,14 +63,29 @@
 (use-package lsp-bridge
   :quelpa (lsp-bridge :fetcher github :repo "manateelazycat/lsp-bridge"
                       :files ("*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources"))
+  :bind (:map evil-normal-state-map
+              ("gd" . lsp-bridge-find-def)
+              ("gD" . lsp-bridge-find-def-other-window)
+              ("gr" . lsp-bridge-find-references)
+              ("K" . lsp-bridge-show-documentation))
+  :hook
+  (gfm-view-mode . (lambda ()
+                     (evil-define-key* '(normal visual) gfm-view-mode-map
+                       (kbd "q") '(lambda()
+                                    (interactive)
+                                     (kill-current-buffer)
+                                     (ace-delete-window))
+                       )))
   :init
   (global-lsp-bridge-mode)
   :custom
-  (acm-enable-copilot t)
-  ;; (lsp-bridge-enable-auto-format-code t)
-  ;; (lsp-bridge-auto-format-code-idle 3)
   (lsp-bridge-elixir-lsp-server 'lexical)
   (lsp-bridge-get-project-path-by-filepath #'lsp-bridge-get-project-path-by-filepath)
+  (acm-enable-search-file-words nil)
+  (acm-enable-tabnine nil)
+  (acm-enable-copilot nil)
+  (acm-enable-citre nil)
+
   :config
   (defun lsp-bridge-get-project-path-by-filepath (filename)
     (if-let ((project (project-current filename)))
@@ -79,7 +94,7 @@
 
 
 (use-package format-all
-  :hook (elixir-ts-mode . format-all-mode))
+  :hook (prog-mode . format-all-mode))
 
 (unless (display-graphic-p)
   (quelpa '(popon :fetcher git :url "https://codeberg.org/akib/emacs-popon.git"))
