@@ -19,7 +19,7 @@
 
   ;; prefer vertical split
   (setq split-height-threshold nil)
-  (setq split-width-threshold 0)
+  (setq split-width-threshold 81)
   )
 
 
