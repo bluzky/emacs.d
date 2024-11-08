@@ -115,7 +115,7 @@
    "sP" '("Search project with input" . me/search-project)
    "sf" '("Search dir" . me/search-dir)
    "sF" '("Search dir with input" . me/search-dir-with-input)
-   "sr" '("Resume last search" . vertico-repeat-last)
+   "sr" '("Resume last search" . vertico-repeat)
    "sw" '("Search web" . me/search-web)
 
    "o" '("Open" . (keymap))

@@ -26,14 +26,13 @@
    :map gptel-mode-map
   ("C-<return>" . gptel-send))
   :config
-  (setq gptel-model "gemini-pro"
-        gptel-backend (gptel-make-gemini "Gemini"
+  (gptel-make-gemini "Gemini"
                  :key ai-gemini-api-key
-                 :stream t))
- ;;  (setq
- ;; gptel-model 'claude-3-sonnet-20240229 ;  "claude-3-opus-20240229" also available
- ;; gptel-backend (gptel-make-anthropic "Claude"
- ;;                 :stream t :key ai-anthropic-api-key))
+                 :stream t)
+  (setq
+ gptel-model 'claude-3-5-sonnet-20241022 ;  "claude-3-opus-20240229" also available
+ gptel-backend (gptel-make-anthropic "Claude"
+                 :stream t :key ai-anthropic-api-key))
   )
 
 (use-package elysium
