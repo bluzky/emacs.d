@@ -27,38 +27,45 @@
 ;; This package extends on gptel.el.  It uses that package to generate code
 ;; suggestions based on the user's request.  Those code suggestions will then
 ;; automatically be applied to the buffer in the format of a git merge.
+;; After applying changes, it enters smerge-mode and provides a transient menu
+;; to approve, reject, or retry with a new query.
 
 ;;; Code:
 (require 'gptel)
 (require 'smerge-mode)
+(require 'transient)
 
 (defgroup elysium nil
   "Apply code changes using gptel."
   :group 'hypermedia)
-
-(defcustom elysium-window-size 0.33
-  "Size of the elysium chat window as a fraction of the frame.
-Must be a number between 0 and 1, exclusive."
-  :type 'float
-  :group 'elysium
-  :set (lambda (symbol value)
-         (if (and (numberp value)
-                  (< 0 value 1))
-             (set-default symbol value)
-           (user-error "Elysium-window-size must be a number between 0 and 1, exclusive"))))
-
-(defcustom elysium-window-style 'vertical
-  "Specify the orientation.  It can be \='horizontal, '\=vertical, or nil."
-  :type '(choice (const :tag "Horizontal" horizontal)
-                 (const :tag "Vertical" vertical)
-                 (const :tag "None" nil)))
 
 (defcustom elysium-apply-changes-hook nil
   "Hook run after code changes have been applied on a buffer."
   :group 'elysium
   :type 'hook)
 
-(defvar elysium--chat-buffer nil)
+(defcustom elysium-save-history t
+  "Whether to save query and response history."
+  :group 'elysium
+  :type 'boolean)
+
+(defcustom elysium-history-file (expand-file-name "elysium-history.el" user-emacs-directory)
+  "File to save Elysium interaction history."
+  :group 'elysium
+  :type 'file)
+
+(defvar elysium--chat-buffer nil
+  "Buffer used for LLM interaction.")
+
+(defvar elysium--last-query nil
+  "The last query sent to the LLM.")
+
+(defvar elysium--last-code-buffer nil
+  "The buffer that was last modified by Elysium.")
+
+(defvar elysium--history nil
+  "History of queries and responses.
+Each entry is a plist with :query, :code-buffer, :changes properties.")
 
 (defvar elysium-base-prompt
   (concat
@@ -111,105 +118,57 @@ Must be a number between 0 and 1, exclusive."
 
    "Remember: Accurate line numbers are CRITICAL. The range start_line to end_line must include ALL lines to be replaced, from the very first to the very last. Double-check every range before finalizing your response, paying special attention to the start_line to ensure it hasn't shifted down. Ensure that your line numbers perfectly match the original code structure without any overall shift.\n"))
 
-(defun elysium-toggle-window ()
-  "Toggle the elysium chat window."
-  (interactive)
-  (if (and (buffer-live-p elysium--chat-buffer)
-           (get-buffer-window elysium--chat-buffer))
-      (delete-window (get-buffer-window elysium--chat-buffer))
-
-    (elysium-setup-windows)))
-
-(defun elysium-setup-windows ()
-  "Set up the coding assistant layout with the chat window."
-  (unless (buffer-live-p elysium--chat-buffer)
-    (setq elysium--chat-buffer
-          (gptel "*elysium*")))
-
-  (when elysium-window-style
-    (delete-other-windows)
-
-    (let* ((main-buffer (current-buffer))
-           (main-window (selected-window))
-           (split-size (floor (* (if (eq elysium-window-style 'vertical)
-                                     (frame-width)
-                                   (frame-height))
-                                 (- 1 elysium-window-size)))))
-      (with-current-buffer elysium--chat-buffer)
-      (if (eq elysium-window-style 'vertical)
-          (split-window-right split-size)
-        (split-window-below split-size))
-      (set-window-buffer main-window main-buffer)
-      (other-window 1)
-      (set-window-buffer (selected-window) elysium--chat-buffer))))
-
 ;;;###autoload
 (defun elysium-query (user-query)
-  "Send USER-QUERY to elysium from the current buffer or chat buffer."
-  (interactive
-   (list
-    (if (eq (current-buffer) elysium--chat-buffer)
-        nil ; We'll extract the query from the chat buffer
-      (read-string "User Query: "))))
+  "Send USER-QUERY to elysium from the current buffer."
+  (interactive (list (read-string "User Query: ")))
   (unless (buffer-live-p elysium--chat-buffer)
-    (elysium-setup-windows))
-  (let* ((in-chat-buffer (eq (current-buffer) elysium--chat-buffer))
-         (code-buffer (if in-chat-buffer
-                          (window-buffer (next-window))
-                        (current-buffer)))
+    (setq elysium--chat-buffer (gptel "*elysium*")))
+
+  (let* ((code-buffer (current-buffer))
          (chat-buffer elysium--chat-buffer)
-         (extracted-query
-          (when in-chat-buffer
-            (elysium-parse-user-query chat-buffer)))
-         (final-user-query (or user-query extracted-query
-                               (user-error "No query provided")))
-         (start-pos (with-current-buffer code-buffer
-                      (if (use-region-p)
-                          (save-excursion
-                            (goto-char (region-beginning))
-                            ;; Always record from the beginning of the line
-                            (beginning-of-line)
-                            (point))
-                        (point-min))))
-         (end-pos (with-current-buffer code-buffer
-                    (if (use-region-p)
-                        (let ((start-of-line-p
-                               (let ((current-point (region-end)))
-                                 (save-excursion
-                                   (goto-char (region-end))
-                                   (beginning-of-line)
-                                   (equal current-point (line-beginning-position))))))
-                          ;; Always record to the end of the line
-                          (save-excursion
-                            (goto-char (region-end))
-                            (when start-of-line-p (forward-line -1))
-                            (end-of-line)
-                            (point)))
-                      (point-max))))
-         (start-line (with-current-buffer code-buffer
-                       (line-number-at-pos start-pos)))
-         (end-line (with-current-buffer code-buffer
-                     (line-number-at-pos end-pos)))
-         (selected-code (with-current-buffer code-buffer
-                          (buffer-substring-no-properties start-pos end-pos)))
-         (file-type (with-current-buffer code-buffer
-                      (symbol-name major-mode)))
+         (start-pos (if (use-region-p)
+                        (save-excursion
+                          (goto-char (region-beginning))
+                          ;; Always record from the beginning of the line
+                          (beginning-of-line)
+                          (point))
+                      (point-min)))
+         (end-pos (if (use-region-p)
+                      (let ((start-of-line-p
+                             (let ((current-point (region-end)))
+                               (save-excursion
+                                 (goto-char (region-end))
+                                 (beginning-of-line)
+                                 (equal current-point (line-beginning-position))))))
+                        ;; Always record to the end of the line
+                        (save-excursion
+                          (goto-char (region-end))
+                          (when start-of-line-p (forward-line -1))
+                          (end-of-line)
+                          (point)))
+                    (point-max)))
+         (start-line (line-number-at-pos start-pos))
+         (end-line (line-number-at-pos end-pos))
+         (selected-code (buffer-substring-no-properties start-pos end-pos))
+         (file-type (symbol-name major-mode))
          (full-query (format "\n\nFile type: %s\nLine range: %d-%d\n\nCode:\n%s\n\n%s"
                              file-type
                              start-line
                              end-line
                              selected-code
-                             final-user-query)))
+                             user-query)))
+
+    (setq elysium--last-query user-query)
+    (setq elysium--last-code-buffer code-buffer)
 
     (gptel--update-status " Waiting..." 'warning)
     (message "Querying %s..." (gptel-backend-name gptel-backend))
     (deactivate-mark)
-    (save-excursion
-      (with-current-buffer chat-buffer
-        (goto-char (point-max))
-        (unless in-chat-buffer
-          (insert final-user-query))
-        (insert "\n\n")))
+    (with-current-buffer chat-buffer
+      (goto-char (point-max))
+      (insert user-query)
+      (insert "\n\n"))
 
     (gptel-request full-query
       :system elysium-base-prompt
@@ -222,20 +181,30 @@ The changes will be applied to CODE-BUFFER in a git merge format.
 INFO is passed into this function from the `gptel-request' function."
   (when response
     (let* ((extracted-data (elysium-extract-changes response))
-           (changes (plist-get extracted-data :changes))
-           (explanations (plist-get extracted-data :explanations)))
+           (changes (plist-get extracted-data :changes)))
 
       (when changes
-        (elysium-apply-code-changes code-buffer changes))
+        ;; Add to history
+        (when elysium-save-history
+          (push (list :query elysium--last-query
+                      :code-buffer (buffer-name code-buffer)
+                      :changes changes
+                      :timestamp (current-time))
+                elysium--history)
+          (elysium--save-history))
 
-      ;; Insert explanations into chat buffer
+        ;; Apply changes
+        (elysium-apply-code-changes code-buffer changes)
+
+        ;; Activate smerge mode and show transient menu
+        (with-current-buffer code-buffer
+          (smerge-mode 1)
+          (goto-char (point-min))
+          (ignore-errors (smerge-next))
+          (elysium-transient-menu)))
+
+      ;; Update status
       (with-current-buffer elysium--chat-buffer
-        (dolist (explanation explanations)
-          (let ((explanation-info (list :buffer (plist-get info :buffer)
-                                        :position (point-max-marker)
-                                        :in-place t)))
-            (gptel--insert-response (string-trim explanation) explanation-info)))
-
         (gptel--sanitize-model)
         (gptel--update-status " Ready" 'success)))))
 
@@ -317,52 +286,26 @@ subsequent inserted lines will need to be offset by
             (setq offset (+ offset 3 (length new-lines)))))))
     (run-hooks 'elysium-apply-changes-hook)))
 
-;; TODO this could probably be replaced with something already in gptel
-(defun elysium-parse-user-query (buffer)
-  "Parse and extract the most recent user query from BUFFER.
-The query is expected to be after the last '* ' (org-mode) or
- '### ' (markdown-mode) heading.  Returns nil if no query is found."
-  (with-current-buffer buffer
-    (save-excursion
-      (goto-char (point-max))
-      (let ((case-fold-search t)
-            (heading-regex (if (derived-mode-p 'org-mode)
-                               "^\\*\\*\\* "
-                             "^### ")))
-        (when (re-search-backward heading-regex nil t)
-          (let ((query-text (buffer-substring-no-properties (point) (point-max))))
-            (string-trim query-text)))))))
-
 (defun elysium-clear-buffer ()
-  "Switch to the elysium buffer and clear it."
+  "Clear the elysium buffer."
   (interactive)
-  (unless (eq (current-buffer) (get-buffer elysium--chat-buffer))
-    (elysium-setup-windows))
   (with-current-buffer elysium--chat-buffer
     (erase-buffer)
     (insert (gptel-prompt-prefix-string))))
 
-(defun elysium-add-context ()
-  "Add the selected region as context to the elysium chat buffer."
-  (interactive)
-  (let ((content (if (region-active-p)
-                     (buffer-substring-no-properties (region-beginning) (region-end))
-                   (buffer-substring-no-properties (point-min) (point-max))))
-        (code-buffer-language
+(defun elysium-add-context (content)
+  "Add CONTENT as context to the elysium chat buffer."
+  (interactive
+   (list (if (region-active-p)
+             (buffer-substring-no-properties (region-beginning) (region-end))
+           (buffer-substring-no-properties (point-min) (point-max)))))
+  (let ((code-buffer-language
          (string-trim-right
           (string-trim-right (symbol-name major-mode) "-ts-mode$") "-mode$")))
-    (elysium-setup-windows)
     (with-current-buffer elysium--chat-buffer
       (goto-char (point-max))
       (insert "\n")
-      (let ((src-pattern
-             (cond
-              ((derived-mode-p 'markdown-mode)
-               "```%s\n%s\n```")
-              ((derived-mode-p 'org-mode)
-               "#+begin_src %s\n%s\n#+end_src")
-              (t "%s%s"))))
-        (insert (format src-pattern code-buffer-language content))))))
+      (insert (format "```%s\n%s\n```" code-buffer-language content)))))
 
 (defun elysium-keep-all-suggested-changes ()
   "Keep all of the LLM suggestions."
@@ -371,7 +314,9 @@ The query is expected to be after the last '* ' (org-mode) or
     (goto-char (point-min))
     (ignore-errors (funcall #'smerge-keep-lower))
     (while (ignore-errors (not (smerge-next)))
-      (funcall #'smerge-keep-lower))))
+      (funcall #'smerge-keep-lower))
+    (smerge-mode -1)
+    (message "All suggested changes applied")))
 
 (defun elysium-discard-all-suggested-changes ()
   "Discard all of the LLM suggestions."
@@ -380,7 +325,52 @@ The query is expected to be after the last '* ' (org-mode) or
     (goto-char (point-min))
     (ignore-errors (funcall #'smerge-keep-upper))
     (while (ignore-errors (not (smerge-next)))
-      (funcall #'smerge-keep-upper))))
+      (funcall #'smerge-keep-upper))
+    (smerge-mode -1)
+    (message "All suggested changes discarded")))
+
+(defun elysium-navigate-next-change ()
+  "Navigate to the next change suggestion."
+  (interactive)
+  (if (ignore-errors (smerge-next))
+      (message "Navigated to next change")
+    (message "No more changes")))
+
+(defun elysium-navigate-prev-change ()
+  "Navigate to the previous change suggestion."
+  (interactive)
+  (if (ignore-errors (smerge-prev))
+      (message "Navigated to previous change")
+    (message "No more changes")))
+
+(defun elysium-keep-current-change ()
+  "Keep the current suggested change and move to the next one."
+  (interactive)
+  (smerge-keep-lower)
+  (if (ignore-errors (not (smerge-next)))
+      (progn
+        (message "All changes reviewed - no more conflicts")
+        (smerge-mode -1))
+    (message "Applied change - move to next")))
+
+(defun elysium-reject-current-change ()
+  "Reject the current suggested change and move to the next one."
+  (interactive)
+  (smerge-keep-upper)
+  (if (ignore-errors (not (smerge-next)))
+      (progn
+        (message "All changes reviewed - no more conflicts")
+        (smerge-mode -1))
+    (message "Rejected change - move to next")))
+
+(defun elysium-retry-query ()
+  "Retry the last query with modifications."
+  (interactive)
+  (let ((new-query (read-string "Modify query: " elysium--last-query)))
+    (when new-query
+      (with-current-buffer elysium--last-code-buffer
+        (elysium-discard-all-suggested-changes)
+        (elysium-query new-query)))))
 
 (defun elysium--ordinal (n)
   "Convert integer N to its ordinal string representation."
@@ -389,6 +379,68 @@ The query is expected to be after the last '* ' (org-mode) or
         (concat (number-to-string n) "th")
       (concat (number-to-string n)
               (nth (mod n 10) suffixes)))))
+
+(defun elysium--save-history ()
+  "Save interaction history to file."
+  (when elysium-save-history
+    (with-temp-file elysium-history-file
+      (prin1 (list :history elysium--history) (current-buffer)))))
+
+(defun elysium--load-history ()
+  "Load interaction history from file."
+  (when (and elysium-save-history
+             (file-exists-p elysium-history-file))
+    (with-temp-buffer
+      (insert-file-contents elysium-history-file)
+      (goto-char (point-min))
+      (let ((data (ignore-errors (read (current-buffer)))))
+        (when data
+          (setq elysium--history (plist-get data :history)))))))
+
+(defun elysium-show-history ()
+  "Show the history of Elysium interactions."
+  (interactive)
+  (elysium--load-history)
+  (if (not elysium--history)
+      (message "No history available")
+    (let ((buffer (get-buffer-create "*Elysium History*")))
+      (with-current-buffer buffer
+        (erase-buffer)
+        (insert "# Elysium Interaction History\n\n")
+        (dolist (entry elysium--history)
+          (let ((query (plist-get entry :query))
+                (buffer-name (plist-get entry :code-buffer))
+                (timestamp (plist-get entry :timestamp))
+                (changes (plist-get entry :changes)))
+            (insert (format "## %s - %s\n\n"
+                            (format-time-string "%Y-%m-%d %H:%M:%S" timestamp)
+                            buffer-name))
+            (insert (format "**Query:** %s\n\n" query))
+            (insert (format "**Number of changes:** %d\n\n" (length changes))))))
+      (switch-to-buffer buffer)
+      (goto-char (point-min))
+      (when (fboundp 'markdown-mode)
+        (markdown-mode)))))
+
+;; Define a transient menu for Elysium with compact layout
+(transient-define-prefix elysium-transient-menu ()
+  "Elysium actions menu."
+  [["Navigate"
+    ("n" "Next" elysium-navigate-next-change)
+    ("p" "Prev" elysium-navigate-prev-change)]
+   ["Current"
+    ("y" "Accept" elysium-keep-current-change)
+    ("N" "Reject" elysium-reject-current-change)]
+   ["All"
+    ("a" "Accept all" elysium-keep-all-suggested-changes)
+    ("d" "Discard all" elysium-discard-all-suggested-changes)]
+   ["Query"
+    ("r" "Retry" elysium-retry-query)
+    ("q" "New" elysium-query)
+    ("h" "History" elysium-show-history)]])
+
+;; Load history when package is loaded
+(add-hook 'after-init-hook #'elysium--load-history)
 
 (provide 'elysium)
 
