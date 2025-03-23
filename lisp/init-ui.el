@@ -19,6 +19,12 @@
   :config (column-number-mode +1))
 
 
+;; Auto change theme based on time
+(use-package auto-dark
+  :defer t
+  :custom
+  (auto-dark-themes '((doom-nord) (doom-solarized-light)))
+  :init (auto-dark-mode))
 
 ;; By default, the scrolling is way too fast to be precise and helpful, let’s tune it down a little bit.
 
@@ -51,7 +57,7 @@
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-  (load-theme 'doom-solarized-light t)
+  (load-theme 'doom-oksolar-light t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)

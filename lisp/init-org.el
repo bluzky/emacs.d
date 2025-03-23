@@ -43,7 +43,12 @@
              consult-notes-search-in-all-notes)
   :custom
   (consult-notes-file-dir-sources
-   `(("Denote" ?d ,org-directory))))
+   `(("denote" ?d ,org-directory)))
+  :config
+  (consult-notes-org-headings-mode)
+  (when (locate-library "denote")
+    (consult-notes-denote-mode))
+  )
 
 (use-package org
   :after
@@ -53,6 +58,8 @@
    ("C-c l" . org-store-link))
   :hook ((org-mode . visual-line-mode)
          (org-mode . org-indent-mode))
+  :init
+  (add-to-list 'org-src-lang-modes '("elixir" . elixr-ts))
   :custom
   (org-default-notes-file (concat org-directory "/Inbox.org"))
   (org-capture-bookmark nil)

@@ -47,6 +47,8 @@
    "fD" '("Delete" . me/delete-buffer-file)
    "fR" '("Rename" . rename-visited-file)
    "fS" '("Save as" . write-file)
+   "fy" '("Copy file path" . me/copy-buffer-relative-path)
+   "fY" '("Copy file path" . me/copy-buffer-abs-path)
 
    ;; Ask/AI
    "a" '("Search/AI" . (keymap))
@@ -70,7 +72,7 @@
 
    ;; Code
    "c" '("Code" . (keymap))
-   "cf" '("Format buffer" . lsp-bridge-code-action)
+   "cf" '("Format buffer" . lsp-bridge-code-format)
    "ca" '("Code action" . lsp-bridge-code-action)
    "cx" '("Execute code" . quickrun)
    "cX" '("Execute code region" . quickrun-region)
@@ -80,7 +82,7 @@
 
    ;; Jump
    "j" '("Jump" . (keymap))
-   "jd" '("Find definition" . xref-find-definitions)
+   "jd" '("Find definition" . citre-jump)
    "jr" '("Find references" . xref-find-references)
    "ji" '("Buffer's symbols" . consult-imenu)
    "jj" '("avy jump" . avy-goto-char-timer)

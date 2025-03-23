@@ -15,6 +15,18 @@
           (forward-line (1- line-number)))))))
 
 
+;; custom functions
+(defun me/delete-buffer-file ()
+  "Kill the current buffer and deletes the file it is visiting."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (if filename
+        (if (y-or-n-p (concat "Do you really want to delete file " filename " ?"))
+            (progn
+              (delete-file filename)
+              (message "Deleted file %s." filename)
+              (kill-buffer)))
+      (message "Not a file visiting buffer!"))))
 
 (defun me/find-file-at-point-with-line()
   "if file has an attached line num goto that line, ie boom.rb:12"
@@ -44,6 +56,24 @@
   (interactive (me/open-file-read-args "Find file: " nil))
   (find-file filepath))
 
+(defun me/copy-buffer-abs-path ()
+  "Copy the absolute file path of the current buffer to the kill ring."
+  (interactive)
+  (if-let ((file-path (buffer-file-name)))
+      (progn
+        (kill-new file-path)
+        (message "Copied file path: %s" file-path))
+    (message "Buffer is not associated with a file.")))
+
+(defun me/copy-buffer-relative-path ()
+  "Get the relative path of the current buffer file with respect to the project root."
+  (interactive)
+  (if-let ((file-path (buffer-file-name))
+          (project-root (project-root (project-current))))
+      (let ((relative-path (file-relative-name file-path project-root)))
+        (kill-new relative-path)
+        (message "Relative path copied: %s" relative-path))
+    (message "Buffer is not associated with a file or not in a project.")))
 
 (provide 'functions)
 ;;; functions.el ends here

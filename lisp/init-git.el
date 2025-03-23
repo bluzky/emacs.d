@@ -16,6 +16,8 @@
 (use-package smerge-mode
   :ensure nil
   :diminish
+  :hook
+  (prog-mode . smerge-mode)
   :pretty-hydra
   ((:color pink :quit-key ("q" "C-g"))
    ("Move"
@@ -44,15 +46,8 @@
              (bury-buffer))
       "Save and bury buffer" :exit t))))
   :bind (:map smerge-mode-map
-         ("C-c m" . smerge-mode-hydra/body))
-  :hook ((find-file . (lambda ()
-                        (save-excursion
-                          (goto-char (point-min))
-                          (when (re-search-forward "^<<<<<<< " nil t)
-                            (smerge-mode 1)))))
-         (magit-diff-visit-file . (lambda ()
-                                    (when smerge-mode
-                                      (smerge-mode-hydra/body))))))
+              ("C-c m" . smerge-mode-hydra/body))
+  )
 
 (defun me/visit-pull-request-url ()
   "Visit the current branch's PR on Github."

@@ -18,9 +18,17 @@
   (setq help-window-select t)
 
   ;; prefer vertical split
-  (setq split-height-threshold nil)
-  (setq split-width-threshold 81)
+  (setq split-height-threshold 60)
+  (setq split-width-threshold 106)
   )
+
+;; improve the default help system
+(use-package helpful
+  :ensure t
+  :bind (("C-h f" . helpful-callable)   ; Describe function
+         ("C-h v" . helpful-variable)   ; Describe variable
+         ("C-h k" . helpful-key)        ; Describe keybinding
+         ("C-h x" . helpful-command)))  ; Describe command
 
 
 ;; enable system clipboard
@@ -95,18 +103,6 @@
          ("M-<down>" . move-dup-move-lines-down)))
 
 
-;; custom functions
-(defun me/delete-buffer-file ()
-  "Kill the current buffer and deletes the file it is visiting."
-  (interactive)
-  (let ((filename (buffer-file-name)))
-    (if filename
-        (if (y-or-n-p (concat "Do you really want to delete file " filename " ?"))
-            (progn
-              (delete-file filename)
-              (message "Deleted file %s." filename)
-              (kill-buffer)))
-      (message "Not a file visiting buffer!"))))
 
 (use-package expand-region
   :bind ("C-=" . er/expand-region))
