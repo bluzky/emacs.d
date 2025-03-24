@@ -135,20 +135,12 @@
          (end-line (line-number-at-pos end-line-pos))
          (selected-code (buffer-substring-no-properties start-line-pos end-line-pos))
          (file-type (symbol-name major-mode))
-         ;; Get the indentation info for the selected region
-         (region-indent (when using-region
-                          (save-excursion
-                            (goto-char start-line-pos)
-                            (when (looking-at "^[ \t]+")
-                              (match-string-no-properties 0)))))
          ;; Include indentation info in the query
          (full-query (format "\n\nFile type: %s\nLine range: %d-%d\n%s\n\nCode:\n%s\n\n%s"
                              file-type
                              start-line
                              end-line
-                             (if region-indent
-                                 (format "Indentation: %d spaces\n" (length region-indent))
-                               "")
+                             ""
                              selected-code
                              user-query)))
 
@@ -156,7 +148,6 @@
     (setq elysium--last-code-buffer code-buffer)
 
     ;; Store region info for later use
-    (setq-local elysium--region-indent region-indent)
     (setq-local elysium--using-region using-region)
     (setq-local elysium--region-start-line start-line)
     (setq-local elysium--region-end-line end-line)
@@ -271,28 +262,16 @@ Explanations will be of the format:
           :changes (nreverse changes))))
 
 (defun elysium-apply-code-changes (buffer code-changes)
-  "Apply CODE-CHANGES to BUFFER in a git merge format with intelligent diffing.
-Uses line-by-line comparison to create more granular diffs that highlight
-only the specific changes rather than entire blocks.
-Preserves empty lines and indentation in the original and modified code."
-  (require 'diff-mode)
+  "Apply CODE-CHANGES to BUFFER in a git merge format.
+Uses simple conflict markers to highlight the differences between
+original and suggested code."
   (with-current-buffer buffer
     (save-excursion
-      (let ((offset 0)
-            (region-indent (and (boundp 'elysium--region-indent)
-                                (local-variable-p 'elysium--region-indent)
-                                elysium--region-indent))
-            (using-region (and (boundp 'elysium--using-region)
-                               (local-variable-p 'elysium--using-region)
-                               elysium--using-region)))
+      (let ((offset 0))
         (dolist (change code-changes)
           (let* ((start (plist-get change :start))
                  (end (plist-get change :end))
                  (new-code (string-trim-right (plist-get change :code)))
-                 ;; Apply indentation to new code if needed
-                 (indented-new-code (if (and using-region region-indent)
-                                        (elysium--apply-indentation new-code region-indent)
-                                      new-code))
                  (orig-code-start (progn
                                     (goto-char (point-min))
                                     (forward-line (1- (+ start offset)))
@@ -301,171 +280,27 @@ Preserves empty lines and indentation in the original and modified code."
                                   (goto-char (point-min))
                                   (forward-line (1- (+ end offset 1)))
                                   (point)))
-                 (orig-code (buffer-substring-no-properties orig-code-start orig-code-end))
-                 ;; Use split-string with OMIT-NULLS set to nil to preserve empty lines
-                 (orig-lines (split-string orig-code "\n" nil))
-                 (new-lines (split-string indented-new-code "\n" nil))
-                 (refined-diff (elysium--create-refined-diff orig-lines new-lines)))
+                 (orig-code (buffer-substring-no-properties orig-code-start orig-code-end)))
 
             ;; Delete the original code block
             (delete-region orig-code-start orig-code-end)
 
-            ;; Insert the refined diff
+            ;; Insert the conflict markers with original and new code
             (goto-char orig-code-start)
-            (insert refined-diff)
+            (insert (concat "<<<<<<< HEAD\n"
+                           orig-code
+                           "=======\n"
+                           new-code
+                           "\n>>>>>>> " (gptel-backend-name gptel-backend) "\n"))
 
-            ;; Update offset
-            (let* ((refined-lines (split-string refined-diff "\n" nil))
+            ;; Update offset - calculate how many lines we added/removed
+            (let* ((orig-lines (split-string orig-code "\n" t))
+                   (new-lines (split-string (concat new-code "\n") "\n" t))
+                   (marker-lines 3) ; <<<<<<< HEAD, =======, and >>>>>>>
                    (original-line-count (- end start 1))
-                   (refined-line-count (1- (length refined-lines))))
-              (setq offset (+ offset (- refined-line-count original-line-count))))))))
-    (run-hooks 'elysium-apply-changes-hook)))
-
-(defun elysium--apply-indentation (code indent)
-  "Apply INDENT to each line of CODE except the first line.
-This preserves the indentation level of a selected region."
-  (let ((lines (split-string code "\n" nil))
-        (result ""))
-    (dolist (line lines)
-      (if (string= result "")
-          ;; First line
-          (setq result line)
-        ;; Subsequent lines - add indentation
-        (setq result (concat result "\n" indent line))))
-    result))
-
-(defun elysium--create-refined-diff (orig-lines new-lines)
-  "Create a refined diff between ORIG-LINES and NEW-LINES.
-Returns a string with smerge conflict markers highlighting only the changes.
-Preserves empty lines in both original and modified code."
-  (let ((result "")
-        (in-diff-block nil)
-        (diff-lines (elysium--simple-diff orig-lines new-lines))
-        (head-section "")
-        (merge-section ""))
-
-    ;; Process each line for smarter diff presentation
-    (dolist (line-info diff-lines)
-      (let ((line (car line-info))
-            (status (cdr line-info)))
-        (cond
-         ;; Common lines - add once without conflict markers
-         ((eq status 'common)
-          (when in-diff-block
-            ;; Close previous diff block if there was one
-            (setq result (concat result
-                                 "<<<<<<< HEAD\n" head-section
-                                 "=======\n" merge-section
-                                 ">>>>>>> " (gptel-backend-name gptel-backend) "\n"))
-            (setq head-section "")
-            (setq merge-section "")
-            (setq in-diff-block nil))
-          ;; Add common line outside of conflict markers
-          (setq result (concat result line "\n")))
-
-         ;; Changed line in original (could be empty)
-         ((and (eq status 'changed) (not (consp line)))
-          (setq in-diff-block t)
-          (setq head-section (concat head-section line "\n")))
-
-         ;; Changed line in new version (could be empty)
-         ((and (eq status 'changed) (consp line))
-          (setq in-diff-block t)
-          (setq merge-section (concat merge-section (cdr line) "\n")))
-
-         ;; Deleted line (only in original)
-         ((eq status 'deleted)
-          (setq in-diff-block t)
-          (setq head-section (concat head-section line "\n")))
-
-         ;; Added line (only in new version)
-         ((eq status 'added)
-          (setq in-diff-block t)
-          (setq merge-section (concat merge-section (cdr line) "\n"))))))
-
-    ;; Close final diff block if there is one
-    (when in-diff-block
-      (setq result (concat result
-                           "<<<<<<< HEAD\n" head-section
-                           "=======\n" merge-section
-                           ">>>>>>> " (gptel-backend-name gptel-backend) "\n")))
-
-    result))
-
-;; We can remove this function as it's been replaced by elysium--simple-diff and elysium--compute-line-diff
-
-(defun elysium--compute-line-diff (orig-lines new-lines)
-  "Compute diff between ORIG-LINES and NEW-LINES using diff utilities.
-Returns a list describing the comparison result."
-  (let ((result nil)
-        (orig-temp (generate-new-buffer " *elysium-orig*"))
-        (new-temp (generate-new-buffer " *elysium-new*"))
-        (diff-temp (generate-new-buffer " *elysium-diff*")))
-    (unwind-protect
-        (progn
-          ;; Fill buffers with content
-          (with-current-buffer orig-temp
-            (insert (string-join orig-lines "\n"))
-            (goto-char (point-min)))
-
-          (with-current-buffer new-temp
-            (insert (string-join new-lines "\n"))
-            (goto-char (point-min)))
-
-          ;; Generate diff
-          (if (executable-find "diff")
-              (progn
-                (call-process-region
-                 (with-current-buffer orig-temp (buffer-string))
-                 nil "diff" nil diff-temp nil "-u" "-"
-                 (with-current-buffer new-temp (buffer-string)))
-
-                ;; Parse diff output
-                (with-current-buffer diff-temp
-                  (goto-char (point-min))
-                  (setq result (elysium--parse-diff-output orig-lines new-lines))))
-            ;; Fallback if diff command not available
-            (setq result (elysium--simple-diff orig-lines new-lines))))
-
-      ;; Clean up buffers
-      (kill-buffer orig-temp)
-      (kill-buffer new-temp)
-      (kill-buffer diff-temp))
-
-    (or result (elysium--simple-diff orig-lines new-lines))))
-
-(defun elysium--simple-diff (orig-lines new-lines)
-  "Create a simple diff alignment between ORIG-LINES and NEW-LINES.
-Preserves empty lines in the diff."
-  (let ((max-lines (max (length orig-lines) (length new-lines)))
-        (result '()))
-    (dotimes (i max-lines)
-      (let ((orig (and (< i (length orig-lines)) (nth i orig-lines)))
-            (new (and (< i (length new-lines)) (nth i new-lines))))
-        (cond
-         ;; Both lines exist (could be empty strings too)
-         ((and (not (eq orig nil)) (not (eq new nil)))
-          (if (string= orig new)
-              ;; Lines are identical (including empty lines)
-              (push (cons orig 'common) result)
-            ;; Lines differ
-            (push (cons orig 'changed) result)
-            (push (cons `(new . ,new) 'changed) result)))
-         ;; Only orig line exists (deletion)
-         ((not (eq orig nil))
-          (push (cons orig 'deleted) result))
-         ;; Only new line exists (addition)
-         ((not (eq new nil))
-          (push (cons `(new . ,new) 'added) result)))))
-    (nreverse result)))
-
-(defun elysium--parse-diff-output (orig-lines new-lines)
-  "Parse unified diff output and create alignment.
-Uses ORIG-LINES and NEW-LINES as reference."
-  ;; This is a placeholder - actual implementation would parse
-  ;; unified diff format and create appropriate alignment.
-  ;; For now, fall back to simple diff
-  (elysium--simple-diff orig-lines new-lines))
+                   (new-line-count (+ (length new-lines) marker-lines))
+                   (line-diff (- new-line-count original-line-count)))
+              (setq offset (+ offset line-diff))))))))
 
 (defun elysium-clear-buffer ()
   "Clear the elysium buffer."
