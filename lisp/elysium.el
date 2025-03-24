@@ -44,16 +44,6 @@
   :group 'elysium
   :type 'hook)
 
-(defcustom elysium-save-history t
-  "Whether to save query and response history."
-  :group 'elysium
-  :type 'boolean)
-
-(defcustom elysium-history-file (expand-file-name "elysium-history.el" user-emacs-directory)
-  "File to save Elysium interaction history."
-  :group 'elysium
-  :type 'file)
-
 (defvar elysium--chat-buffer nil
   "Buffer used for LLM interaction.")
 
@@ -62,10 +52,6 @@
 
 (defvar elysium--last-code-buffer nil
   "The buffer that was last modified by Elysium.")
-
-(defvar elysium--history nil
-  "History of queries and responses.
-Each entry is a plist with :query, :code-buffer, :changes properties.")
 
 (defvar elysium-base-prompt
   (concat
@@ -77,7 +63,6 @@ Each entry is a plist with :query, :code-buffer, :changes properties.")
 
    "2. When suggesting modifications:\n"
    "a. Use the language in the question to reply. If there are non-English parts in the question, use the language of those parts.\n"
-   "b. Explain why the change is necessary or beneficial.\n"
    "c. If an image is provided, make sure to use the image in conjunction with the code snippet.\n"
    "d. Provide the exact code snippet to be replaced using this format:\n"
 
@@ -201,15 +186,6 @@ INFO is passed into this function from the `gptel-request' function."
            (using-region (buffer-local-value 'elysium--using-region code-buffer)))
 
       (when changes
-        ;; Add to history
-        (when elysium-save-history
-          (push (list :query elysium--last-query
-                      :code-buffer (buffer-name code-buffer)
-                      :changes changes
-                      :timestamp (current-time))
-                elysium--history)
-          (elysium--save-history))
-
         ;; Apply changes
         (with-current-buffer code-buffer
           ;; Adjust changes if we're working with a region
@@ -593,48 +569,6 @@ Uses ORIG-LINES and NEW-LINES as reference."
       (concat (number-to-string n)
               (nth (mod n 10) suffixes)))))
 
-(defun elysium--save-history ()
-  "Save interaction history to file."
-  (when elysium-save-history
-    (with-temp-file elysium-history-file
-      (prin1 (list :history elysium--history) (current-buffer)))))
-
-(defun elysium--load-history ()
-  "Load interaction history from file."
-  (when (and elysium-save-history
-             (file-exists-p elysium-history-file))
-    (with-temp-buffer
-      (insert-file-contents elysium-history-file)
-      (goto-char (point-min))
-      (let ((data (ignore-errors (read (current-buffer)))))
-        (when data
-          (setq elysium--history (plist-get data :history)))))))
-
-(defun elysium-show-history ()
-  "Show the history of Elysium interactions."
-  (interactive)
-  (elysium--load-history)
-  (if (not elysium--history)
-      (message "No history available")
-    (let ((buffer (get-buffer-create "*Elysium History*")))
-      (with-current-buffer buffer
-        (erase-buffer)
-        (insert "# Elysium Interaction History\n\n")
-        (dolist (entry elysium--history)
-          (let ((query (plist-get entry :query))
-                (buffer-name (plist-get entry :code-buffer))
-                (timestamp (plist-get entry :timestamp))
-                (changes (plist-get entry :changes)))
-            (insert (format "## %s - %s\n\n"
-                            (format-time-string "%Y-%m-%d %H:%M:%S" timestamp)
-                            buffer-name))
-            (insert (format "**Query:** %s\n\n" query))
-            (insert (format "**Number of changes:** %d\n\n" (length changes))))))
-      (switch-to-buffer buffer)
-      (goto-char (point-min))
-      (when (fboundp 'markdown-mode)
-        (markdown-mode)))))
-
 ;; Define a transient menu for Elysium with compact layout
 (transient-define-prefix elysium-transient-menu ()
   "Elysium actions menu."
@@ -649,11 +583,8 @@ Uses ORIG-LINES and NEW-LINES as reference."
     ("d" "Discard all" elysium-discard-all-suggested-changes)]
    ["Query"
     ("r" "Retry" elysium-retry-query)
-    ("q" "New" elysium-query)
-    ("h" "History" elysium-show-history)]])
+    ("q" "New" elysium-query)]])
 
-;; Load history when package is loaded
-(add-hook 'after-init-hook #'elysium--load-history)
 
 (provide 'elysium)
 
