@@ -135,12 +135,11 @@
          (end-line (line-number-at-pos end-line-pos))
          (selected-code (buffer-substring-no-properties start-line-pos end-line-pos))
          (file-type (symbol-name major-mode))
-         ;; Include indentation info in the query
-         (full-query (format "\n\nFile type: %s\nLine range: %d-%d\n%s\n\nCode:\n%s\n\n%s"
+         ;; Format the query
+         (full-query (format "\n\nFile type: %s\nLine range: %d-%d\n\nCode:\n%s\n\n%s"
                              file-type
                              start-line
                              end-line
-                             ""
                              selected-code
                              user-query)))
 
@@ -301,6 +300,7 @@ original and suggested code."
                    (new-line-count (+ (length new-lines) marker-lines))
                    (line-diff (- new-line-count original-line-count)))
               (setq offset (+ offset line-diff))))))))
+  (run-hooks 'elysium-apply-changes-hook))
 
 (defun elysium-clear-buffer ()
   "Clear the elysium buffer."
