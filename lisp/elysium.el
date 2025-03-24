@@ -34,6 +34,7 @@
 (require 'gptel)
 (require 'smerge-mode)
 (require 'transient)
+(require 'diff-mode)
 
 (defgroup elysium nil
   "Apply code changes using gptel."
@@ -64,38 +65,27 @@
   :type 'string)
 
 
-(defvar elysium-base-prompt
+(setq elysium-base-prompt
   (concat
-   ;; The prompt is originally from avante.nvim:
-   ;; https://github.com/yetone/avante.nvim/blob/main/lua/avante/llm.lua
-"Your primary task is to suggest code modifications with precise line number ranges. Follow these instructions meticulously:\n"
-"1. Carefully analyze the original code, paying close attention to its structure and line numbers. Line numbers start from 1 and include ALL lines, even empty ones.\n"
-"2. When suggesting modifications:\n"
-"   a. Use the language in the question to reply.\n"
-"   b. If an image is provided, reference it alongside the code snippet.\n"
-"   c. Provide ONLY the modified code using this format:\n"
-"   Replace lines: {{start_line}}-{{end_line}}\n"
-"   ```{{language}}\n"
-"   {{modified_code_only}}\n"
+"Your primary task is to suggest code modifications with precise line numbers:\n"
+"1. Count ALL lines starting from 1 (including empty lines and comments).\n"
+"2. Use this exact format:\n"
+"   Replace lines: {start_line}-{end_line}\n"
+"   ```{language}\n"
+"   {suggested_code}\n"
 "   ```\n"
-"   d. Don't return unchanged lines, focus on providing only the modified lines\n"
-"   e. Don't explain the solution\n"
-"3. Crucial guidelines for code modifications:\n"
-"   - Only include the exact lines being modified, not the entire file.\n"
-"   - Group adjacent modified lines into a single replacement block.\n"
-"   - Only apply changes from the most recent assistant message.\n"
-"   - Maintain original indentation.\n"
-"   - Don't delete comments or empty lines unless explicitly required.\n"
-"4. Crucial guidelines for line numbers:\n"
-"   - start_line and end_line refer to positions in the original code.\n"
-"   - The range {{start_line}}-{{end_line}} is INCLUSIVE. Both start_line and end_line are included in the replacement.\n"
-"   - For single-line changes, use the same number for start and end lines.\n"
-"   - Group consecutive modified lines into one replacement block (one start_line and one end_line).\n"
-"   - Create separate replacement blocks for non-consecutive modified lines.\n"
-"5. Final check:\n"
-"   - Double-check all line numbers before submitting to ensure perfect alignment with the original code structure.\n"
-"   - Verify that each replacement block contains ONLY the modified lines.\n"
-"Remember: Only include the specific lines being changed in your replacement blocks. Group adjacent modified lines together but create separate blocks for non-consecutive changes.\n"
+"   {brief explanation}\n"
+"3. Important rules:\n"
+"   - Line ranges are INCLUSIVE\n"
+"   - Make ONLY the requested changes\n"
+"   - Maintain original indentation and comments\n"
+"   - Include COMPLETE code for the specified range\n"
+"   - Use the same language as the question\n"
+"4. Verify before submitting:\n"
+"   - Line numbers are accurate\n"
+"   - All affected lines are included\n"
+"   - No unrelated code is modified\n"
+"DO NOT show the full content after modifications.\n"
 ))
 
 ;;;###autoload
@@ -287,7 +277,8 @@ Explanations will be of the format:
 (defun elysium-apply-code-changes (buffer code-changes)
   "Apply CODE-CHANGES to BUFFER in a git merge format.
 Uses simple conflict markers to highlight the differences between
-original and suggested code."
+original and suggested code. Breaks down large changes into smaller chunks
+for easier review."
   (with-current-buffer buffer
     (save-excursion
       (let ((offset 0))
@@ -305,26 +296,203 @@ original and suggested code."
                                   (point)))
                  (orig-code (buffer-substring-no-properties orig-code-start orig-code-end)))
 
-            ;; Delete the original code block
-            (delete-region orig-code-start orig-code-end)
+            ;; If the change is multi-line, try to refine the diff
+            (if (and (> (length (split-string orig-code "\n" t)) 1)
+                     (> (length (split-string new-code "\n" t)) 1))
+                (elysium--apply-refined-change orig-code-start orig-code-end orig-code new-code)
+              ;; For single-line changes or very small changes, use the simple approach
+              (elysium--apply-simple-change orig-code-start orig-code-end orig-code new-code))
 
-            ;; Insert the conflict markers with original and new code
-            (goto-char orig-code-start)
-            (insert (concat "<<<<<<< HEAD\n"
-                           orig-code
-                           "=======\n"
-                           new-code
-                           "\n>>>>>>> " (gptel-backend-name gptel-backend) "\n"))
-
-            ;; Update offset - calculate how many lines we added/removed
-            (let* ((orig-lines (split-string orig-code "\n" t))
-                   (new-lines (split-string (concat new-code "\n") "\n" t))
-                   (marker-lines 3) ; <<<<<<< HEAD, =======, and >>>>>>>
-                   (original-line-count (- end start 1))
-                   (new-line-count (+ (length new-lines) marker-lines))
+            ;; Update offset - We need to recalculate the total lines now
+            (let* ((new-line-count (count-lines orig-code-start (point)))
+                   (original-line-count (- end start -1)) ; -1 because line range is inclusive
                    (line-diff (- new-line-count original-line-count)))
               (setq offset (+ offset line-diff)))))))
     (run-hooks 'elysium-apply-changes-hook)))
+
+(defun elysium--apply-simple-change (start end orig-code new-code)
+  "Apply a simple change with conflict markers.
+Replace the region from START to END containing ORIG-CODE with conflict markers
+containing both ORIG-CODE and NEW-CODE."
+  (delete-region start end)
+  (goto-char start)
+  (insert (concat "<<<<<<< HEAD\n"
+                 orig-code
+                 "=======\n"
+                 new-code
+                 "\n>>>>>>> " (gptel-backend-name gptel-backend) "\n")))
+
+(defun elysium--apply-refined-change (start end orig-code new-code)
+  "Apply a refined change that breaks code into smaller conflict chunks.
+Replace the region from START to END containing ORIG-CODE with a refined diff
+against NEW-CODE, using conflict markers for each meaningful chunk."
+  (delete-region start end)
+  (goto-char start)
+
+  ;; Split both code blocks into lines
+  (let* ((orig-lines (split-string orig-code "\n" t))
+         (new-lines (split-string new-code "\n" t))
+         (chunks (elysium--create-diff-chunks orig-lines new-lines))
+         (insertion-point start))
+
+    ;; Insert each chunk with appropriate conflict markers
+    (dolist (chunk chunks)
+      (let ((chunk-type (car chunk))
+            (orig-chunk-lines (nth 1 chunk))
+            (new-chunk-lines (nth 2 chunk)))
+
+        (cond
+         ;; Lines that are the same in both versions - no conflict needed
+         ((eq chunk-type 'same)
+          (let ((text (string-join orig-chunk-lines "\n")))
+            (insert text)
+            (when (> (length text) 0)
+              (insert "\n"))))
+
+         ;; Lines that differ - add conflict markers
+         ((eq chunk-type 'diff)
+          (let ((orig-text (string-join orig-chunk-lines "\n"))
+                (new-text (string-join new-chunk-lines "\n")))
+            (insert "<<<<<<< HEAD\n")
+            (when (> (length orig-text) 0)
+              (insert orig-text "\n"))
+            (insert "=======\n")
+            (when (> (length new-text) 0)
+              (insert new-text "\n"))
+            (insert ">>>>>>> " (gptel-backend-name gptel-backend) "\n"))))))))
+
+(defun elysium--create-diff-chunks (orig-lines new-lines)
+  "Create a list of diff chunks between ORIG-LINES and NEW-LINES.
+Each chunk is of the form (TYPE ORIG-CHUNK NEW-CHUNK) where:
+- TYPE is either 'same or 'diff
+- ORIG-CHUNK is a list of lines from the original text
+- NEW-CHUNK is a list of lines from the new text
+
+For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
+  (let ((chunks nil)
+        (i 0)
+        (j 0)
+        (orig-len (length orig-lines))
+        (new-len (length new-lines))
+        (current-chunk-type nil)
+        (current-orig-chunk nil)
+        (current-new-chunk nil)
+        (context-lines 1)) ; Number of context lines to keep before/after changes
+
+    ;; Compare lines and build chunks
+    (while (or (< i orig-len) (< j new-len))
+      (let ((orig-line (when (< i orig-len) (nth i orig-lines)))
+            (new-line (when (< j new-len) (nth j new-lines)))
+            (lines-match (and (< i orig-len)
+                              (< j new-len)
+                              (string= (nth i orig-lines) (nth j new-lines)))))
+
+        (if lines-match
+            ;; Lines match - they're part of a 'same' chunk
+            (progn
+              ;; If we were in a 'diff' chunk, finalize it
+              (when (eq current-chunk-type 'diff)
+                (push (list 'diff current-orig-chunk current-new-chunk) chunks)
+                (setq current-orig-chunk nil
+                      current-new-chunk nil))
+
+              ;; Add to or start a 'same' chunk
+              (if (eq current-chunk-type 'same)
+                  (progn
+                    (push orig-line current-orig-chunk)
+                    (push new-line current-new-chunk))
+                (setq current-chunk-type 'same
+                      current-orig-chunk (list orig-line)
+                      current-new-chunk (list new-line)))
+
+              ;; Move to next lines
+              (cl-incf i)
+              (cl-incf j))
+
+          ;; Lines don't match - they're part of a 'diff' chunk
+          (progn
+            ;; If we were in a 'same' chunk, finalize it
+            (when (eq current-chunk-type 'same)
+              ;; Reverse the lists to restore order
+              (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+              (setq current-orig-chunk nil
+                    current-new-chunk nil))
+
+            ;; Add to or start a 'diff' chunk
+            (setq current-chunk-type 'diff)
+
+            ;; The heuristic below finds the 'best' way to advance through the diff
+            ;; Look ahead to find matching lines
+            (let ((match-distance-i nil)
+                  (match-distance-j nil))
+
+              ;; Look ahead in orig-lines to find a match with current new-line
+              (when (and new-line (< i orig-len))
+                (let ((k 0))
+                  (while (and (< (+ i k) orig-len)
+                              (< k 10) ; Limit how far we look ahead
+                              (not match-distance-i))
+                    (when (string= (nth (+ i k) orig-lines) new-line)
+                      (setq match-distance-i k))
+                    (cl-incf k))))
+
+              ;; Look ahead in new-lines to find a match with current orig-line
+              (when (and orig-line (< j new-len))
+                (let ((k 0))
+                  (while (and (< (+ j k) new-len)
+                              (< k 10) ; Limit how far we look ahead
+                              (not match-distance-j))
+                    (when (string= (nth (+ j k) new-lines) orig-line)
+                      (setq match-distance-j k))
+                    (cl-incf k))))
+
+              ;; Decide which way to advance based on match distances
+              (cond
+               ;; If we're at the end of either list, consume the other
+               ((>= i orig-len)
+                (when new-line
+                  (push new-line current-new-chunk)
+                  (cl-incf j)))
+               ((>= j new-len)
+                (when orig-line
+                  (push orig-line current-orig-chunk)
+                  (cl-incf i)))
+
+               ;; If we found a match in both directions, take the shortest path
+               ((and match-distance-i match-distance-j)
+                (if (< match-distance-i match-distance-j)
+                    (progn
+                      (push orig-line current-orig-chunk)
+                      (cl-incf i))
+                  (push new-line current-new-chunk)
+                  (cl-incf j)))
+
+               ;; If we found a match in just one direction, go that way
+               (match-distance-i
+                (push orig-line current-orig-chunk)
+                (cl-incf i))
+               (match-distance-j
+                (push new-line current-new-chunk)
+                (cl-incf j))
+
+               ;; No match found, just advance both
+               (t
+                (push orig-line current-orig-chunk)
+                (push new-line current-new-chunk)
+                (cl-incf i)
+                (cl-incf j)))))))
+
+      ;; End of main loop
+      )
+
+    ;; Finalize the last chunk
+    (when current-chunk-type
+      (if (eq current-chunk-type 'same)
+          (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+        (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)))
+
+    ;; Return the chunks in correct order
+    (reverse chunks)))
 
 (defun elysium-clear-buffer ()
   "Clear the elysium buffer."
