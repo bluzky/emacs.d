@@ -16,8 +16,8 @@
 (use-package smerge-mode
   :ensure nil
   :diminish
-  :hook
-  (prog-mode . smerge-mode)
+  ;; :hook
+  ;; (prog-mode . smerge-mode)
   :pretty-hydra
   ((:color pink :quit-key ("q" "C-g"))
    ("Move"

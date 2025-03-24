@@ -65,7 +65,7 @@
    ;; "bs" '("Save" . save-buffer)
    "bb" '("Switch buffer" . consult-buffer)
    "bd" '("Close current buffer" . kill-buffer)
-   "bs" '("Scratch buffer" . scratch-buffer)
+   "bs" '("Open scratch" . (lambda () (interactive) (find-file "~/.scratch")))
    "bS" '("Save all buffers" . save-some-buffers)
    "bn" '("New" . evil-buffer-new)
    "bt" '("Open in new tab" . tab-new)

@@ -53,55 +53,50 @@
 (defvar elysium--last-code-buffer nil
   "The buffer that was last modified by Elysium.")
 
+(defcustom elysium-debug-mode nil
+  "When non-nil, log LLM responses and other debug information."
+  :group 'elysium
+  :type 'boolean)
+
+(defcustom elysium-debug-buffer-name "*elysium-debug*"
+  "Name of the buffer for debug logging."
+  :group 'elysium
+  :type 'string)
+
+
 (defvar elysium-base-prompt
   (concat
    ;; The prompt is originally from avante.nvim:
    ;; https://github.com/yetone/avante.nvim/blob/main/lua/avante/llm.lua
-   "Your primary task is to suggest code modifications with precise line number ranges. Follow these instructions meticulously:\n"
-
-   "1. Carefully analyze the original code, paying close attention to its structure and line numbers. Line numbers start from 1 and include ALL lines, even empty ones.\n"
-
-   "2. When suggesting modifications:\n"
-   "a. Use the language in the question to reply. If there are non-English parts in the question, use the language of those parts.\n"
-   "c. If an image is provided, make sure to use the image in conjunction with the code snippet.\n"
-   "d. Provide the exact code snippet to be replaced using this format:\n"
-
-   "Replace lines: {{start_line}}-{{end_line}}\n"
-   ;; We don't need the language here but if we don't specify it then some LLMs might provide it and some might not.
-   ;; So it's better to mandate it and filter it later
-   "```{{language}}\n"
-   "{{suggested_code}}\n"
-   "```\n"
-   "{{Explanation of the changes}}"
-
-   "3. Crucial guidelines for suggested code snippets:\n"
-   "- Only apply the change(s) suggested by the most recent assistant message (before your generation).\n"
-   "- Do not make any unrelated changes to the code.\n"
-   "- Produce a valid full rewrite of the entire original file without skipping any lines. Do not be lazy!\n"
-   "- Do not arbitrarily delete pre-existing comments/empty Lines.\n"
-   "- Do not omit large parts of the original file for no reason.\n"
-   "- Do not omit any needed changes from the requisite messages/code blocks.\n"
-   "- If there is a clicked code block, bias towards just applying that (and applying other changes implied).\n"
-   "- Please keep your suggested code changes minimal, and do not include irrelevant lines in the code snippet.\n"
-   "- Maintain the SAME indentation in the returned code as in the source code\n"
-
-   "4. Crucial guidelines for line numbers:\n"
-   "- The content regarding line numbers MUST strictly follow the format Replace lines: {{start_line}}-{{end_line}}. Do not be lazy!\n"
-   "- The range {{start_line}}-{{end_line}} is INCLUSIVE. Both start_line and end_line are included in the replacement.\n"
-   "- Count EVERY line, including empty lines and comments lines, comments. Do not be lazy!\n"
-   "- For single-line changes, use the same number for start and end lines.\n"
-   "- For multi-line changes, ensure the range covers ALL affected lines, from the very first to the very last.\n"
-   "- Double-check that your line numbers align perfectly with the original code structure.\n"
-
-   "5. Final check:\n"
-   "- Review all suggestions, ensuring each line number is correct, especially the start_line and end_line.\n"
-   "- Confirm that no unrelated code is accidentally modified or deleted.\n"
-   "- Verify that the start_line and end_line correctly include all intended lines for replacement.\n"
-   "- Perform a final alignment check to ensure your line numbers haven't shifted, especially the start_line.\n"
-   "- Double-check that your line numbers align perfectly with the original code structure.\n"
-   "- Do not show the full content after these modifications.\n"
-
-   "Remember: Accurate line numbers are CRITICAL. The range start_line to end_line must include ALL lines to be replaced, from the very first to the very last. Double-check every range before finalizing your response, paying special attention to the start_line to ensure it hasn't shifted down. Ensure that your line numbers perfectly match the original code structure without any overall shift.\n"))
+"Your primary task is to suggest code modifications with precise line number ranges. Follow these instructions meticulously:\n"
+"1. Carefully analyze the original code, paying close attention to its structure and line numbers. Line numbers start from 1 and include ALL lines, even empty ones.\n"
+"2. When suggesting modifications:\n"
+"   a. Use the language in the question to reply.\n"
+"   b. If an image is provided, reference it alongside the code snippet.\n"
+"   c. Provide ONLY the modified code using this format:\n"
+"   Replace lines: {{start_line}}-{{end_line}}\n"
+"   ```{{language}}\n"
+"   {{modified_code_only}}\n"
+"   ```\n"
+"   d. Don't return unchanged lines, focus on providing only the modified lines\n"
+"   e. Don't explain the solution\n"
+"3. Crucial guidelines for code modifications:\n"
+"   - Only include the exact lines being modified, not the entire file.\n"
+"   - Group adjacent modified lines into a single replacement block.\n"
+"   - Only apply changes from the most recent assistant message.\n"
+"   - Maintain original indentation.\n"
+"   - Don't delete comments or empty lines unless explicitly required.\n"
+"4. Crucial guidelines for line numbers:\n"
+"   - start_line and end_line refer to positions in the original code.\n"
+"   - The range {{start_line}}-{{end_line}} is INCLUSIVE. Both start_line and end_line are included in the replacement.\n"
+"   - For single-line changes, use the same number for start and end lines.\n"
+"   - Group consecutive modified lines into one replacement block (one start_line and one end_line).\n"
+"   - Create separate replacement blocks for non-consecutive modified lines.\n"
+"5. Final check:\n"
+"   - Double-check all line numbers before submitting to ensure perfect alignment with the original code structure.\n"
+"   - Verify that each replacement block contains ONLY the modified lines.\n"
+"Remember: Only include the specific lines being changed in your replacement blocks. Group adjacent modified lines together but create separate blocks for non-consecutive changes.\n"
+))
 
 ;;;###autoload
 (defun elysium-query (user-query)
@@ -136,7 +131,7 @@
          (selected-code (buffer-substring-no-properties start-line-pos end-line-pos))
          (file-type (symbol-name major-mode))
          ;; Include indentation info in the query
-         (full-query (format "\n\nFile type: %s\nLine range: %d-%d\n%s\n\nCode:\n%s\n\n%s"
+         (full-query (format "\n\nFile type: %s\nLine range: %d-%d\n%s\n\nCode:\n```\n%s\n```\n\n%s"
                              file-type
                              start-line
                              end-line
@@ -172,16 +167,30 @@
 The changes will be applied to CODE-BUFFER in a git merge format.
 INFO is passed into this function from the `gptel-request' function."
   (when response
+    ;; Log the full response if debug mode is enabled
+    (elysium-debug-log "LLM Response:\n%s" response)
+
     (let* ((extracted-data (elysium-extract-changes response))
            (changes (plist-get extracted-data :changes))
            (using-region (buffer-local-value 'elysium--using-region code-buffer)))
+
+      ;; Log the extracted changes if debug mode is enabled
+      (when elysium-debug-mode
+        (elysium-debug-log "Extracted %d change(s)" (length changes))
+        (dolist (change changes)
+          (elysium-debug-log "Change - Lines %d-%d:\n%s"
+                             (plist-get change :start)
+                             (plist-get change :end)
+                             (plist-get change :code))))
 
       (when changes
         ;; Apply changes
         (with-current-buffer code-buffer
           ;; Adjust changes if we're working with a region
           (when using-region
-            (setq changes (elysium--adjust-changes-for-region changes)))
+            (setq changes (elysium--adjust-changes-for-region changes))
+            (when elysium-debug-mode
+              (elysium-debug-log "Region-adjusted changes")))
 
           (elysium-apply-code-changes code-buffer changes)
 
@@ -195,6 +204,20 @@ INFO is passed into this function from the `gptel-request' function."
       (with-current-buffer elysium--chat-buffer
         (gptel--sanitize-model)
         (gptel--update-status " Ready" 'success)))))
+
+
+(defun elysium-debug-log (message &rest args)
+  "Log MESSAGE with ARGS to the debug buffer if debug mode is enabled."
+  (when elysium-debug-mode
+    (let ((debug-buffer (get-buffer-create elysium-debug-buffer-name)))
+      (with-current-buffer debug-buffer
+        (goto-char (point-max))
+        (let ((start (point)))
+          (insert (format "[%s] " (format-time-string "%Y-%m-%d %H:%M:%S")))
+          (insert (apply #'format message args))
+          (insert "\n\n")
+          ;; Add some properties to make it easier to read
+          (add-text-properties start (point) '(face font-lock-comment-face)))))))
 
 (defun elysium--adjust-changes-for-region (changes)
   "Adjust CHANGES line numbers based on the selected region.
@@ -316,6 +339,10 @@ original and suggested code."
    (list (if (region-active-p)
              (buffer-substring-no-properties (region-beginning) (region-end))
            (buffer-substring-no-properties (point-min) (point-max)))))
+  ;; Ensure chat buffer exists
+  (unless (buffer-live-p elysium--chat-buffer)
+    (setq elysium--chat-buffer (gptel "*elysium*")))
+
   (let ((code-buffer-language
          (string-trim-right
           (string-trim-right (symbol-name major-mode) "-ts-mode$") "-mode$")))
@@ -399,16 +426,20 @@ original and suggested code."
 
         ;; Restore the region if a region was previously used
         (when (buffer-local-value 'elysium--using-region elysium--last-code-buffer)
-          (let ((start-line (buffer-local-value 'elysium--region-start-line elysium--last-code-buffer))
-                (end-line (buffer-local-value 'elysium--region-end-line elysium--last-code-buffer)))
+          (let* ((point-min (point-min))
+                 (start-line (buffer-local-value 'elysium--region-start-line elysium--last-code-buffer))
+                 (end-line (buffer-local-value 'elysium--region-end-line elysium--last-code-buffer))
+                 start-pos end-pos)
             ;; Set point to start line
-            (goto-char (point-min))
+            (setq start-pos (goto-char point-min))
             (forward-line (1- start-line))
-            (set-mark (point))
+            (setq start-pos (point))
             ;; Set mark to end line
-            (goto-char (point-min))
+            (goto-char point-min)
             (forward-line (1- end-line))
-            (end-of-line)))
+            (end-of-line)
+            (setq end-pos (point))
+            (set-mark start-pos)))
 
         ;; Execute the new query
         (elysium-query new-query)))))
@@ -421,6 +452,26 @@ original and suggested code."
       (concat (number-to-string n)
               (nth (mod n 10) suffixes)))))
 
+;; Add command to toggle debug mode
+(defun elysium-toggle-debug-mode ()
+  "Toggle elysium debug mode."
+  (interactive)
+  (setq elysium-debug-mode (not elysium-debug-mode))
+  (message "Elysium debug mode %s" (if elysium-debug-mode "enabled" "disabled"))
+  (when elysium-debug-mode
+    (display-buffer (get-buffer-create elysium-debug-buffer-name))))
+
+;; Add command to clear debug buffer
+(defun elysium-clear-debug-buffer ()
+  "Clear the elysium debug buffer."
+  (interactive)
+  (when-let ((buffer (get-buffer elysium-debug-buffer-name)))
+    (with-current-buffer buffer
+      (erase-buffer)
+      (insert (format "[%s] Debug buffer cleared\n\n"
+                       (format-time-string "%Y-%m-%d %H:%M:%S"))))))
+
+
 ;; Define a transient menu for Elysium with compact layout
 (transient-define-prefix elysium-transient-menu ()
   "Elysium actions menu."
@@ -430,11 +481,11 @@ original and suggested code."
    ("p" "Prev" elysium-navigate-prev-change)
    ("y" "Accept" elysium-keep-current-change)
    ("N" "Reject" elysium-reject-current-change)
-   ("a" "Accept all" elysium-keep-all-suggested-changes)
+   ("RET" "Accept all" elysium-keep-all-suggested-changes)
    ("d" "Discard all" elysium-discard-all-suggested-changes)
    ("r" "Retry" elysium-retry-query)
-   ("q" "New" elysium-query)])
-
+   ("q" "Quit" transient-quit-one)
+   ("!" "Toggle debug" elysium-toggle-debug-mode)])
 
 (provide 'elysium)
 

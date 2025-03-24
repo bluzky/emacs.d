@@ -28,23 +28,26 @@
     :key ai-gemini-api-key
     :stream t)
 
-  ;; Groq offers an OpenAI compatible API
-  (gptel-make-openai "Groq"
-    :host "api.groq.com"
-    :endpoint "/openai/v1/chat/completions"
+  (gptel-make-openai "Github Models" ;Any name you want
+    :host "models.inference.ai.azure.com"
+    :endpoint "/chat/completions?api-version=2024-05-01-preview"
     :stream t
-    :key groq-api-key
-    :models '(qwen-2.5-coder-32b
-              llama-3.1-70b-versatile))
+    :key ai-github-api-key             ;can be a function that returns the key
+    :models '(gpt-4o
+              o1))
+
+  ;; Groq offers an OpenAI compatible API
 
   (setq gptel-model  'gpt-4o
         gptel-backend
-        (gptel-make-openai "Github Models" ;Any name you want
-          :host "models.inference.ai.azure.com"
-          :endpoint "/chat/completions?api-version=2024-05-01-preview"
+        (gptel-make-openai "Groq"
+          :host "api.groq.com"
+          :endpoint "/openai/v1/chat/completions"
           :stream t
-          :key ai-github-api-key             ;can be a function that returns the key
-          :models '(gpt-4o)))
+          :key groq-api-key
+          :models '(qwen-2.5-coder-32b
+                    llama-3.3-70b-versatile))
+        )
 
   ;; (setq gptel-model   'deepseek-chat
   ;;       gptel-backend
@@ -56,11 +59,32 @@
   ;;         :models '(deepseek-chat deepseek-coder)))
   )
 
-(use-package elysium
-  :custom
-  ;; Below are the default values
-  (elysium-window-size 0.33) ; The elysium buffer will be 1/3 your screen
-  (elysium-window-style 'vertical)) ; Can be customized to horizontal
+(require 'elysium)
+
+;; Add key binding for C-<return> (Ctrl+Enter) to trigger elysium-query in prog-mode
+(defun elysium-query-dwim ()
+  "Query elysium with the region if active, otherwise prompt for a query."
+  (interactive)
+  (if (use-region-p)
+      (call-interactively 'elysium-query)
+    (let ((current-prefix-arg '(4))) ; Simulate C-u prefix to prompt for region
+      (call-interactively 'elysium-query))))
+
+;; Define a keymap for programming modes
+(defvar elysium-prog-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-<return>") 'elysium-query-dwim)
+    map)
+  "Keymap for elysium in programming modes.")
+
+;; Set up a minor mode to attach the keymap
+(define-minor-mode elysium-prog-mode
+  "Minor mode for elysium in programming modes."
+  :lighter " Elysium"
+  :keymap elysium-prog-mode-map)
+
+;; Enable the minor mode in all programming modes
+(add-hook 'prog-mode-hook 'elysium-prog-mode)
 
 (provide 'init-ai)
 ;;; init-ai.el ends here
