@@ -389,12 +389,28 @@ original and suggested code."
     (elysium-transient-menu)))
 
 (defun elysium-retry-query ()
-  "Retry the last query with modifications."
+  "Retry the last query with modifications, preserving the previously marked region."
   (interactive)
   (let ((new-query (read-string "Modify query: " elysium--last-query)))
     (when new-query
       (with-current-buffer elysium--last-code-buffer
+        ;; Discard current suggestions
         (elysium-discard-all-suggested-changes)
+
+        ;; Restore the region if a region was previously used
+        (when (buffer-local-value 'elysium--using-region elysium--last-code-buffer)
+          (let ((start-line (buffer-local-value 'elysium--region-start-line elysium--last-code-buffer))
+                (end-line (buffer-local-value 'elysium--region-end-line elysium--last-code-buffer)))
+            ;; Set point to start line
+            (goto-char (point-min))
+            (forward-line (1- start-line))
+            (set-mark (point))
+            ;; Set mark to end line
+            (goto-char (point-min))
+            (forward-line (1- end-line))
+            (end-of-line)))
+
+        ;; Execute the new query
         (elysium-query new-query)))))
 
 (defun elysium--ordinal (n)
@@ -408,18 +424,16 @@ original and suggested code."
 ;; Define a transient menu for Elysium with compact layout
 (transient-define-prefix elysium-transient-menu ()
   "Elysium actions menu."
-  [["Navigate"
-    ("n" "Next" elysium-navigate-next-change)
-    ("p" "Prev" elysium-navigate-prev-change)]
-   ["Current"
-    ("y" "Accept" elysium-keep-current-change)
-    ("N" "Reject" elysium-reject-current-change)]
-   ["All"
-    ("a" "Accept all" elysium-keep-all-suggested-changes)
-    ("d" "Discard all" elysium-discard-all-suggested-changes)]
-   ["Query"
-    ("r" "Retry" elysium-retry-query)
-    ("q" "New" elysium-query)]])
+  ["Actions"
+   :class transient-row
+   ("n" "Next" elysium-navigate-next-change)
+   ("p" "Prev" elysium-navigate-prev-change)
+   ("y" "Accept" elysium-keep-current-change)
+   ("N" "Reject" elysium-reject-current-change)
+   ("a" "Accept all" elysium-keep-all-suggested-changes)
+   ("d" "Discard all" elysium-discard-all-suggested-changes)
+   ("r" "Retry" elysium-retry-query)
+   ("q" "New" elysium-query)])
 
 
 (provide 'elysium)
