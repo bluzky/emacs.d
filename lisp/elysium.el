@@ -45,6 +45,24 @@
   :group 'elysium
   :type 'hook)
 
+(defcustom elysium-window-size 0.33
+  "Size of the elysium chat window as a fraction of the frame.
+Must be a number between 0 and 1, exclusive."
+  :type 'float
+  :group 'elysium
+  :set (lambda (symbol value)
+         (if (and (numberp value)
+                  (< 0 value 1))
+             (set-default symbol value)
+           (user-error "Elysium-window-size must be a number between 0 and 1, exclusive"))))
+
+(defcustom elysium-window-style 'vertical
+  "Specify the orientation.  It can be \='horizontal, '\=vertical, or nil."
+  :type '(choice (const :tag "Horizontal" horizontal)
+                 (const :tag "Vertical" vertical)
+                 (const :tag "None" nil)))
+
+
 (defvar elysium--chat-buffer nil
   "Buffer used for LLM interaction.")
 
@@ -65,28 +83,105 @@
   :type 'string)
 
 
-(setq elysium-base-prompt
-  (concat
-"Your primary task is to suggest code modifications with precise line numbers:\n"
-"1. Count ALL lines starting from 1 (including empty lines and comments).\n"
-"2. Use this exact format:\n"
-"   Replace lines: {start_line}-{end_line}\n"
-"   ```{language}\n"
-"   {suggested_code}\n"
-"   ```\n"
-"   {brief explanation}\n"
-"3. Important rules:\n"
-"   - Line ranges are INCLUSIVE\n"
-"   - Make ONLY the requested changes\n"
-"   - Maintain original indentation and comments\n"
-"   - Include COMPLETE code for the specified range\n"
-"   - Use the same language as the question\n"
-"4. Verify before submitting:\n"
-"   - Line numbers are accurate\n"
-"   - All affected lines are included\n"
-"   - No unrelated code is modified\n"
-"DO NOT show the full content after modifications.\n"
-))
+(setq elysium-base-prompt "Your task is to create exact code modifications with explicit line number ranges.
+Act as an expert software developer.
+Always use best practices when coding.
+Respect and use existing conventions, libraries, etc that are already present in the code base.
+
+Make sure code comments are in English when generating them.
+
+Your task is to modify the provided code according to the user's request. Follow these instructions precisely:
+
+1. Line numbering requirements:
+   - Count EVERY line starting from 1, including all empty lines, comments, and whitespace lines
+   - Line ranges are ALWAYS inclusive (both start_line and end_line are part of the replacement)
+   - For single-line changes, use identical numbers for start and end (e.g., 42-42)
+
+2. Response rules:
+   - *DO NOT* include three backticks: ``` in your suggestion! Treat the suggested code AS IS.
+   - The code you return must be wrapped in <code></code>, and cannot contain any other code.
+   - *MUST* strictly follows format:
+   Replace lines: {start_line}-{end_line}
+   <code>
+   {complete_replacement_code}
+   </code>
+
+3. Code modification rules:
+   - *DO NOT* include any explanations, comments.
+   - Ensure the returned code is complete and can be directly used as a replacement for the original code.
+   - Preserve the original structure, indentation, and formatting of the code as much as possible.
+   - Only modify the specific lines requested in the range - no more, no less
+   - Maintain the *SAME INDENTATION* in the returned code as in the source code
+   - *ONLY* return the new code snippets to be updated, *DO NOT* return the entire file content.
+
+4. Multi-change handling:
+   - For multiple distinct changes, provide separate 'Replace lines:' blocks for each change
+   - Do not overlap line ranges between different changes
+   - List changes in ascending line number order
+
+Remember that Your response SHOULD CONTAIN ONLY THE MODIFIED CODE to be used as DIRECT REPLACEMENT to the original file.
+
+There is an example below:
+
+Original code:
+```python
+def add(a, b):
+    return a + b
+
+result = add(2, 3)
+print(result)
+```
+
+Selected code:
+Line range: 1-2
+```python
+def add(a, b):
+    return a + b
+```
+
+User request:
+Print the result
+
+Your response:
+Replace lines: 1-1
+<code>
+def add(a, b):
+    print(a + b)
+</code>
+")
+
+(defun elysium-toggle-window ()
+  "Toggle the elysium chat window."
+  (interactive)
+  (if (and (buffer-live-p elysium--chat-buffer)
+           (get-buffer-window elysium--chat-buffer))
+      (delete-window (get-buffer-window elysium--chat-buffer))
+
+    (elysium-setup-windows)))
+
+(defun elysium-setup-windows ()
+  "Set up the coding assistant layout with the chat window."
+  (unless (buffer-live-p elysium--chat-buffer)
+    (setq elysium--chat-buffer
+          (gptel "*elysium*")))
+
+  (when elysium-window-style
+    (delete-other-windows)
+
+    (let* ((main-buffer (current-buffer))
+           (main-window (selected-window))
+           (split-size (floor (* (if (eq elysium-window-style 'vertical)
+                                     (frame-width)
+                                   (frame-height))
+                                 (- 1 elysium-window-size)))))
+      (with-current-buffer elysium--chat-buffer)
+      (if (eq elysium-window-style 'vertical)
+          (split-window-right split-size)
+        (split-window-below split-size))
+      (set-window-buffer main-window main-buffer)
+      (other-window 1)
+      (set-window-buffer (selected-window) elysium--chat-buffer))))
+
 
 ;;;###autoload
 (defun elysium-query (user-query)
@@ -120,11 +215,14 @@
          (end-line (line-number-at-pos end-line-pos))
          (selected-code (buffer-substring-no-properties start-line-pos end-line-pos))
          (file-type (symbol-name major-mode))
+         ;; Get cursor line position
+         (cursor-line (line-number-at-pos (point)))
          ;; Include indentation info in the query
-         (full-query (format "\n\nFile type: %s\nLine range: %d-%d\n%s\n\nCode:\n```\n%s\n```\n\n%s"
+         (full-query (format "\n\nFile type: %s\nLine range: %d-%d\nCursor line: %d\n%s\n\nCode:\n```\n%s\n```\n\n%s"
                              file-type
                              start-line
                              end-line
+                             cursor-line
                              ""
                              selected-code
                              user-query)))
@@ -136,6 +234,12 @@
     (setq-local elysium--using-region using-region)
     (setq-local elysium--region-start-line start-line)
     (setq-local elysium--region-end-line end-line)
+
+     (with-current-buffer chat-buffer
+      (goto-char (point-max))
+      (insert "\n\n### USER:\n")
+      (insert full-query)
+      (insert "\n"))
 
     (gptel--update-status " Waiting..." 'warning)
     (message "Querying %s for lines %d-%d..."
@@ -159,6 +263,13 @@ INFO is passed into this function from the `gptel-request' function."
   (when response
     ;; Log the full response if debug mode is enabled
     (elysium-debug-log "LLM Response:\n%s" response)
+
+     ;; Add this section to show the full response in the chat buffer
+    (with-current-buffer elysium--chat-buffer
+      (goto-char (point-max))
+      (insert "\n\n### ASSISTANT:\n")
+      (insert response)
+      (insert "\n\n### "))
 
     (let* ((extracted-data (elysium-extract-changes response))
            (changes (plist-get extracted-data :changes))
@@ -239,7 +350,7 @@ Explanations will be of the format:
         (start 0)
         (change-count 0)
         (code-block-regex
-         "Replace [Ll]ines:? \\([0-9]+\\)-\\([0-9]+\\)\n```\\(?:[[:alpha:]-]+\\)?\n\\(\\(?:.\\|\n\\)*?\\)```"))
+         "Replace [Ll]ines:? \\([0-9]+\\)-\\([0-9]+\\)\n<code>\\(?:[[:alpha:]-]+\\)?\n\\(\\(?:.\\|\n\\)*?\\)</code>"))
     (while (string-match code-block-regex response start)
       (let ((change-start (string-to-number (match-string 1 response)))
             (change-end (string-to-number (match-string 2 response)))
@@ -351,8 +462,8 @@ against NEW-CODE, using conflict markers for each meaningful chunk."
 
          ;; Lines that differ - add conflict markers
          ((eq chunk-type 'diff)
-          (let ((orig-text (string-join orig-chunk-lines "\n"))
-                (new-text (string-join new-chunk-lines "\n")))
+          (let ((orig-text (string-join (reverse orig-chunk-lines) "\n"))
+                (new-text (string-join (reverse new-chunk-lines) "\n")))
             (insert "<<<<<<< HEAD\n")
             (when (> (length orig-text) 0)
               (insert orig-text "\n"))
@@ -517,7 +628,8 @@ For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
     (with-current-buffer elysium--chat-buffer
       (goto-char (point-max))
       (insert "\n")
-      (insert (format "```%s\n%s\n```" code-buffer-language content)))))
+      (insert (format "```%s\n%s\n```" code-buffer-language content))
+      (insert "\n"))))
 
 (defun elysium-keep-all-suggested-changes ()
   "Keep all of the LLM suggestions."
@@ -647,13 +759,42 @@ For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
    :class transient-row
    ("n" "Next" elysium-navigate-next-change)
    ("p" "Prev" elysium-navigate-prev-change)
-   ("y" "Accept" elysium-keep-current-change)
-   ("N" "Reject" elysium-reject-current-change)
+   ("a" "Accept" elysium-keep-current-change)
+   ("d" "Reject" elysium-reject-current-change)
    ("RET" "Accept all" elysium-keep-all-suggested-changes)
-   ("d" "Discard all" elysium-discard-all-suggested-changes)
+   ("x" "Discard all" elysium-discard-all-suggested-changes)
    ("r" "Retry" elysium-retry-query)
-   ("q" "Quit" transient-quit-one)
-   ("!" "Toggle debug" elysium-toggle-debug-mode)])
+   ("q" "Quit" transient-quit-one)])
+
+
+;; Add key binding for C-<return> (Ctrl+Enter) to trigger elysium-query in prog-mode
+(defun elysium-query-dwim ()
+  "Query elysium with the region if active, otherwise prompt for a query."
+  (interactive)
+  (if (use-region-p)
+      (call-interactively 'elysium-query)
+    (let ((current-prefix-arg '(4))) ; Simulate C-u prefix to prompt for region
+      (call-interactively 'elysium-query))))
+
+;; Define a keymap for programming modes
+(defvar elysium-prog-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-<return>") 'elysium-query-dwim)
+    (define-key map (kbd "C-c e t") 'elysium-toggle-window)
+    (define-key map (kbd "C-c e a") 'elysium-add-context)
+    (define-key map (kbd "C-c e c") 'elysium-clear-buffer)
+    (define-key map (kbd "C-c e d") 'elysium-toggle-debug-mode)
+    (define-key map (kbd "C-c e l") 'elysium-debug-log)
+    (define-key map (kbd "C-c e l") 'elysium-transient-menu)
+    map)
+  "Keymap for elysium in programming modes.")
+
+;; Set up a minor mode to attach the keymap
+(define-minor-mode elysium-prog-mode
+  "Minor mode for elysium in programming modes."
+  :lighter " Elysium"
+  :keymap elysium-prog-mode-map)
+
 
 (provide 'elysium)
 
