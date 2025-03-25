@@ -445,10 +445,12 @@ against NEW-CODE, using conflict markers for each meaningful chunk."
   (goto-char start)
 
   ;; Split both code blocks into lines
-  (let* ((orig-lines (split-string orig-code "\n" t))
-         (new-lines (split-string new-code "\n" t))
+  (let* ((orig-lines (split-string orig-code "\n"))
+         (new-lines (split-string new-code "\n"))
          (chunks (elysium--create-diff-chunks orig-lines new-lines))
          (insertion-point start))
+
+    (elysium-debug-log "Refined change - %d chunks" (length chunks))
 
     ;; Insert each chunk with appropriate conflict markers
     (dolist (chunk chunks)
