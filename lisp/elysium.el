@@ -235,7 +235,7 @@ def add(a, b):
     (setq-local elysium--region-start-line start-line)
     (setq-local elysium--region-end-line end-line)
 
-     (with-current-buffer chat-buffer
+    (with-current-buffer chat-buffer
       (goto-char (point-max))
       (insert "\n\n### USER:\n")
       (insert full-query)
@@ -264,7 +264,7 @@ INFO is passed into this function from the `gptel-request' function."
     ;; Log the full response if debug mode is enabled
     (elysium-debug-log "LLM Response:\n%s" response)
 
-     ;; Add this section to show the full response in the chat buffer
+    ;; Add this section to show the full response in the chat buffer
     (with-current-buffer elysium--chat-buffer
       (goto-char (point-max))
       (insert "\n\n### ASSISTANT:\n")
@@ -428,10 +428,10 @@ containing both ORIG-CODE and NEW-CODE."
   (delete-region start end)
   (goto-char start)
   (insert (concat "<<<<<<< HEAD\n"
-                 orig-code
-                 "=======\n"
-                 new-code
-                 "\n>>>>>>> " (gptel-backend-name gptel-backend) "\n")))
+                  orig-code
+                  "=======\n"
+                  new-code
+                  "\n>>>>>>> " (gptel-backend-name gptel-backend) "\n")))
 
 (defun elysium--apply-refined-change (start end orig-code new-code)
   "Apply a refined change that breaks code into smaller conflict chunks.
@@ -446,6 +446,8 @@ against NEW-CODE, using conflict markers for each meaningful chunk."
          (chunks (elysium--create-diff-chunks orig-lines new-lines))
          (insertion-point start))
 
+    ;; mark undo boundary
+    (undo-boundary)
     ;; Insert each chunk with appropriate conflict markers
     (dolist (chunk chunks)
       (let ((chunk-type (car chunk))
@@ -645,13 +647,9 @@ For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
 (defun elysium-discard-all-suggested-changes ()
   "Discard all of the LLM suggestions."
   (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (ignore-errors (funcall #'smerge-keep-upper))
-    (while (ignore-errors (not (smerge-next)))
-      (funcall #'smerge-keep-upper))
-    (smerge-mode -1)
-    (message "All suggested changes discarded")))
+  (undo)
+  (smerge-mode -1)
+  (message "All suggested changes discarded"))
 
 (defun elysium-navigate-next-change ()
   "Navigate to the next change suggestion and keep the transient menu active."
@@ -749,7 +747,7 @@ For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
     (with-current-buffer buffer
       (erase-buffer)
       (insert (format "[%s] Debug buffer cleared\n\n"
-                       (format-time-string "%Y-%m-%d %H:%M:%S"))))))
+                      (format-time-string "%Y-%m-%d %H:%M:%S"))))))
 
 
 ;; Define a transient menu for Elysium with compact layout
