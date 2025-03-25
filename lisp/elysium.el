@@ -445,8 +445,8 @@ against NEW-CODE, using conflict markers for each meaningful chunk."
   (goto-char start)
 
   ;; Split both code blocks into lines
-  (let* ((orig-lines (split-string orig-code "\n" t))
-         (new-lines (split-string new-code "\n" t))
+  (let* ((orig-lines (split-string orig-code "\n"))
+         (new-lines (split-string new-code "\n"))
          (chunks (elysium--create-diff-chunks orig-lines new-lines))
          (insertion-point start))
 
@@ -466,8 +466,8 @@ against NEW-CODE, using conflict markers for each meaningful chunk."
 
          ;; Lines that differ - add conflict markers
          ((eq chunk-type 'diff)
-          (let ((orig-text (string-join (reverse orig-chunk-lines) "\n"))
-                (new-text (string-join (reverse new-chunk-lines) "\n")))
+          (let ((orig-text (string-join orig-chunk-lines "\n"))
+                (new-text (string-join new-chunk-lines "\n")))
             (insert "<<<<<<< HEAD\n")
             (when (> (length orig-text) 0)
               (insert orig-text "\n"))
@@ -506,7 +506,7 @@ For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
             (progn
               ;; If we were in a 'diff' chunk, finalize it
               (when (eq current-chunk-type 'diff)
-                (push (list 'diff current-orig-chunk current-new-chunk) chunks)
+                (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
                 (setq current-orig-chunk nil
                       current-new-chunk nil))
 
@@ -604,8 +604,8 @@ For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
     ;; Finalize the last chunk
     (when current-chunk-type
       (if (eq current-chunk-type 'same)
-          (push (list 'same current-orig-chunk current-new-chunk) chunks)
-        (push (list 'diff current-orig-chunk current-new-chunk) chunks)))
+          (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+        (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)))
 
     ;; Return the chunks in correct order
     (reverse chunks)))
