@@ -445,12 +445,10 @@ against NEW-CODE, using conflict markers for each meaningful chunk."
   (goto-char start)
 
   ;; Split both code blocks into lines
-  (let* ((orig-lines (split-string orig-code "\n"))
-         (new-lines (split-string new-code "\n"))
+  (let* ((orig-lines (split-string orig-code "\n" t))
+         (new-lines (split-string new-code "\n" t))
          (chunks (elysium--create-diff-chunks orig-lines new-lines))
          (insertion-point start))
-
-    (elysium-debug-log "Refined change - %d chunks" (length chunks))
 
     ;; Insert each chunk with appropriate conflict markers
     (dolist (chunk chunks)
@@ -493,8 +491,7 @@ For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
         (new-len (length new-lines))
         (current-chunk-type nil)
         (current-orig-chunk nil)
-        (current-new-chunk nil)
-        (context-lines 1)) ; Number of context lines to keep before/after changes
+        (current-new-chunk nil))
 
     ;; Compare lines and build chunks
     (while (or (< i orig-len) (< j new-len))
@@ -594,8 +591,10 @@ For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
 
                ;; No match found, just advance both
                (t
-                (push orig-line current-orig-chunk)
-                (push new-line current-new-chunk)
+                (when orig-line
+                  (push orig-line current-orig-chunk))
+                (when new-line
+                  (push new-line current-new-chunk))
                 (cl-incf i)
                 (cl-incf j)))))))
 
