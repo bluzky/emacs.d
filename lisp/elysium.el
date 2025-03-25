@@ -284,6 +284,10 @@ INFO is passed into this function from the `gptel-request' function."
                              (plist-get change :end)
                              (plist-get change :code))))
 
+      ;; mark undo boundary
+      (undo-boundary)
+
+
       (when changes
         ;; Apply changes
         (with-current-buffer code-buffer
@@ -408,8 +412,8 @@ for easier review."
                  (orig-code (buffer-substring-no-properties orig-code-start orig-code-end)))
 
             ;; If the change is multi-line, try to refine the diff
-            (if (and (> (length (split-string orig-code "\n" t)) 1)
-                     (> (length (split-string new-code "\n" t)) 1))
+            (if (and (> (length (split-string orig-code "\n")) 1)
+                     (> (length (split-string new-code "\n")) 1))
                 (elysium--apply-refined-change orig-code-start orig-code-end orig-code new-code)
               ;; For single-line changes or very small changes, use the simple approach
               (elysium--apply-simple-change orig-code-start orig-code-end orig-code new-code))
@@ -446,8 +450,6 @@ against NEW-CODE, using conflict markers for each meaningful chunk."
          (chunks (elysium--create-diff-chunks orig-lines new-lines))
          (insertion-point start))
 
-    ;; mark undo boundary
-    (undo-boundary)
     ;; Insert each chunk with appropriate conflict markers
     (dolist (chunk chunks)
       (let ((chunk-type (car chunk))
@@ -601,8 +603,8 @@ For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
     ;; Finalize the last chunk
     (when current-chunk-type
       (if (eq current-chunk-type 'same)
-          (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-        (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)))
+          (push (list 'same current-orig-chunk current-new-chunk) chunks)
+        (push (list 'diff current-orig-chunk current-new-chunk) chunks)))
 
     ;; Return the chunks in correct order
     (reverse chunks)))
