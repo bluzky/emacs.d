@@ -74,8 +74,8 @@
 
    `(vertical-border ((t (:foreground ,athens-sculpture-1 ))))
 
-   `(font-lock-builtin-face ((t (:foreground ,tourist-shoes-brown :bold t ))))
-   `(font-lock-preprocessor-face ((t (:foreground ,tourist-shoes-brown :bold t ))))
+   `(font-lock-builtin-face ((t (:foreground ,tourist-shoes-brown :bold nil ))))
+   `(font-lock-preprocessor-face ((t (:foreground ,tourist-shoes-brown :bold nil ))))
    `(font-lock-comment-face ((t (:foreground ,olive-green :slant italic ))))
    `(font-lock-comment-delimiter-face ((t (:foreground ,aged-jade :slant italic ))))
    `(font-lock-doc-face ((t (:foreground ,agora-tile-red ))))
