@@ -183,6 +183,56 @@ def add(a, b):
       (set-window-buffer (selected-window) elysium--chat-buffer))))
 
 
+(defun trim-empty-lines-and-adjust (string start-line end-line)
+  "Trim leading and trailing empty lines from STRING and adjust START-LINE and END-LINE accordingly.
+Returns a list containing the trimmed string, adjusted start-line, and adjusted end-line."
+  (with-temp-buffer
+    ;; Insert the string into a temporary buffer
+    (insert string)
+
+    ;; Count leading empty lines
+    (goto-char (point-min))
+    (let ((leading-empty-lines 0)
+          (trailing-empty-lines 0)
+          (adjusted-start-line start-line)
+          (adjusted-end-line end-line)
+          (trimmed-string nil))
+
+      ;; Count leading empty lines
+      (while (and (not (eobp))
+                  (looking-at "^\\s-*$"))
+        (setq leading-empty-lines (1+ leading-empty-lines))
+        (forward-line 1))
+
+      ;; Count trailing empty lines
+      (goto-char (point-max))
+      (when (not (bobp))
+        (forward-line -1))
+      (while (and (not (bobp))
+                  (looking-at "^\\s-*$"))
+        (setq trailing-empty-lines (1+ trailing-empty-lines))
+        (forward-line -1))
+
+      ;; Adjust start and end line numbers
+      (setq adjusted-start-line (+ start-line leading-empty-lines))
+      (setq adjusted-end-line (- end-line trailing-empty-lines))
+
+      ;; Extract the trimmed string
+      (goto-char (point-min))
+      (when (> leading-empty-lines 0)
+        (forward-line leading-empty-lines)
+        (delete-region (point-min) (point)))
+
+      (goto-char (point-max))
+      (when (> trailing-empty-lines 0)
+        (forward-line (- trailing-empty-lines))
+        (delete-region (point) (point-max)))
+
+      (setq trimmed-string (buffer-string))
+
+      ;; Return a list with the trimmed string and adjusted line numbers
+      (list trimmed-string adjusted-start-line adjusted-end-line))))
+
 ;;;###autoload
 (defun elysium-query (user-query)
   "Send USER-QUERY to elysium from the current buffer."
@@ -211,20 +261,25 @@ def add(a, b):
                              (progn (backward-char 1)
                                     (line-end-position))
                            (line-end-position))))
+         (selected-code (buffer-substring-no-properties start-line-pos end-line-pos))
          (start-line (line-number-at-pos start-line-pos))
          (end-line (line-number-at-pos end-line-pos))
-         (selected-code (buffer-substring-no-properties start-line-pos end-line-pos))
-         (file-type (symbol-name major-mode))
-         ;; Get cursor line position
          (cursor-line (line-number-at-pos (point)))
+         (file-type (symbol-name major-mode))
+         ;; Apply trimming and line adjustment
+         (adjustment-result (when using-region
+                              (trim-empty-lines-and-adjust selected-code start-line end-line)))
+         (final-code (if using-region (nth 0 adjustment-result) selected-code))
+         (final-start-line (if using-region (nth 1 adjustment-result) start-line))
+         (final-end-line (if using-region (nth 2 adjustment-result) end-line))
          ;; Include indentation info in the query
          (full-query (format "\n\nFile type: %s\nLine range: %d-%d\nCursor line: %d\n%s\n\nCode:\n```\n%s\n```\n\n%s"
                              file-type
-                             start-line
-                             end-line
+                             final-start-line
+                             final-end-line
                              cursor-line
                              ""
-                             selected-code
+                             final-code
                              user-query)))
 
     (setq elysium--last-query user-query)
@@ -232,8 +287,8 @@ def add(a, b):
 
     ;; Store region info for later use
     (setq-local elysium--using-region using-region)
-    (setq-local elysium--region-start-line start-line)
-    (setq-local elysium--region-end-line end-line)
+    (setq-local elysium--region-start-line final-start-line)
+    (setq-local elysium--region-end-line final-end-line)
 
     (with-current-buffer chat-buffer
       (goto-char (point-max))
@@ -244,7 +299,7 @@ def add(a, b):
     (gptel--update-status " Waiting..." 'warning)
     (message "Querying %s for lines %d-%d..."
              (gptel-backend-name gptel-backend)
-             start-line end-line)
+             final-start-line final-end-line)
     (deactivate-mark)
     (with-current-buffer chat-buffer
       (goto-char (point-max))
@@ -277,12 +332,7 @@ INFO is passed into this function from the `gptel-request' function."
 
       ;; Log the extracted changes if debug mode is enabled
       (when elysium-debug-mode
-        (elysium-debug-log "Extracted %d change(s)" (length changes))
-        (dolist (change changes)
-          (elysium-debug-log "Change - Lines %d-%d:\n%s"
-                             (plist-get change :start)
-                             (plist-get change :end)
-                             (plist-get change :code))))
+        (elysium-debug-log "Extracted %d change(s)" (length changes)))
 
       ;; mark undo boundary
       (undo-boundary)
@@ -340,35 +390,26 @@ Makes sure changes are properly aligned with the actual lines in the buffer."
   changes)
 
 (defun elysium-extract-changes (response)
-  "Extract the code-changes and explanations from RESPONSE.
-Explanations will be of the format:
-{Initial explanation}
-
-1st Code Change:
+  "Extract the code-changes from RESPONSE.
+Replace lines: 1-2
+<code>
 {Code Change}
+</code>
 
-2nd Code Change:
-{Code Change}"
+Replace lines: 4-4
+<code>
+{Code Change}
+</code>"
   (let ((changes '())
         (explanations '())
         (start 0)
         (change-count 0)
         (code-block-regex
-         "Replace [Ll]ines:? \\([0-9]+\\)-\\([0-9]+\\)\n<code>\\(?:[[:alpha:]-]+\\)?\n\\(\\(?:.\\|\n\\)*?\\)</code>"))
+         "Replace [Ll]ines:? \\([0-9]+\\)-\\([0-9]+\\)\n<code>\n\\(\\(?:.\\|\n\\)*?\\(?:\n\\)\\)</code>"))
     (while (string-match code-block-regex response start)
       (let ((change-start (string-to-number (match-string 1 response)))
             (change-end (string-to-number (match-string 2 response)))
-            (code (match-string 3 response))
-            (explanation-text (substring response start (match-beginning 0))))
-        ;; the initial explanation won't be preceded by nth Code Change
-        (when (not (string-empty-p explanation-text))
-          (push (if (= 0 change-count)
-                    explanation-text  ; For the first explanation, just use the text as is
-                  (format "%s Code Change:\n%s"
-                          (elysium--ordinal change-count)
-                          explanation-text))
-                explanations)
-          (setq change-count (1+ change-count)))
+            (code (match-string 3 response)))
         (push (list :start change-start
                     :end change-end
                     :code code)
@@ -400,7 +441,7 @@ for easier review."
         (dolist (change code-changes)
           (let* ((start (plist-get change :start))
                  (end (plist-get change :end))
-                 (new-code (string-trim-right (plist-get change :code)))
+                 (new-code (plist-get change :code))
                  (orig-code-start (progn
                                     (goto-char (point-min))
                                     (forward-line (1- (+ start offset)))
