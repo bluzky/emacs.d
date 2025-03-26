@@ -30,12 +30,6 @@
 ;; :config
 ;; (global-flycheck-mode +1))
 
-(use-package imenu-list
-  :bind
-  ("C-c i" . imenu-list-smart-toggle)
-  :config
-  (setq imenu-list-focus-after-activation t))
-
 
 (setq treesit-language-source-alist
       '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src"))
@@ -76,17 +70,11 @@
                        )))
   :custom
   (lsp-bridge-elixir-lsp-server 'lexical)
-  (lsp-bridge-get-project-path-by-filepath #'lsp-bridge-get-project-path-by-filepath)
   (acm-enable-search-file-words nil)
   (acm-enable-tabnine nil)
   (acm-enable-copilot nil)
   (acm-enable-citre nil)
-
-  :config
-  (defun lsp-bridge-get-project-path-by-filepath (filename)
-    (if-let ((project (project-current filename)))
-        (expand-file-name (project-root project))))
-  )
+  (lsp-bridge-enable-auto-format-code t))
 
 
 (use-package format-all
@@ -117,6 +105,7 @@
   (global-set-key (kbd "C-x c J") 'citre-jump-back)
   (global-set-key (kbd "C-x c p") 'citre-ace-peek)
   (global-set-key (kbd "C-x c u") 'citre-update-this-tags-file)
+  (define-key evil-normal-state-map (kbd "g d") 'citre-jump))
   :config
   (setq
    ;; Set these if readtags/ctags is not in your PATH.

@@ -61,28 +61,6 @@
 
 (require 'elysium)
 
-;; Add key binding for C-<return> (Ctrl+Enter) to trigger elysium-query in prog-mode
-(defun elysium-query-dwim ()
-  "Query elysium with the region if active, otherwise prompt for a query."
-  (interactive)
-  (if (use-region-p)
-      (call-interactively 'elysium-query)
-    (let ((current-prefix-arg '(4))) ; Simulate C-u prefix to prompt for region
-      (call-interactively 'elysium-query))))
-
-;; Define a keymap for programming modes
-(defvar elysium-prog-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-<return>") 'elysium-query-dwim)
-    map)
-  "Keymap for elysium in programming modes.")
-
-;; Set up a minor mode to attach the keymap
-(define-minor-mode elysium-prog-mode
-  "Minor mode for elysium in programming modes."
-  :lighter " Elysium"
-  :keymap elysium-prog-mode-map)
-
 ;; Enable the minor mode in all programming modes
 (add-hook 'prog-mode-hook 'elysium-prog-mode)
 

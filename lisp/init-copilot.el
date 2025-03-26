@@ -37,8 +37,7 @@ tab-indent."
                    :branch "master"
                    :files ("*.el"))
 
-   :bind (("C-c C-c" . copilot-chat-display)
-          ("C-c d" . copilot-chat-transient))
+   :bind (("C-c C-c" . copilot-chat-display))
   :custom
   (copilot-chat-frontend 'markdown)
   (copilot-chat-model "claude-3.7-sonnet"))

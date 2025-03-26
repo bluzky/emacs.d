@@ -19,13 +19,6 @@
   :config (column-number-mode +1))
 
 
-;; Auto change theme based on time
-(use-package auto-dark
-  :defer t
-  :custom
-  (auto-dark-themes '((doom-nord) (doom-solarized-light)))
-  :init (auto-dark-mode))
-
 ;; By default, the scrolling is way too fast to be precise and helpful, let’s tune it down a little bit.
 
 (use-package mwheel

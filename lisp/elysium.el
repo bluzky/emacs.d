@@ -82,8 +82,14 @@ Must be a number between 0 and 1, exclusive."
   :group 'elysium
   :type 'string)
 
+(defvar elysium-ask-system-prompt
+  "You are an expert programmer and coding assistant.
+Your task is to provide helpful, accurate, and relevant information about the code provided.
+Be concise yet thorough in your explanations.
+Your answers should be clear, informative, and directly related to the code provided.
+Your answer should be short and focus ONLY on the questions asked.")
 
-(setq elysium-base-prompt "Your task is to create exact code modifications with explicit line number ranges.
+(defvar elysium-base-prompt "Your task is to create exact code modifications with explicit line number ranges.
 Act as an expert software developer.
 Always use best practices when coding.
 Respect and use existing conventions, libraries, etc that are already present in the code base.
@@ -182,10 +188,64 @@ def add(a, b):
       (other-window 1)
       (set-window-buffer (selected-window) elysium--chat-buffer))))
 
+;;;###autoload
+(defun elysium-ask (user-prompt)
+  "Ask a question about the selected code region"
+  (interactive "sAsk about code: ")
+  (if (not (use-region-p))
+      (message "Please select a region of code first")
+    ;; Region is selected, proceed with LLM query
+    (unless (buffer-live-p elysium--chat-buffer)
+      (setq elysium--chat-buffer (gptel "*elysium*")))
+
+    (let* ((chat-buffer elysium--chat-buffer)
+           (selected-code (buffer-substring-no-properties (region-beginning) (region-end)))
+           (file-type (symbol-name major-mode))
+           (lang-name (replace-regexp-in-string "-mode$\\|-ts-mode$" "" file-type))
+           ;; Create the full prompt with code context
+           (full-prompt (format "Code (%s):\n```%s\n%s\n```\n\nQuestion: %s"
+                                lang-name
+                                lang-name
+                                selected-code
+                                user-prompt)))
+
+      ;; Update chat buffer with the query
+      (with-current-buffer chat-buffer
+        (goto-char (point-max))
+        (insert "\n\n### USER:\n")
+        (insert full-prompt)
+        (insert "\n"))
+
+      ;; Show the chat window
+      (elysium-setup-windows)
+
+      ;; Update status and send request
+      (gptel--update-status " Waiting..." 'warning)
+      (message "Asking LLM about selected code...")
+      (deactivate-mark)
+
+      (gptel-request full-prompt
+        :system elysium-ask-system-prompt
+        :buffer chat-buffer
+        :callback 'elysium-ask-callback))))
+
+(defun elysium-ask-callback (response _info)
+  "Handle the RESPONSE from LLM for elysium-ask.
+_INFO is unused but required by the gptel callback interface."
+  (when response
+    (with-current-buffer elysium--chat-buffer
+      (goto-char (point-max))
+      (insert "\n\n### ASSISTANT:\n")
+      (insert response)
+      (insert "\n")
+
+      ;; Update status
+      (gptel--sanitize-model)
+      (gptel--update-status " Ready" 'success))
+    (message "LLM response received")))
 
 (defun trim-empty-lines-and-adjust (string start-line end-line)
-  "Trim leading and trailing empty lines from STRING and adjust START-LINE and END-LINE accordingly.
-Returns a list containing the trimmed string, adjusted start-line, and adjusted end-line."
+  "Trim leading and trailing empty lines and adjust line numbers."
   (with-temp-buffer
     ;; Insert the string into a temporary buffer
     (insert string)
@@ -401,9 +461,7 @@ Replace lines: 4-4
 {Code Change}
 </code>"
   (let ((changes '())
-        (explanations '())
         (start 0)
-        (change-count 0)
         (code-block-regex
          "Replace [Ll]ines:? \\([0-9]+\\)-\\([0-9]+\\)\n<code>\n\\(\\(?:.\\|\n\\)*?\\(?:\n\\)\\)</code>"))
     (while (string-match code-block-regex response start)
@@ -417,18 +475,7 @@ Replace lines: 4-4
 
         ;; Update start index in the response string
         (setq start (match-end 0))))
-
-    ;; Add any remaining text as the last explanation
-    (let ((remaining-text (substring response start)))
-      (when (not (string-empty-p remaining-text))
-        (push (if (= 0 change-count)
-                  remaining-text
-                (format "%s Code Change:\n%s"
-                        (elysium--ordinal change-count)
-                        remaining-text))
-              explanations)))
-    (list :explanations (nreverse explanations)
-          :changes (nreverse changes))))
+    (list :changes (nreverse changes))))
 
 (defun elysium-apply-code-changes (buffer code-changes)
   "Apply CODE-CHANGES to BUFFER in a git merge format.
@@ -822,12 +869,14 @@ For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
 (defvar elysium-prog-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-<return>") 'elysium-query-dwim)
+    (define-key map (kbd "C-c a") 'elysium-ask)
     (define-key map (kbd "C-c e t") 'elysium-toggle-window)
     (define-key map (kbd "C-c e a") 'elysium-add-context)
-    (define-key map (kbd "C-c e c") 'elysium-clear-buffer)
-    (define-key map (kbd "C-c e d") 'elysium-toggle-debug-mode)
+    (define-key map (kbd "C-c e c") 'elysium-ask)
+    (define-key map (kbd "C-c e d") 'elysium-clear-buffer)
+    (define-key map (kbd "C-c e L") 'elysium-toggle-debug-mode)
     (define-key map (kbd "C-c e l") 'elysium-debug-log)
-    (define-key map (kbd "C-c e l") 'elysium-transient-menu)
+    (define-key map (kbd "C-c e m") 'elysium-transient-menu)
     map)
   "Keymap for elysium in programming modes.")
 
