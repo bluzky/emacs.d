@@ -384,9 +384,9 @@ INFO is passed into this function from the `gptel-request' function."
       ;; Log the extracted code if debug mode is enabled
       (when relysium-debug-mode
         (relysium-debug-log "Extracted code change: %s"
-                           (if code-change
-                               (format "%s" code-change)
-                             "None found")))
+                            (if code-change
+                                (format "%s" code-change)
+                              "None found")))
 
       ;; mark undo boundary
       (with-current-buffer code-buffer
@@ -401,8 +401,8 @@ INFO is passed into this function from the `gptel-request' function."
                                  (buffer-local-value 'relysium--region-start-line code-buffer)
                                current-line))
                  (end-line (if using-region
-                              (buffer-local-value 'relysium--region-end-line code-buffer)
-                            current-line))
+                               (buffer-local-value 'relysium--region-end-line code-buffer)
+                             current-line))
                  (change (list :start start-line
                                :end end-line
                                :code code-change)))
@@ -484,7 +484,7 @@ CHANGE is a plist with :start, :end, and :code properties."
              (orig-code (buffer-substring-no-properties orig-code-start orig-code-end)))
 
         (relysium-debug-log "Applying change from line %d to %d:\n--%s--\n"
-                           start end orig-code)
+                            start end orig-code)
 
         ;; If the change is multi-line, try to refine the diff
         (if (and (> (length (split-string orig-code "\n")) 1)
@@ -552,131 +552,136 @@ Each chunk is of the form (TYPE ORIG-CHUNK NEW-CHUNK) where:
 - NEW-CHUNK is a list of lines from the new text
 
 For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
-  (let ((chunks nil)
-        (i 0)
-        (j 0)
-        (orig-len (length orig-lines))
-        (new-len (length new-lines))
-        (current-chunk-type nil)
-        (current-orig-chunk nil)
-        (current-new-chunk nil))
+  ;; Special case: if both input lists are empty, return an empty list
+  (if (and (null orig-lines) (null new-lines))
+      nil  ;; Return nil (empty list) when both inputs are empty
+    ;; Normal processing for non-empty inputs
 
-    ;; Compare lines and build chunks
-    (while (or (< i orig-len) (< j new-len))
-      (let ((orig-line (when (< i orig-len) (nth i orig-lines)))
-            (new-line (when (< j new-len) (nth j new-lines)))
-            (lines-match (and (< i orig-len)
-                              (< j new-len)
-                              (string= (nth i orig-lines) (nth j new-lines)))))
+    (let ((chunks nil)
+          (i 0)
+          (j 0)
+          (orig-len (length orig-lines))
+          (new-len (length new-lines))
+          (current-chunk-type nil)
+          (current-orig-chunk nil)
+          (current-new-chunk nil))
 
-        (if lines-match
-            ;; Lines match - they're part of a 'same' chunk
+      ;; Compare lines and build chunks
+      (while (or (< i orig-len) (< j new-len))
+        (let ((orig-line (when (< i orig-len) (nth i orig-lines)))
+              (new-line (when (< j new-len) (nth j new-lines)))
+              (lines-match (and (< i orig-len)
+                                (< j new-len)
+                                (string= (nth i orig-lines) (nth j new-lines)))))
+
+          (if lines-match
+              ;; Lines match - they're part of a 'same' chunk
+              (progn
+                ;; If we were in a 'diff' chunk, finalize it
+                (when (eq current-chunk-type 'diff)
+                  (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+                  (setq current-orig-chunk nil
+                        current-new-chunk nil))
+
+                ;; Add to or start a 'same' chunk
+                (if (eq current-chunk-type 'same)
+                    (progn
+                      (push orig-line current-orig-chunk)
+                      (push new-line current-new-chunk))
+                  (setq current-chunk-type 'same
+                        current-orig-chunk (list orig-line)
+                        current-new-chunk (list new-line)))
+
+                ;; Move to next lines
+                (cl-incf i)
+                (cl-incf j))
+
+            ;; Lines don't match - they're part of a 'diff' chunk
             (progn
-              ;; If we were in a 'diff' chunk, finalize it
-              (when (eq current-chunk-type 'diff)
-                (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+              ;; If we were in a 'same' chunk, finalize it
+              (when (eq current-chunk-type 'same)
+                ;; Reverse the lists to restore order
+                (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
                 (setq current-orig-chunk nil
                       current-new-chunk nil))
 
-              ;; Add to or start a 'same' chunk
-              (if (eq current-chunk-type 'same)
-                  (progn
+              ;; Add to or start a 'diff' chunk
+              (setq current-chunk-type 'diff)
+
+              ;; The heuristic below finds the 'best' way to advance through the diff
+              ;; Look ahead to find matching lines
+              (let ((match-distance-i nil)
+                    (match-distance-j nil))
+
+                ;; Look ahead in orig-lines to find a match with current new-line
+                (when (and new-line (< i orig-len))
+                  (let ((k 0))
+                    (while (and (< (+ i k) orig-len)
+                                (< k 10) ; Limit how far we look ahead
+                                (not match-distance-i))
+                      (when (string= (nth (+ i k) orig-lines) new-line)
+                        (setq match-distance-i k))
+                      (cl-incf k))))
+
+                ;; Look ahead in new-lines to find a match with current orig-line
+                (when (and orig-line (< j new-len))
+                  (let ((k 0))
+                    (while (and (< (+ j k) new-len)
+                                (< k 10) ; Limit how far we look ahead
+                                (not match-distance-j))
+                      (when (string= (nth (+ j k) new-lines) orig-line)
+                        (setq match-distance-j k))
+                      (cl-incf k))))
+
+                ;; Decide which way to advance based on match distances
+                (cond
+                 ;; If we're at the end of either list, consume the other
+                 ((>= i orig-len)
+                  (when new-line
+                    (push new-line current-new-chunk)
+                    (cl-incf j)))
+                 ((>= j new-len)
+                  (when orig-line
                     (push orig-line current-orig-chunk)
-                    (push new-line current-new-chunk))
-                (setq current-chunk-type 'same
-                      current-orig-chunk (list orig-line)
-                      current-new-chunk (list new-line)))
+                    (cl-incf i)))
 
-              ;; Move to next lines
-              (cl-incf i)
-              (cl-incf j))
+                 ;; If we found a match in both directions, take the shortest path
+                 ((and match-distance-i match-distance-j)
+                  (if (< match-distance-i match-distance-j)
+                      (progn
+                        (push orig-line current-orig-chunk)
+                        (cl-incf i))
+                    (push new-line current-new-chunk)
+                    (cl-incf j)))
 
-          ;; Lines don't match - they're part of a 'diff' chunk
-          (progn
-            ;; If we were in a 'same' chunk, finalize it
-            (when (eq current-chunk-type 'same)
-              ;; Reverse the lists to restore order
-              (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-              (setq current-orig-chunk nil
-                    current-new-chunk nil))
-
-            ;; Add to or start a 'diff' chunk
-            (setq current-chunk-type 'diff)
-
-            ;; The heuristic below finds the 'best' way to advance through the diff
-            ;; Look ahead to find matching lines
-            (let ((match-distance-i nil)
-                  (match-distance-j nil))
-
-              ;; Look ahead in orig-lines to find a match with current new-line
-              (when (and new-line (< i orig-len))
-                (let ((k 0))
-                  (while (and (< (+ i k) orig-len)
-                              (< k 10) ; Limit how far we look ahead
-                              (not match-distance-i))
-                    (when (string= (nth (+ i k) orig-lines) new-line)
-                      (setq match-distance-i k))
-                    (cl-incf k))))
-
-              ;; Look ahead in new-lines to find a match with current orig-line
-              (when (and orig-line (< j new-len))
-                (let ((k 0))
-                  (while (and (< (+ j k) new-len)
-                              (< k 10) ; Limit how far we look ahead
-                              (not match-distance-j))
-                    (when (string= (nth (+ j k) new-lines) orig-line)
-                      (setq match-distance-j k))
-                    (cl-incf k))))
-
-              ;; Decide which way to advance based on match distances
-              (cond
-               ;; If we're at the end of either list, consume the other
-               ((>= i orig-len)
-                (when new-line
-                  (push new-line current-new-chunk)
-                  (cl-incf j)))
-               ((>= j new-len)
-                (when orig-line
+                 ;; If we found a match in just one direction, go that way
+                 (match-distance-i
                   (push orig-line current-orig-chunk)
-                  (cl-incf i)))
-
-               ;; If we found a match in both directions, take the shortest path
-               ((and match-distance-i match-distance-j)
-                (if (< match-distance-i match-distance-j)
-                    (progn
-                      (push orig-line current-orig-chunk)
-                      (cl-incf i))
+                  (cl-incf i))
+                 (match-distance-j
                   (push new-line current-new-chunk)
-                  (cl-incf j)))
+                  (cl-incf j))
 
-               ;; If we found a match in just one direction, go that way
-               (match-distance-i
-                (push orig-line current-orig-chunk)
-                (cl-incf i))
-               (match-distance-j
-                (push new-line current-new-chunk)
-                (cl-incf j))
+                 ;; No match found, just advance both
+                 (t
+                  (when orig-line
+                    (push orig-line current-orig-chunk))
+                  (when new-line
+                    (push new-line current-new-chunk))
+                  (cl-incf i)
+                  (cl-incf j)))))))
 
-               ;; No match found, just advance both
-               (t
-                (when orig-line
-                  (push orig-line current-orig-chunk))
-                (when new-line
-                  (push new-line current-new-chunk))
-                (cl-incf i)
-                (cl-incf j)))))))
+        ;; End of main loop
+        )
 
-      ;; End of main loop
-      )
+      ;; Finalize the last chunk
+      (when current-chunk-type
+        (if (eq current-chunk-type 'same)
+            (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+          (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)))
 
-    ;; Finalize the last chunk
-    (when current-chunk-type
-      (if (eq current-chunk-type 'same)
-          (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-        (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)))
-
-    ;; Return the chunks in correct order
-    (reverse chunks)))
+      ;; Return the chunks in correct order
+      (reverse chunks))))
 
 (defun relysium-clear-buffer ()
   "Clear the elysium buffer."
