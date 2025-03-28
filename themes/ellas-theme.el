@@ -82,7 +82,7 @@
    `(font-lock-doc-markup-face ((t (:foreground ,aged-jade ))))
    `(font-lock-punctuation-face ((t (:foreground ,aged-jade ))))
    `(font-lock-type-face ((t (:foreground ,olive-green-darker ))))
-   `(font-lock-function-name-face ((t (:foreground ,sky-blue-athens :bold t ))))
+   `(font-lock-function-name-face ((t (:foreground ,sky-blue-athens :bold nil ))))
    `(font-lock-variable-name-face ((t (:foreground ,sky-blue-athens ))))
    `(font-lock-keyword-face ((t (:foreground ,dark-neon-blue ))))
    `(font-lock-string-face ((t (:foreground ,agora-tile-red ))))
