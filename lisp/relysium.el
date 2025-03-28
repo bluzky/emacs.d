@@ -486,388 +486,411 @@ CHANGE is a plist with :start, :end, and :code properties."
         (relysium-debug-log "Applying change from line %d to %d:\n--%s--\n"
                             start end orig-code)
 
-        ;; If the change is multi-line, try to refine the diff
-        (if (and (> (length (split-string orig-code "\n")) 1)
-                 (> (length (split-string new-code "\n")) 1))
-            (relysium--apply-refined-change orig-code-start orig-code-end orig-code new-code)
-          ;; For single-line changes or very small changes, use the simple approach
-          (relysium--apply-simple-change orig-code-start orig-code-end orig-code new-code))))
-    (run-hooks 'relysium-apply-changes-hook)))
+        (relysium--apply-refined-change orig-code-start orig-code-end orig-code new-code)
+        (run-hooks 'relysium-apply-changes-hook)))
 
-(defun relysium--apply-simple-change (start end orig-code new-code)
-  "Apply a simple change with conflict markers.
+    (defun relysium--apply-simple-change (start end orig-code new-code)
+      "Apply a simple change with conflict markers.
 Replace the region from START to END containing ORIG-CODE with conflict markers
 containing both ORIG-CODE and NEW-CODE."
-  (delete-region start end)
-  (goto-char start)
-  (insert (concat "<<<<<<< HEAD\n"
-                  orig-code
-                  "=======\n"
-                  new-code
-                  "\n>>>>>>> " (gptel-backend-name gptel-backend) "\n")))
+      (delete-region start end)
+      (goto-char start)
+      (insert (concat "<<<<<<< HEAD\n"
+                      orig-code
+                      "=======\n"
+                      new-code
+                      "\n>>>>>>> " (gptel-backend-name gptel-backend) "\n")))
 
-(defun relysium--apply-refined-change (start end orig-code new-code)
-  "Apply a refined change that breaks code into smaller conflict chunks.
+    (defun relysium--apply-refined-change (start end orig-code new-code)
+      "Apply a refined change that breaks code into smaller conflict chunks.
 Replace the region from START to END containing ORIG-CODE with a refined diff
 against NEW-CODE, using conflict markers for each meaningful chunk."
-  (delete-region start end)
-  (goto-char start)
+      (delete-region start end)
+      (goto-char start)
 
-  ;; Split both code blocks into lines
-  (let* ((orig-lines (split-string orig-code "\n"))
-         (new-lines (split-string new-code "\n"))
-         (chunks (relysium--create-diff-chunks orig-lines new-lines)))
+      ;; Split both code blocks into lines
+      (let* ((orig-lines (split-string orig-code "\n"))
+             (new-lines (split-string new-code "\n"))
+             (chunks (relysium--create-diff-chunks orig-lines new-lines)))
 
-    ;; Insert each chunk with appropriate conflict markers
-    (dolist (chunk chunks)
-      (let ((chunk-type (car chunk))
-            (orig-chunk-lines (nth 1 chunk))
-            (new-chunk-lines (nth 2 chunk)))
+        ;; Insert each chunk with appropriate conflict markers
+        (dolist (chunk chunks)
+          (let ((chunk-type (car chunk))
+                (orig-chunk-lines (nth 1 chunk))
+                (new-chunk-lines (nth 2 chunk)))
 
-        (cond
-         ;; Lines that are the same in both versions - no conflict needed
-         ((eq chunk-type 'same)
-          (let ((text (string-join orig-chunk-lines "\n")))
-            (insert text)
-            (when (> (length text) 0)
-              (insert "\n"))))
+            (cond
+             ;; Lines that are the same in both versions - no conflict needed
+             ((eq chunk-type 'same)
+              (let ((text (string-join orig-chunk-lines "\n")))
+                (insert text)
+                (when (> (length text) 0)
+                  (insert "\n"))))
 
-         ;; Lines that differ - add conflict markers
-         ((eq chunk-type 'diff)
-          (let ((orig-text (string-join orig-chunk-lines "\n"))
-                (new-text (string-join new-chunk-lines "\n")))
-            (insert "<<<<<<< HEAD\n")
-            (when (> (length orig-text) 0)
-              (insert orig-text "\n"))
-            (insert "=======\n")
-            (when (> (length new-text) 0)
-              (insert new-text "\n"))
-            (insert ">>>>>>> " (gptel-backend-name gptel-backend) "\n"))))))))
+             ;; Lines that differ - add conflict markers
+             ((eq chunk-type 'diff)
+              (let ((orig-text (string-join orig-chunk-lines "\n"))
+                    (new-text (string-join new-chunk-lines "\n")))
+                (insert "<<<<<<< HEAD\n")
+                (when (> (length orig-text) 0)
+                  (insert orig-text "\n"))
+                (insert "=======\n")
+                (when (> (length new-text) 0)
+                  (insert new-text "\n"))
+                (insert ">>>>>>> " (gptel-backend-name gptel-backend) "\n"))))))))
 
-(defun relysium--create-diff-chunks (orig-lines new-lines)
-  "Create a list of diff chunks between ORIG-LINES and NEW-LINES.
+    (defun relysium--create-diff-chunks (orig-lines new-lines)
+      "Create a list of diff chunks between ORIG-LINES and NEW-LINES.
 Each chunk is of the form (TYPE ORIG-CHUNK NEW-CHUNK) where:
 - TYPE is either 'same or 'diff
 - ORIG-CHUNK is a list of lines from the original text
 - NEW-CHUNK is a list of lines from the new text
 
 For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
-  ;; Special case: if both input lists are empty, return an empty list
-  (if (and (null orig-lines) (null new-lines))
-      nil  ;; Return nil (empty list) when both inputs are empty
-    ;; Normal processing for non-empty inputs
+      ;; Special case: if both input lists are empty, return an empty list
+      (if (and (null orig-lines) (null new-lines))
+          nil
+        (let ((chunks nil)
+              (i 0)
+              (j 0)
+              (orig-len (length orig-lines))
+              (new-len (length new-lines))
+              (current-chunk-type nil)
+              (current-orig-chunk nil)
+              (current-new-chunk nil))
 
-    (let ((chunks nil)
-          (i 0)
-          (j 0)
-          (orig-len (length orig-lines))
-          (new-len (length new-lines))
-          (current-chunk-type nil)
-          (current-orig-chunk nil)
-          (current-new-chunk nil))
+          ;; Compare lines and build chunks
+          (while (or (< i orig-len) (< j new-len))
+            (let ((orig-line (when (< i orig-len) (nth i orig-lines)))
+                  (new-line (when (< j new-len) (nth j new-lines)))
+                  (lines-match (and (< i orig-len)
+                                    (< j new-len)
+                                    (string= (nth i orig-lines) (nth j new-lines)))))
 
-      ;; Compare lines and build chunks
-      (while (or (< i orig-len) (< j new-len))
-        (let ((orig-line (when (< i orig-len) (nth i orig-lines)))
-              (new-line (when (< j new-len) (nth j new-lines)))
-              (lines-match (and (< i orig-len)
-                                (< j new-len)
-                                (string= (nth i orig-lines) (nth j new-lines)))))
+              (if lines-match
+                  ;; Lines match - they're part of a 'same' chunk
+                  (progn
+                    ;; If we were in a 'diff' chunk, finalize it
+                    (when (eq current-chunk-type 'diff)
+                      (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+                      (setq current-orig-chunk nil
+                            current-new-chunk nil))
 
-          (if lines-match
-              ;; Lines match - they're part of a 'same' chunk
-              (progn
-                ;; If we were in a 'diff' chunk, finalize it
-                (when (eq current-chunk-type 'diff)
-                  (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-                  (setq current-orig-chunk nil
-                        current-new-chunk nil))
+                    ;; Add to or start a 'same' chunk
+                    (if (eq current-chunk-type 'same)
+                        (progn
+                          (push orig-line current-orig-chunk)
+                          (push new-line current-new-chunk))
+                      (setq current-chunk-type 'same
+                            current-orig-chunk (list orig-line)
+                            current-new-chunk (list new-line)))
 
-                ;; Add to or start a 'same' chunk
-                (if (eq current-chunk-type 'same)
-                    (progn
+                    ;; Move to next lines
+                    (cl-incf i)
+                    (cl-incf j))
+
+                ;; Lines don't match - they're part of a 'diff' chunk
+                (progn
+                  ;; If we were in a 'same' chunk, finalize it
+                  (when (eq current-chunk-type 'same)
+                    ;; Reverse the lists to restore order
+                    (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+                    (setq current-orig-chunk nil
+                          current-new-chunk nil))
+
+                  ;; Add to or start a 'diff' chunk
+                  (setq current-chunk-type 'diff)
+
+                  ;; Enhanced look-ahead heuristic that considers sequence length
+                  (let ((best-match-i nil)
+                        (best-match-j nil)
+                        (best-match-length 0)
+                        (max-lookahead 20)) ; Increase look-ahead distance
+
+                    ;; Look for the best matching sequence in orig-lines
+                    (when (and new-line (< i orig-len))
+                      (let ((k 0))
+                        (while (and (< (+ i k) orig-len)
+                                    (< k max-lookahead))
+                          (when (string= (nth (+ i k) orig-lines) new-line)
+                            ;; Found a potential match, now calculate how long the matching sequence is
+                            (let ((match-i (+ i k))
+                                  (match-j j)
+                                  (match-length 0))
+                              (while (and (< match-i orig-len)
+                                          (< match-j new-len)
+                                          (string= (nth match-i orig-lines) (nth match-j new-lines)))
+                                (cl-incf match-length)
+                                (cl-incf match-i)
+                                (cl-incf match-j))
+
+                              ;; If this sequence is longer than our current best, update best match
+                              (when (> match-length best-match-length)
+                                (setq best-match-i k
+                                      best-match-length match-length))))
+                          (cl-incf k))))
+
+                    ;; Look for the best matching sequence in new-lines
+                    (when (and orig-line (< j new-len))
+                      (let ((k 0))
+                        (while (and (< (+ j k) new-len)
+                                    (< k max-lookahead))
+                          (when (string= (nth (+ j k) new-lines) orig-line)
+                            ;; Found a potential match, now calculate how long the matching sequence is
+                            (let ((match-i i)
+                                  (match-j (+ j k))
+                                  (match-length 0))
+                              (while (and (< match-i orig-len)
+                                          (< match-j new-len)
+                                          (string= (nth match-i orig-lines) (nth match-j new-lines)))
+                                (cl-incf match-length)
+                                (cl-incf match-i)
+                                (cl-incf match-j))
+
+                              ;; If this sequence is longer than our current best, update best match
+                              (when (> match-length best-match-length)
+                                (setq best-match-j k
+                                      best-match-length match-length))))
+                          (cl-incf k))))
+
+                    ;; Decide which way to advance based on match distances and lengths
+                    (cond
+                     ;; If we're at the end of either list, consume the other
+                     ((>= i orig-len)
+                      (push new-line current-new-chunk)
+                      (cl-incf j))
+                     ((>= j new-len)
                       (push orig-line current-orig-chunk)
-                      (push new-line current-new-chunk))
-                  (setq current-chunk-type 'same
-                        current-orig-chunk (list orig-line)
-                        current-new-chunk (list new-line)))
+                      (cl-incf i))
 
-                ;; Move to next lines
-                (cl-incf i)
-                (cl-incf j))
-
-            ;; Lines don't match - they're part of a 'diff' chunk
-            (progn
-              ;; If we were in a 'same' chunk, finalize it
-              (when (eq current-chunk-type 'same)
-                ;; Reverse the lists to restore order
-                (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-                (setq current-orig-chunk nil
-                      current-new-chunk nil))
-
-              ;; Add to or start a 'diff' chunk
-              (setq current-chunk-type 'diff)
-
-              ;; The heuristic below finds the 'best' way to advance through the diff
-              ;; Look ahead to find matching lines
-              (let ((match-distance-i nil)
-                    (match-distance-j nil))
-
-                ;; Look ahead in orig-lines to find a match with current new-line
-                (when (and new-line (< i orig-len))
-                  (let ((k 0))
-                    (while (and (< (+ i k) orig-len)
-                                (< k 10) ; Limit how far we look ahead
-                                (not match-distance-i))
-                      (when (string= (nth (+ i k) orig-lines) new-line)
-                        (setq match-distance-i k))
-                      (cl-incf k))))
-
-                ;; Look ahead in new-lines to find a match with current orig-line
-                (when (and orig-line (< j new-len))
-                  (let ((k 0))
-                    (while (and (< (+ j k) new-len)
-                                (< k 10) ; Limit how far we look ahead
-                                (not match-distance-j))
-                      (when (string= (nth (+ j k) new-lines) orig-line)
-                        (setq match-distance-j k))
-                      (cl-incf k))))
-
-                ;; Decide which way to advance based on match distances
-                (cond
-                 ;; If we're at the end of either list, consume the other
-                 ((>= i orig-len)
-                  (when new-line
-                    (push new-line current-new-chunk)
-                    (cl-incf j)))
-                 ((>= j new-len)
-                  (when orig-line
-                    (push orig-line current-orig-chunk)
-                    (cl-incf i)))
-
-                 ;; If we found a match in both directions, take the shortest path
-                 ((and match-distance-i match-distance-j)
-                  (if (< match-distance-i match-distance-j)
-                      (progn
+                     ;; If we found a good sequence match, prioritize it
+                     ((> best-match-length 1)  ; Require at least 2 matching lines to consider it significant
+                      (cond
+                       ;; If we have matches in both directions, choose the one with the shorter distance
+                       ((and best-match-i best-match-j)
+                        (if (< best-match-i best-match-j)
+                            (progn
+                              (push orig-line current-orig-chunk)
+                              (cl-incf i))
+                          (push new-line current-new-chunk)
+                          (cl-incf j)))
+                       ;; Just go with the direction that has a match
+                       (best-match-i
                         (push orig-line current-orig-chunk)
                         (cl-incf i))
-                    (push new-line current-new-chunk)
-                    (cl-incf j)))
+                       (best-match-j
+                        (push new-line current-new-chunk)
+                        (cl-incf j))
+                       ;; Fallback case (shouldn't happen with our logic, but just to be safe)
+                       (t
+                        (when orig-line (push orig-line current-orig-chunk))
+                        (when new-line (push new-line current-new-chunk))
+                        (cl-incf i)
+                        (cl-incf j))))
 
-                 ;; If we found a match in just one direction, go that way
-                 (match-distance-i
-                  (push orig-line current-orig-chunk)
-                  (cl-incf i))
-                 (match-distance-j
-                  (push new-line current-new-chunk)
-                  (cl-incf j))
+                     ;; No significant sequence match found, just advance both
+                     (t
+                      (when orig-line
+                        (push orig-line current-orig-chunk))
+                      (when new-line
+                        (push new-line current-new-chunk))
+                      (cl-incf i)
+                      (cl-incf j))))))))
 
-                 ;; No match found, just advance both
-                 (t
-                  (when orig-line
-                    (push orig-line current-orig-chunk))
-                  (when new-line
-                    (push new-line current-new-chunk))
-                  (cl-incf i)
-                  (cl-incf j)))))))
+          ;; Finalize the last chunk
+          (when current-chunk-type
+            (if (eq current-chunk-type 'same)
+                (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+              (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)))
 
-        ;; End of main loop
-        )
+          ;; Return the chunks in correct order
+          (nreverse chunks))))
 
-      ;; Finalize the last chunk
-      (when current-chunk-type
-        (if (eq current-chunk-type 'same)
-            (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-          (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)))
+    (defun relysium-clear-buffer ()
+      "Clear the elysium buffer."
+      (interactive)
+      (with-current-buffer relysium--chat-buffer
+        (erase-buffer)
+        (insert (gptel-prompt-prefix-string))))
 
-      ;; Return the chunks in correct order
-      (reverse chunks))))
+    (defun relysium-add-context (content)
+      "Add CONTENT as context to the elysium chat buffer."
+      (interactive
+       (list (if (region-active-p)
+                 (buffer-substring-no-properties (region-beginning) (region-end))
+               (buffer-substring-no-properties (point-min) (point-max)))))
+      ;; Ensure chat buffer exists
+      (unless (buffer-live-p relysium--chat-buffer)
+        (setq relysium--chat-buffer (gptel "*elysium*")))
 
-(defun relysium-clear-buffer ()
-  "Clear the elysium buffer."
-  (interactive)
-  (with-current-buffer relysium--chat-buffer
-    (erase-buffer)
-    (insert (gptel-prompt-prefix-string))))
+      (let ((code-buffer-language
+             (string-trim-right
+              (string-trim-right (symbol-name major-mode) "-ts-mode$") "-mode$")))
+        (with-current-buffer relysium--chat-buffer
+          (goto-char (point-max))
+          (insert "\n")
+          (insert (format "```%s\n%s\n```" code-buffer-language content))
+          (insert "\n"))))
 
-(defun relysium-add-context (content)
-  "Add CONTENT as context to the elysium chat buffer."
-  (interactive
-   (list (if (region-active-p)
-             (buffer-substring-no-properties (region-beginning) (region-end))
-           (buffer-substring-no-properties (point-min) (point-max)))))
-  ;; Ensure chat buffer exists
-  (unless (buffer-live-p relysium--chat-buffer)
-    (setq relysium--chat-buffer (gptel "*elysium*")))
+    (defun relysium-keep-all-suggested-changes ()
+      "Keep all of the LLM suggestions."
+      (interactive)
+      (save-excursion
+        (goto-char (point-min))
+        (ignore-errors (funcall #'smerge-keep-lower))
+        (while (ignore-errors (not (smerge-next)))
+          (funcall #'smerge-keep-lower))
+        (smerge-mode -1)
+        (message "All suggested changes applied")))
 
-  (let ((code-buffer-language
-         (string-trim-right
-          (string-trim-right (symbol-name major-mode) "-ts-mode$") "-mode$")))
-    (with-current-buffer relysium--chat-buffer
-      (goto-char (point-max))
-      (insert "\n")
-      (insert (format "```%s\n%s\n```" code-buffer-language content))
-      (insert "\n"))))
+    (defun relysium-discard-all-suggested-changes ()
+      "Discard all of the LLM suggestions."
+      (interactive)
+      (undo)
+      (smerge-mode -1)
+      (message "All suggested changes discarded"))
 
-(defun relysium-keep-all-suggested-changes ()
-  "Keep all of the LLM suggestions."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (ignore-errors (funcall #'smerge-keep-lower))
-    (while (ignore-errors (not (smerge-next)))
-      (funcall #'smerge-keep-lower))
-    (smerge-mode -1)
-    (message "All suggested changes applied")))
+    (defun relysium-navigate-next-change ()
+      "Navigate to the next change suggestion and keep the transient menu active."
+      (interactive)
+      (if (ignore-errors (smerge-next))
+          (message "Navigated to next change")
+        (message "No more changes"))
+      ;; Keep the transient menu active
+      (relysium-transient-menu))
 
-(defun relysium-discard-all-suggested-changes ()
-  "Discard all of the LLM suggestions."
-  (interactive)
-  (undo)
-  (smerge-mode -1)
-  (message "All suggested changes discarded"))
+    (defun relysium-navigate-prev-change ()
+      "Navigate to the previous change suggestion and keep the transient menu active."
+      (interactive)
+      (if (ignore-errors (smerge-prev))
+          (message "Navigated to previous change")
+        (message "No more changes"))
+      ;; Keep the transient menu active
+      (relysium-transient-menu))
 
-(defun relysium-navigate-next-change ()
-  "Navigate to the next change suggestion and keep the transient menu active."
-  (interactive)
-  (if (ignore-errors (smerge-next))
-      (message "Navigated to next change")
-    (message "No more changes"))
-  ;; Keep the transient menu active
-  (relysium-transient-menu))
+    (defun relysium-keep-current-change ()
+      "Keep the current suggested change and move to the next one."
+      (interactive)
+      (smerge-keep-lower)
+      (if (ignore-errors (not (smerge-next)))
+          (progn
+            (message "All changes reviewed - no more conflicts")
+            (smerge-mode -1))
+        (message "Applied change - move to next")
+        ;; Keep the transient menu active if there are more changes
+        (relysium-transient-menu)))
 
-(defun relysium-navigate-prev-change ()
-  "Navigate to the previous change suggestion and keep the transient menu active."
-  (interactive)
-  (if (ignore-errors (smerge-prev))
-      (message "Navigated to previous change")
-    (message "No more changes"))
-  ;; Keep the transient menu active
-  (relysium-transient-menu))
+    (defun relysium-reject-current-change ()
+      "Reject the current suggested change and move to the next one."
+      (interactive)
+      (smerge-keep-upper)
+      (if (ignore-errors (not (smerge-next)))
+          (progn
+            (message "All changes reviewed - no more conflicts")
+            (smerge-mode -1))
+        (message "Rejected change - move to next")
+        ;; Keep the transient menu active if there are more changes
+        (relysium-transient-menu)))
 
-(defun relysium-keep-current-change ()
-  "Keep the current suggested change and move to the next one."
-  (interactive)
-  (smerge-keep-lower)
-  (if (ignore-errors (not (smerge-next)))
-      (progn
-        (message "All changes reviewed - no more conflicts")
-        (smerge-mode -1))
-    (message "Applied change - move to next")
-    ;; Keep the transient menu active if there are more changes
-    (relysium-transient-menu)))
+    (defun relysium-retry-query ()
+      "Retry the last query with modifications, preserving the previously marked region."
+      (interactive)
+      (let ((new-query (read-string "Modify query: " relysium--last-query)))
+        (when new-query
+          (with-current-buffer relysium--last-code-buffer
+            ;; Discard current suggestions
+            (relysium-discard-all-suggested-changes)
 
-(defun relysium-reject-current-change ()
-  "Reject the current suggested change and move to the next one."
-  (interactive)
-  (smerge-keep-upper)
-  (if (ignore-errors (not (smerge-next)))
-      (progn
-        (message "All changes reviewed - no more conflicts")
-        (smerge-mode -1))
-    (message "Rejected change - move to next")
-    ;; Keep the transient menu active if there are more changes
-    (relysium-transient-menu)))
+            ;; Restore the region if a region was previously used
+            (when (buffer-local-value 'relysium--using-region relysium--last-code-buffer)
+              (let* ((point-min (point-min))
+                     (start-line (buffer-local-value 'relysium--region-start-line relysium--last-code-buffer))
+                     (end-line (buffer-local-value 'relysium--region-end-line relysium--last-code-buffer))
+                     start-pos end-pos)
+                ;; Set point to start line
+                (setq start-pos (goto-char point-min))
+                (forward-line (1- start-line))
+                (setq start-pos (point))
+                ;; Set mark to end line
+                (goto-char point-min)
+                (forward-line (1- end-line))
+                (end-of-line)
+                (setq end-pos (point))
+                (set-mark start-pos)))
 
-(defun relysium-retry-query ()
-  "Retry the last query with modifications, preserving the previously marked region."
-  (interactive)
-  (let ((new-query (read-string "Modify query: " relysium--last-query)))
-    (when new-query
-      (with-current-buffer relysium--last-code-buffer
-        ;; Discard current suggestions
-        (relysium-discard-all-suggested-changes)
+            ;; Execute the new query
+            (relysium-query new-query)))))
 
-        ;; Restore the region if a region was previously used
-        (when (buffer-local-value 'relysium--using-region relysium--last-code-buffer)
-          (let* ((point-min (point-min))
-                 (start-line (buffer-local-value 'relysium--region-start-line relysium--last-code-buffer))
-                 (end-line (buffer-local-value 'relysium--region-end-line relysium--last-code-buffer))
-                 start-pos end-pos)
-            ;; Set point to start line
-            (setq start-pos (goto-char point-min))
-            (forward-line (1- start-line))
-            (setq start-pos (point))
-            ;; Set mark to end line
-            (goto-char point-min)
-            (forward-line (1- end-line))
-            (end-of-line)
-            (setq end-pos (point))
-            (set-mark start-pos)))
+    (defun relysium--ordinal (n)
+      "Convert integer N to its ordinal string representation."
+      (let ((suffixes '("th" "st" "nd" "rd" "th" "th" "th" "th" "th" "th")))
+        (if (and (> n 10) (< n 14))
+            (concat (number-to-string n) "th")
+          (concat (number-to-string n)
+                  (nth (mod n 10) suffixes)))))
 
-        ;; Execute the new query
-        (relysium-query new-query)))))
+    ;; Add command to toggle debug mode
+    (defun relysium-toggle-debug-mode ()
+      "Toggle elysium debug mode."
+      (interactive)
+      (setq relysium-debug-mode (not relysium-debug-mode))
+      (message "Elysium debug mode %s" (if relysium-debug-mode "enabled" "disabled"))
+      (when relysium-debug-mode
+        (display-buffer (get-buffer-create relysium-debug-buffer-name))))
 
-(defun relysium--ordinal (n)
-  "Convert integer N to its ordinal string representation."
-  (let ((suffixes '("th" "st" "nd" "rd" "th" "th" "th" "th" "th" "th")))
-    (if (and (> n 10) (< n 14))
-        (concat (number-to-string n) "th")
-      (concat (number-to-string n)
-              (nth (mod n 10) suffixes)))))
-
-;; Add command to toggle debug mode
-(defun relysium-toggle-debug-mode ()
-  "Toggle elysium debug mode."
-  (interactive)
-  (setq relysium-debug-mode (not relysium-debug-mode))
-  (message "Elysium debug mode %s" (if relysium-debug-mode "enabled" "disabled"))
-  (when relysium-debug-mode
-    (display-buffer (get-buffer-create relysium-debug-buffer-name))))
-
-;; Add command to clear debug buffer
-(defun relysium-clear-debug-buffer ()
-  "Clear the elysium debug buffer."
-  (interactive)
-  (when-let ((buffer (get-buffer relysium-debug-buffer-name)))
-    (with-current-buffer buffer
-      (erase-buffer)
-      (insert (format "[%s] Debug buffer cleared\n\n"
-                      (format-time-string "%Y-%m-%d %H:%M:%S"))))))
+    ;; Add command to clear debug buffer
+    (defun relysium-clear-debug-buffer ()
+      "Clear the elysium debug buffer."
+      (interactive)
+      (when-let ((buffer (get-buffer relysium-debug-buffer-name)))
+        (with-current-buffer buffer
+          (erase-buffer)
+          (insert (format "[%s] Debug buffer cleared\n\n"
+                          (format-time-string "%Y-%m-%d %H:%M:%S"))))))
 
 
-;; Define a transient menu for Elysium with compact layout
-(transient-define-prefix relysium-transient-menu ()
-  "Elysium actions menu."
-  ["Actions"
-   :class transient-row
-   ("n" "Next" relysium-navigate-next-change)
-   ("p" "Prev" relysium-navigate-prev-change)
-   ("a" "Accept" relysium-keep-current-change)
-   ("d" "Reject" relysium-reject-current-change)
-   ("RET" "Accept all" relysium-keep-all-suggested-changes)
-   ("x" "Discard all" relysium-discard-all-suggested-changes)
-   ("r" "Retry" relysium-retry-query)
-   ("q" "Quit" transient-quit-one)])
+    ;; Define a transient menu for Elysium with compact layout
+    (transient-define-prefix relysium-transient-menu ()
+      "Elysium actions menu."
+      ["Actions"
+       :class transient-row
+       ("n" "Next" relysium-navigate-next-change)
+       ("p" "Prev" relysium-navigate-prev-change)
+       ("a" "Accept" relysium-keep-current-change)
+       ("d" "Reject" relysium-reject-current-change)
+       ("RET" "Accept all" relysium-keep-all-suggested-changes)
+       ("x" "Discard all" relysium-discard-all-suggested-changes)
+       ("r" "Retry" relysium-retry-query)
+       ("q" "Quit" transient-quit-one)])
 
 
-;; Add key binding for C-<return> (Ctrl+Enter) to trigger relysium-query in prog-mode
-(defun relysium-query-dwim ()
-  "Query elysium with the region if active, otherwise prompt for a query."
-  (interactive)
-  (if (use-region-p)
-      (call-interactively 'relysium-query)
-    (let ((current-prefix-arg '(4))) ; Simulate C-u prefix to prompt for region
-      (call-interactively 'relysium-query))))
+    ;; Add key binding for C-<return> (Ctrl+Enter) to trigger relysium-query in prog-mode
+    (defun relysium-query-dwim ()
+      "Query elysium with the region if active, otherwise prompt for a query."
+      (interactive)
+      (if (use-region-p)
+          (call-interactively 'relysium-query)
+        (let ((current-prefix-arg '(4))) ; Simulate C-u prefix to prompt for region
+          (call-interactively 'relysium-query))))
 
 ;;;###autoload
-(define-minor-mode relysium-prog-mode
-  "Minor mode for elysium in programming modes.
+    (define-minor-mode relysium-prog-mode
+      "Minor mode for elysium in programming modes.
 Provides keybindings and integration for elysium code assistance."
-  :lighter " Elysium"
-  :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-<return>") 'relysium-query-dwim)
-            (define-key map (kbd "C-c a") 'relysium-ask)
-            (define-key map (kbd "C-c e t") 'relysium-toggle-window)
-            (define-key map (kbd "C-c e a") 'relysium-add-context)
-            (define-key map (kbd "C-c e c") 'relysium-ask)
-            (define-key map (kbd "C-c e d") 'relysium-clear-buffer)
-            (define-key map (kbd "C-c e L") 'relysium-toggle-debug-mode)
-            (define-key map (kbd "C-c e l") 'relysium-debug-log)
-            (define-key map (kbd "C-c e m") 'relysium-transient-menu)
-            map))
+      :lighter " Elysium"
+      :keymap (let ((map (make-sparse-keymap)))
+                (define-key map (kbd "C-<return>") 'relysium-query-dwim)
+                (define-key map (kbd "C-c a") 'relysium-ask)
+                (define-key map (kbd "C-c e t") 'relysium-toggle-window)
+                (define-key map (kbd "C-c e a") 'relysium-add-context)
+                (define-key map (kbd "C-c e c") 'relysium-ask)
+                (define-key map (kbd "C-c e d") 'relysium-clear-buffer)
+                (define-key map (kbd "C-c e L") 'relysium-toggle-debug-mode)
+                (define-key map (kbd "C-c e l") 'relysium-debug-log)
+                (define-key map (kbd "C-c e m") 'relysium-transient-menu)
+                map))
 
 
-(provide 'relysium)
+    (provide 'relysium)
 
 ;;; relysium.el ends here
