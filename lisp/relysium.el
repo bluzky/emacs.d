@@ -379,7 +379,7 @@ INFO is passed into this function from the `gptel-request' function."
       (insert response)
       (insert "\n\n### "))
 
-    (let ((code-change (relysium-extract-changes response))
+    (let ((code-change (relysium-extract-edit-changes response))
           (using-region (buffer-local-value 'relysium--using-region code-buffer)))
 
       ;; Log the extracted code if debug mode is enabled
@@ -408,7 +408,7 @@ INFO is passed into this function from the `gptel-request' function."
                                :end end-line
                                :code code-change)))
 
-            (relysium-apply-code-changes code-buffer change)
+            (relysium-apply-code-changes code-buffer (list change))
 
             ;; Activate smerge mode and show transient menu
             (smerge-mode 1)
@@ -450,7 +450,7 @@ Makes sure changes are properly aligned with the actual lines in the buffer."
               changes)))
   changes)
 
-(defun relysium-extract-changes (response)
+(defun relysium-extract-edit-changes (response)
   "Extract the code from the first <code> block in RESPONSE.
 Returns the code as a string, or nil if no code block is found."
   (let ((code-block-regex
@@ -462,35 +462,38 @@ Returns the code as a string, or nil if no code block is found."
       ;; No code block found
       nil)))
 
-(defun relysium-apply-code-changes (buffer change)
-  "Apply CHANGE to BUFFER in a git merge format.
+(defun relysium-apply-code-changes (buffer code-changes)
+  "Apply CODE-CHANGES to BUFFER in a git merge format.
 Uses simple conflict markers to highlight the differences between
 original and suggested code. Breaks down large changes into smaller chunks
-for easier review.
-
-CHANGE is a plist with :start, :end, and :code properties."
+for easier review."
   (with-current-buffer buffer
     (save-excursion
-      (let* ((start (plist-get change :start))
-             (end (plist-get change :end))
-             (new-code (plist-get change :code))
-             (orig-code-start (progn
-                                (goto-char (point-min))
-                                (forward-line (1- start))
-                                (point)))
-             (orig-code-end (progn
-                              (goto-char (point-min))
-                              (forward-line (1- (+ end 1)))
-                              (point)))
-             (orig-code (buffer-substring-no-properties orig-code-start orig-code-end)))
-        (when (string= orig-code "\n")
-          (setq orig-code ""))
+      (let ((offset 0))
+        (dolist (change code-changes)
+          (let* ((start (plist-get change :start))
+                 (end (plist-get change :end))
+                 (new-code (plist-get change :code))
+                 (orig-code-start (progn
+                                    (goto-char (point-min))
+                                    (forward-line (1- (+ start offset)))
+                                    (point)))
+                 (orig-code-end (progn
+                                  (goto-char (point-min))
+                                  (forward-line (1- (+ end offset 1)))
+                                  (point)))
+                 (orig-code (buffer-substring-no-properties orig-code-start orig-code-end)))
+            (when (string= orig-code "\n")
+              (setq orig-code ""))
 
-        (relysium-debug-log "Applying change from line %d to %d:\n--%s--\n"
-                            start end orig-code)
+                (relysium--apply-refined-change orig-code-start orig-code-end orig-code new-code)
 
-        (relysium--apply-refined-change orig-code-start orig-code-end orig-code new-code)
-        (run-hooks 'relysium-apply-changes-hook)))))
+            ;; Update offset - We need to recalculate the total lines now
+            (let* ((new-line-count (count-lines orig-code-start (point)))
+                   (original-line-count (- end start -1)) ; -1 because line range is inclusive
+                   (line-diff (- new-line-count original-line-count)))
+              (setq offset (+ offset line-diff)))))))
+    (run-hooks 'relysium-apply-changes-hook)))
 
 (defun relysium--apply-simple-change (start end orig-code new-code)
   "Apply a simple change with conflict markers.
