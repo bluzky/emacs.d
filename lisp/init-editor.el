@@ -4,7 +4,6 @@
   :hook (after-init . global-hl-line-mode)
   :config
   (xterm-mouse-mode 1)
-  (setq initial-major-mode 'elixir-ts-mode)
   (setq initial-scratch-message "")
 
   ;; disable auto-save

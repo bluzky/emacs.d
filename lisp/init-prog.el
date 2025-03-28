@@ -61,6 +61,7 @@
               ("K" . lsp-bridge-show-documentation))
   :hook
   (prog-mode . lsp-bridge-mode)
+  (before-save . lsp-bridge-code-format)
   (gfm-view-mode . (lambda ()
                      (evil-define-key* '(normal visual) gfm-view-mode-map
                        (kbd "q") '(lambda()
@@ -73,8 +74,7 @@
   (acm-enable-search-file-words nil)
   (acm-enable-tabnine nil)
   (acm-enable-copilot nil)
-  (acm-enable-citre nil)
-  (lsp-bridge-enable-auto-format-code t))
+  (acm-enable-citre nil))
 
 
 (use-package format-all
@@ -105,7 +105,7 @@
   (global-set-key (kbd "C-x c J") 'citre-jump-back)
   (global-set-key (kbd "C-x c p") 'citre-ace-peek)
   (global-set-key (kbd "C-x c u") 'citre-update-this-tags-file)
-  (define-key evil-normal-state-map (kbd "g d") 'citre-jump))
+  (define-key evil-normal-state-map (kbd "g d") 'citre-jump)
   :config
   (setq
    ;; Set these if readtags/ctags is not in your PATH.
@@ -131,6 +131,9 @@
    ;; certain modes (like `prog-mode'), set it like this.
    ;; citre-auto-enable-citre-mode-modes '(prog-mode)
    ))
+
+(use-package devdocs
+  :bind ("C-h D" . devdocs-lookup))
 
 
 (provide 'init-prog)

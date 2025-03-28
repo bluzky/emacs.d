@@ -59,10 +59,14 @@
   ;;         :models '(deepseek-chat deepseek-coder)))
   )
 
-(require 'elysium)
+(require 'relysium)
+(add-hook 'prog-mode-hook 'relysium-prog-mode)
 
-;; Enable the minor mode in all programming modes
-(add-hook 'prog-mode-hook 'elysium-prog-mode)
+;; (use-package relysium
+;;   :quelpa (relysium :fetcher github
+;;                     :repo "bluzky/relysium"
+;;                     :branch "main")
+;;   :hook (prog-mode . relysium-prog-mode))
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

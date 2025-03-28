@@ -14,6 +14,7 @@
   ;; (before-save . eglot-format)
   :config
   (add-to-list 'treesit-language-source-alist '(elixir "https://github.com/elixir-lang/tree-sitter-elixir" "master" "src"))
+  (add-to-list 'org-src-lang-modes '("elixir" . elixir-ts-mode))
   ;; ;; (add-to-list 'eglot-server-programs '((heex-ts-mode elixir-ts-mode elixir-mode) . ("nextls" "--stdio=true")))
   ;; ;; (add-to-list 'eglot-server-programs '((heex-ts-mode elixir-ts-mode elixir-mode) . ("language_server.sh" "--stdio")))
   ;; (add-to-list 'eglot-server-programs '((heex-ts-mode elixir-ts-mode elixir-mode) . ("start_lexical.sh")))
