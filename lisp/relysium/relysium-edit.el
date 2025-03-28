@@ -71,7 +71,7 @@ def add(a, b):
 ")
 
 ;;;###autoload
-(defun relysium-query (user-query)
+(defun relysium-edit (user-query)
   "Send USER-QUERY to elysium from the current buffer."
   (interactive (list (read-string "User Query: ")))
   (unless (buffer-live-p relysium--chat-buffer)
@@ -176,11 +176,10 @@ INFO is passed into this function from the `gptel-request' function."
           (using-region (buffer-local-value 'relysium--using-region code-buffer)))
 
       ;; Log the extracted code if debug mode is enabled
-      (when relysium-debug-mode
         (relysium-debug-log "Extracted code change: %s"
                             (if code-change
                                 (format "%s" code-change)
-                              "None found")))
+                              "None found"))
 
       ;; mark undo boundary
       (with-current-buffer code-buffer
@@ -301,15 +300,15 @@ INFO is passed into this function from the `gptel-request' function."
             (set-mark start-pos)))
 
         ;; Execute the new query
-        (relysium-query new-query)))))
+        (relysium-edit new-query)))))
 
-(defun relysium-query-dwim ()
+(defun relysium-edit-dwim ()
   "Query elysium with the region if active, otherwise prompt for a query."
   (interactive)
   (if (use-region-p)
-      (call-interactively 'relysium-query)
+      (call-interactively 'relysium-edit)
     (let ((current-prefix-arg '(4))) ; Simulate C-u prefix to prompt for region
-      (call-interactively 'relysium-query))))
+      (call-interactively 'relysium-edit))))
 
 (provide 'relysium-edit)
 ;;; relysium-edit.el ends here

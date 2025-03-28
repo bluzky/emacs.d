@@ -217,164 +217,131 @@ Each chunk is of the form (TYPE ORIG-CHUNK NEW-CHUNK) where:
 - NEW-CHUNK is a list of lines from the new text
 
 For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
-  ;; Special case: if both input lists are empty, return an empty list
-  (if (and (null orig-lines) (null new-lines))
-      nil
-    (let ((chunks nil)
-          (i 0)
-          (j 0)
-          (orig-len (length orig-lines))
-          (new-len (length new-lines))
-          (current-chunk-type nil)
-          (current-orig-chunk nil)
-          (current-new-chunk nil))
+  (let ((chunks nil)
+        (i 0)
+        (j 0)
+        (orig-len (length orig-lines))
+        (new-len (length new-lines))
+        (current-chunk-type nil)
+        (current-orig-chunk nil)
+        (current-new-chunk nil))
 
-      ;; Compare lines and build chunks
-      (while (or (< i orig-len) (< j new-len))
-        (let ((orig-line (when (< i orig-len) (nth i orig-lines)))
-              (new-line (when (< j new-len) (nth j new-lines)))
-              (lines-match (and (< i orig-len)
-                                (< j new-len)
-                                (string= (nth i orig-lines) (nth j new-lines)))))
+    ;; Compare lines and build chunks
+    (while (or (< i orig-len) (< j new-len))
+      (let ((orig-line (when (< i orig-len) (nth i orig-lines)))
+            (new-line (when (< j new-len) (nth j new-lines)))
+            (lines-match (and (< i orig-len)
+                              (< j new-len)
+                              (string= (nth i orig-lines) (nth j new-lines)))))
 
-          (if lines-match
-              ;; Lines match - they're part of a 'same' chunk
-              (progn
-                ;; If we were in a 'diff' chunk, finalize it
-                (when (eq current-chunk-type 'diff)
-                  (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-                  (setq current-orig-chunk nil
-                        current-new-chunk nil))
-
-                ;; Add to or start a 'same' chunk
-                (if (eq current-chunk-type 'same)
-                    (progn
-                      (push orig-line current-orig-chunk)
-                      (push new-line current-new-chunk))
-                  (setq current-chunk-type 'same
-                        current-orig-chunk (list orig-line)
-                        current-new-chunk (list new-line)))
-
-                ;; Move to next lines
-                (cl-incf i)
-                (cl-incf j))
-
-            ;; Lines don't match - they're part of a 'diff' chunk
+        (if lines-match
+            ;; Lines match - they're part of a 'same' chunk
             (progn
-              ;; If we were in a 'same' chunk, finalize it
-              (when (eq current-chunk-type 'same)
-                ;; Reverse the lists to restore order
-                (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+              ;; If we were in a 'diff' chunk, finalize it
+              (when (eq current-chunk-type 'diff)
+                (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
                 (setq current-orig-chunk nil
                       current-new-chunk nil))
 
-              ;; Add to or start a 'diff' chunk
-              (setq current-chunk-type 'diff)
-
-              ;; Enhanced look-ahead heuristic that considers sequence length
-              (let ((best-match-i nil)
-                    (best-match-j nil)
-                    (best-match-length 0)
-                    (max-lookahead 20)) ; Increase look-ahead distance
-
-                ;; Look for the best matching sequence in orig-lines
-                (when (and new-line (< i orig-len))
-                  (let ((k 0))
-                    (while (and (< (+ i k) orig-len)
-                                (< k max-lookahead))
-                      (when (string= (nth (+ i k) orig-lines) new-line)
-                        ;; Found a potential match, now calculate how long the matching sequence is
-                        (let ((match-i (+ i k))
-                              (match-j j)
-                              (match-length 0))
-                          (while (and (< match-i orig-len)
-                                      (< match-j new-len)
-                                      (string= (nth match-i orig-lines) (nth match-j new-lines)))
-                            (cl-incf match-length)
-                            (cl-incf match-i)
-                            (cl-incf match-j))
-
-                          ;; If this sequence is longer than our current best, update best match
-                          (when (> match-length best-match-length)
-                            (setq best-match-i k
-                                  best-match-length match-length))))
-                      (cl-incf k))))
-
-                ;; Look for the best matching sequence in new-lines
-                (when (and orig-line (< j new-len))
-                  (let ((k 0))
-                    (while (and (< (+ j k) new-len)
-                                (< k max-lookahead))
-                      (when (string= (nth (+ j k) new-lines) orig-line)
-                        ;; Found a potential match, now calculate how long the matching sequence is
-                        (let ((match-i i)
-                              (match-j (+ j k))
-                              (match-length 0))
-                          (while (and (< match-i orig-len)
-                                      (< match-j new-len)
-                                      (string= (nth match-i orig-lines) (nth match-j new-lines)))
-                            (cl-incf match-length)
-                            (cl-incf match-i)
-                            (cl-incf match-j))
-
-                          ;; If this sequence is longer than our current best, update best match
-                          (when (> match-length best-match-length)
-                            (setq best-match-j k
-                                  best-match-length match-length))))
-                      (cl-incf k))))
-
-                ;; Decide which way to advance based on match distances and lengths
-                (cond
-                 ;; If we're at the end of either list, consume the other
-                 ((>= i orig-len)
-                  (push new-line current-new-chunk)
-                  (cl-incf j))
-                 ((>= j new-len)
-                  (push orig-line current-orig-chunk)
-                  (cl-incf i))
-
-                 ;; If we found a good sequence match, prioritize it
-                 ((> best-match-length 1)  ; Require at least 2 matching lines to consider it significant
-                  (cond
-                   ;; If we have matches in both directions, choose the one with the shorter distance
-                   ((and best-match-i best-match-j)
-                    (if (< best-match-i best-match-j)
-                        (progn
-                          (push orig-line current-orig-chunk)
-                          (cl-incf i))
-                      (push new-line current-new-chunk)
-                      (cl-incf j)))
-                   ;; Just go with the direction that has a match
-                   (best-match-i
+              ;; Add to or start a 'same' chunk
+              (if (eq current-chunk-type 'same)
+                  (progn
                     (push orig-line current-orig-chunk)
-                    (cl-incf i))
-                   (best-match-j
-                    (push new-line current-new-chunk)
-                    (cl-incf j))
-                   ;; Fallback case (shouldn't happen with our logic, but just to be safe)
-                   (t
-                    (when orig-line (push orig-line current-orig-chunk))
-                    (when new-line (push new-line current-new-chunk))
-                    (cl-incf i)
-                    (cl-incf j))))
-
-                 ;; No significant sequence match found, just advance both
-                 (t
-                  (when orig-line
-                    (push orig-line current-orig-chunk))
-                  (when new-line
                     (push new-line current-new-chunk))
-                  (cl-incf i)
-                  (cl-incf j))))))))
+                (setq current-chunk-type 'same
+                      current-orig-chunk (list orig-line)
+                      current-new-chunk (list new-line)))
 
-      ;; Finalize the last chunk
-      (when current-chunk-type
-        (if (eq current-chunk-type 'same)
-            (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-          (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)))
+              ;; Move to next lines
+              (cl-incf i)
+              (cl-incf j))
 
-      ;; Return the chunks in correct order
-      (nreverse chunks))))
+          ;; Lines don't match - they're part of a 'diff' chunk
+          (progn
+            ;; If we were in a 'same' chunk, finalize it
+            (when (eq current-chunk-type 'same)
+              ;; Reverse the lists to restore order
+              (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+              (setq current-orig-chunk nil
+                    current-new-chunk nil))
+
+            ;; Add to or start a 'diff' chunk
+            (setq current-chunk-type 'diff)
+
+            ;; The heuristic below finds the 'best' way to advance through the diff
+            ;; Look ahead to find matching lines
+            (let ((match-distance-i nil)
+                  (match-distance-j nil))
+
+              ;; Look ahead in orig-lines to find a match with current new-line
+              (when (and new-line (< i orig-len))
+                (let ((k 0))
+                  (while (and (< (+ i k) orig-len)
+                              (< k 10) ; Limit how far we look ahead
+                              (not match-distance-i))
+                    (when (string= (nth (+ i k) orig-lines) new-line)
+                      (setq match-distance-i k))
+                    (cl-incf k))))
+
+              ;; Look ahead in new-lines to find a match with current orig-line
+              (when (and orig-line (< j new-len))
+                (let ((k 0))
+                  (while (and (< (+ j k) new-len)
+                              (< k 10) ; Limit how far we look ahead
+                              (not match-distance-j))
+                    (when (string= (nth (+ j k) new-lines) orig-line)
+                      (setq match-distance-j k))
+                    (cl-incf k))))
+
+              ;; Decide which way to advance based on match distances
+              (cond
+               ;; If we're at the end of either list, consume the other
+               ((>= i orig-len)
+                (when new-line
+                  (push new-line current-new-chunk)
+                  (cl-incf j)))
+               ((>= j new-len)
+                (when orig-line
+                  (push orig-line current-orig-chunk)
+                  (cl-incf i)))
+
+               ;; If we found a match in both directions, take the shortest path
+               ((and match-distance-i match-distance-j)
+                (if (< match-distance-i match-distance-j)
+                    (progn
+                      (push orig-line current-orig-chunk)
+                      (cl-incf i))
+                  (push new-line current-new-chunk)
+                  (cl-incf j)))
+
+               ;; If we found a match in just one direction, go that way
+               (match-distance-i
+                (push orig-line current-orig-chunk)
+                (cl-incf i))
+               (match-distance-j
+                (push new-line current-new-chunk)
+                (cl-incf j))
+
+               ;; No match found, just advance both
+               (t
+                (when orig-line
+                  (push orig-line current-orig-chunk))
+                (when new-line
+                  (push new-line current-new-chunk))
+                (cl-incf i)
+                (cl-incf j)))))))
+
+      ;; End of main loop
+      )
+
+    ;; Finalize the last chunk
+    (when current-chunk-type
+      (if (eq current-chunk-type 'same)
+          (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
+        (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)))
+
+    ;; Return the chunks in correct order
+    (reverse chunks)))
 
 (provide 'relysium-utils)
 ;;; relysium-utils.el ends here

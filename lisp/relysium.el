@@ -81,7 +81,7 @@
 Provides keybindings and integration for elysium code assistance."
   :lighter " Elysium"
   :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-<return>") 'relysium-query-dwim)
+            (define-key map (kbd "C-<return>") 'relysium-edit-dwim)
             (define-key map (kbd "C-c a") 'relysium-ask)
             (define-key map (kbd "C-c e t") 'relysium-toggle-window)
             (define-key map (kbd "C-c e a") 'relysium-add-context)
