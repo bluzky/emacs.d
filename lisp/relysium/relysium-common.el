@@ -8,6 +8,7 @@
 ;;; Code:
 
 (require 'gptel)
+(require 'smerge-mode)
 
 (defcustom relysium-window-size 0.33
   "Size of the elysium chat window as a fraction of the frame.
@@ -33,7 +34,7 @@ Must be a number between 0 and 1, exclusive."
   "Set up the coding assistant layout with the chat window."
   (unless (buffer-live-p relysium--chat-buffer)
     (setq relysium--chat-buffer
-          (gptel "*elysium*")))
+          (gptel "*relysium*")))
 
   (when relysium-window-style
     (delete-other-windows)
@@ -76,7 +77,7 @@ Must be a number between 0 and 1, exclusive."
            (buffer-substring-no-properties (point-min) (point-max)))))
   ;; Ensure chat buffer exists
   (unless (buffer-live-p relysium--chat-buffer)
-    (setq relysium--chat-buffer (gptel "*elysium*")))
+    (setq relysium--chat-buffer (gptel "*relysium*")))
 
   (let ((code-buffer-language
          (string-trim-right
@@ -86,6 +87,67 @@ Must be a number between 0 and 1, exclusive."
       (insert "\n")
       (insert (format "```%s\n%s\n```" code-buffer-language content))
       (insert "\n"))))
+
+(defun relysium-keep-all-suggested-changes ()
+  "Keep all of the LLM suggestions."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (ignore-errors (funcall #'smerge-keep-lower))
+    (while (ignore-errors (not (smerge-next)))
+      (funcall #'smerge-keep-lower))
+    (smerge-mode -1)
+    (message "All suggested changes applied")))
+
+(defun relysium-discard-all-suggested-changes ()
+  "Discard all of the LLM suggestions."
+  (interactive)
+  (undo)
+  (smerge-mode -1)
+  (message "All suggested changes discarded"))
+
+(defun relysium-navigate-next-change ()
+  "Navigate to the next change suggestion and keep the transient menu active."
+  (interactive)
+  (if (ignore-errors (smerge-next))
+      (message "Navigated to next change")
+    (message "No more changes"))
+  ;; Keep the transient menu active
+  (relysium-transient-menu))
+
+(defun relysium-navigate-prev-change ()
+  "Navigate to the previous change suggestion and keep the transient menu active."
+  (interactive)
+  (if (ignore-errors (smerge-prev))
+      (message "Navigated to previous change")
+    (message "No more changes"))
+  ;; Keep the transient menu active
+  (relysium-transient-menu))
+
+(defun relysium-keep-current-change ()
+  "Keep the current suggested change and move to the next one."
+  (interactive)
+  (smerge-keep-lower)
+  (if (ignore-errors (not (smerge-next)))
+      (progn
+        (message "All changes reviewed - no more conflicts")
+        (smerge-mode -1))
+    (message "Applied change - move to next")
+    ;; Keep the transient menu active if there are more changes
+    (relysium-transient-menu)))
+
+(defun relysium-reject-current-change ()
+  "Reject the current suggested change and move to the next one."
+  (interactive)
+  (smerge-keep-upper)
+  (if (ignore-errors (not (smerge-next)))
+      (progn
+        (message "All changes reviewed - no more conflicts")
+        (smerge-mode -1))
+    (message "Rejected change - move to next")
+    ;; Keep the transient menu active if there are more changes
+    (relysium-transient-menu)))
+
 
 (provide 'relysium-common)
 ;;; relysium-common.el ends here

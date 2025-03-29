@@ -8,7 +8,6 @@
 ;;; Code:
 
 (require 'gptel)
-(require 'smerge-mode)
 (require 'relysium-utils)
 (require 'relysium-common)
 
@@ -37,7 +36,8 @@ Your task is to modify the provided code according to the user's request. Follow
    - Only modify the specific lines requested in the range - no more, no less
    - Maintain the *SAME INDENTATION* in the returned code as in the source code
    - *ONLY* return the new code snippets to be updated, *DO NOT* return the entire file content.
-   - If no selected code is provided, *DO NOT* return any code from reference source code.
+   - If no selected code is provided, *DO NOT* return the entire file content or any surrounding code.
+   - If no selected code is provided, suggest code modifications at the cursor position. Carefully analyze the original code, paying close attention to its structure and the cursor position
 
 Remember that Your response SHOULD CONTAIN ONLY THE MODIFIED CODE to be used as DIRECT REPLACEMENT to the original file.
 
@@ -75,7 +75,7 @@ def add(a, b):
   "Send USER-QUERY to elysium from the current buffer."
   (interactive (list (read-string "User Query: ")))
   (unless (buffer-live-p relysium--chat-buffer)
-    (setq relysium--chat-buffer (gptel "*elysium*")))
+    (setq relysium--chat-buffer (gptel "*relysium*")))
 
   (let* ((code-buffer (current-buffer))
          (chat-buffer relysium--chat-buffer)
@@ -194,8 +194,11 @@ INFO is passed into this function from the `gptel-request' function."
                                  (buffer-local-value 'relysium--region-start-line code-buffer)
                                current-line))
                  (end-line (if using-region
-                               (buffer-local-value 'relysium--region-end-line code-buffer)
-                             current-line))
+                               (1+(buffer-local-value 'relysium--region-end-line code-buffer))
+                               (1+ current-line))) ;; Use exclusive range, end=start+1 for single-line
+                 ;; Special handling for insertion at current line
+                 (is-insertion (not using-region))
+                 (end-line (if is-insertion start-line end-line)) ;; end=start for insert
                  (change (list :start start-line
                                :end end-line
                                :code code-change)))
@@ -213,65 +216,18 @@ INFO is passed into this function from the `gptel-request' function."
         (gptel--sanitize-model)
         (gptel--update-status " Ready" 'success)))))
 
-(defun relysium-keep-all-suggested-changes ()
-  "Keep all of the LLM suggestions."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (ignore-errors (funcall #'smerge-keep-lower))
-    (while (ignore-errors (not (smerge-next)))
-      (funcall #'smerge-keep-lower))
-    (smerge-mode -1)
-    (message "All suggested changes applied")))
+(defun relysium-extract-edit-changes (response)
+  "Extract the code from the first <code> block in RESPONSE.
+Returns the code as a string, or nil if no code block is found."
+  (let ((code-block-regex
+         "<code>\n\\(\\(?:.\\|\n\\)*?\\)</code>"))
+    ;; Extract just the first code block
+    (if (string-match code-block-regex response)
+        ;; Return the extracted code as a string
+        (match-string 1 response)
+      ;; No code block found
+      nil)))
 
-(defun relysium-discard-all-suggested-changes ()
-  "Discard all of the LLM suggestions."
-  (interactive)
-  (undo)
-  (smerge-mode -1)
-  (message "All suggested changes discarded"))
-
-(defun relysium-navigate-next-change ()
-  "Navigate to the next change suggestion and keep the transient menu active."
-  (interactive)
-  (if (ignore-errors (smerge-next))
-      (message "Navigated to next change")
-    (message "No more changes"))
-  ;; Keep the transient menu active
-  (relysium-transient-menu))
-
-(defun relysium-navigate-prev-change ()
-  "Navigate to the previous change suggestion and keep the transient menu active."
-  (interactive)
-  (if (ignore-errors (smerge-prev))
-      (message "Navigated to previous change")
-    (message "No more changes"))
-  ;; Keep the transient menu active
-  (relysium-transient-menu))
-
-(defun relysium-keep-current-change ()
-  "Keep the current suggested change and move to the next one."
-  (interactive)
-  (smerge-keep-lower)
-  (if (ignore-errors (not (smerge-next)))
-      (progn
-        (message "All changes reviewed - no more conflicts")
-        (smerge-mode -1))
-    (message "Applied change - move to next")
-    ;; Keep the transient menu active if there are more changes
-    (relysium-transient-menu)))
-
-(defun relysium-reject-current-change ()
-  "Reject the current suggested change and move to the next one."
-  (interactive)
-  (smerge-keep-upper)
-  (if (ignore-errors (not (smerge-next)))
-      (progn
-        (message "All changes reviewed - no more conflicts")
-        (smerge-mode -1))
-    (message "Rejected change - move to next")
-    ;; Keep the transient menu active if there are more changes
-    (relysium-transient-menu)))
 
 (defun relysium-retry-query ()
   "Retry the last query with modifications, preserving the previously marked region."

@@ -26,7 +26,7 @@ Your answer should be short and focus ONLY on the questions asked.")
       (message "Please select a region of code first")
     ;; Region is selected, proceed with LLM query
     (unless (buffer-live-p relysium--chat-buffer)
-      (setq relysium--chat-buffer (gptel "*elysium*")))
+      (setq relysium--chat-buffer (gptel "*relysium*")))
 
     (let* ((chat-buffer relysium--chat-buffer)
            (selected-code (buffer-substring-no-properties (region-beginning) (region-end)))

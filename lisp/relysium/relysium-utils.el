@@ -51,18 +51,6 @@
       (insert (format "[%s] Debug buffer cleared\n\n"
                       (format-time-string "%Y-%m-%d %H:%M:%S"))))))
 
-(defun relysium-extract-edit-changes (response)
-  "Extract the code from the first <code> block in RESPONSE.
-Returns the code as a string, or nil if no code block is found."
-  (let ((code-block-regex
-         "<code>\n\\(\\(?:.\\|\n\\)*?\\)</code>"))
-    ;; Extract just the first code block
-    (if (string-match code-block-regex response)
-        ;; Return the extracted code as a string
-        (match-string 1 response)
-      ;; No code block found
-      nil)))
-
 (defun relysium--adjust-changes-for-region (changes)
   "Adjust CHANGES line numbers based on the selected region.
 Makes sure changes are properly aligned with the actual lines in the buffer."
@@ -153,14 +141,17 @@ Uses exclusive line ranges where end points to the line after the last line to c
                                   (point)))
                  (orig-code (buffer-substring-no-properties orig-code-start orig-code-end)))
             (when (string= orig-code "\n")
-              -              (setq orig-code ""))
+              (setq orig-code ""))
+
+            (relysium-debug-log "Current offset: %d\nApplying change:\n---%s---\n" offset change)
+            (relysium-debug-log "Original code:\n---%s---\n" orig-code)
 
             ;; Apply the appropriate type of change
             (if is-insert
                 ;; Insert-only change
                 (relysium--apply-insert-change orig-code-start new-code)
               ;; Normal replacement change
-              (if (< (- end start) 7)
+              (if (< (- end start) 10)
                   (relysium--apply-simple-change orig-code-start orig-code-end orig-code new-code)
                 (relysium--apply-refined-change orig-code-start orig-code-end orig-code new-code)))
 
@@ -178,7 +169,7 @@ Insert at POSITION a conflict section containing just the NEW-CODE."
   (insert (concat "<<<<<<< HEAD\n"
                   "=======\n"
                   new-code
-                  "\n>>>>>>> Relysium \n")))
+                  "\n>>>>>>> Relysium\n")))
 
 (defun relysium--apply-simple-change (start end orig-code new-code)
   "Apply a simple change with conflict markers.
@@ -190,7 +181,7 @@ containing both ORIG-CODE and NEW-CODE."
                   orig-code
                   "=======\n"
                   new-code
-                  "\n>>>>>>> Relysium \n")))
+                  "\n>>>>>>> Relysium\n")))
 
 (defun relysium--apply-refined-change (start end orig-code new-code)
   "Apply a refined change that breaks code into smaller conflict chunks.

@@ -50,6 +50,7 @@
 (require 'relysium-common)
 (require 'relysium-ask)
 (require 'relysium-edit)
+(require 'relysium-suggest)
 
 (defgroup relysium nil
   "Apply code changes using gptel."
@@ -84,12 +85,13 @@ Provides keybindings and integration for elysium code assistance."
             (define-key map (kbd "C-<return>") 'relysium-edit-dwim)
             (define-key map (kbd "C-c a") 'relysium-ask)
             (define-key map (kbd "C-c e t") 'relysium-toggle-window)
-            (define-key map (kbd "C-c e a") 'relysium-add-context)
-            (define-key map (kbd "C-c e c") 'relysium-ask)
-            (define-key map (kbd "C-c e d") 'relysium-clear-buffer)
-            (define-key map (kbd "C-c e L") 'relysium-toggle-debug-mode)
-            (define-key map (kbd "C-c e l") 'relysium-debug-log)
+            (define-key map (kbd "C-c e b") 'relysium-add-context)
+            (define-key map (kbd "C-c e a") 'relysium-ask)
+            (define-key map (kbd "C-c e c") 'relysium-clear-buffer)
+            (define-key map (kbd "C-c e D") 'relysium-toggle-debug-mode)
+            (define-key map (kbd "C-c e d") 'relysium-debug-log)
             (define-key map (kbd "C-c e m") 'relysium-transient-menu)
+            (define-key map (kbd "C-c e s") 'relysium-suggest)
             map))
 
 (provide 'relysium)
