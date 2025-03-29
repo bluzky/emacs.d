@@ -9,6 +9,8 @@
 
 ;;; Code:
 
+(require 'simple-diff)
+
 (defcustom relysium-debug-mode nil
   "When non-nil, log LLM responses and other debug information."
   :group 'relysium
@@ -130,7 +132,8 @@ STRING is the text to trim, START-LINE and END-LINE are the line numbers."
   "Apply CODE-CHANGES to BUFFER in a git merge format.
 Uses simple conflict markers to highlight the differences between
 original and suggested code. Breaks down large changes into smaller chunks
-for easier review."
+for easier review.
+Uses exclusive line ranges where end points to the line after the last line to change."
   (with-current-buffer buffer
     (save-excursion
       (let ((offset 0))
@@ -138,26 +141,44 @@ for easier review."
           (let* ((start (plist-get change :start))
                  (end (plist-get change :end))
                  (new-code (plist-get change :code))
+                 ;; Detect insert operations where start == end (exclusive range)
+                 (is-insert (= start end))
                  (orig-code-start (progn
                                     (goto-char (point-min))
                                     (forward-line (1- (+ start offset)))
                                     (point)))
                  (orig-code-end (progn
                                   (goto-char (point-min))
-                                  (forward-line (1- (+ end offset 1)))
+                                  (forward-line (1- (+ end offset)))
                                   (point)))
                  (orig-code (buffer-substring-no-properties orig-code-start orig-code-end)))
             (when (string= orig-code "\n")
-              (setq orig-code ""))
+              -              (setq orig-code ""))
 
-                (relysium--apply-refined-change orig-code-start orig-code-end orig-code new-code)
+            ;; Apply the appropriate type of change
+            (if is-insert
+                ;; Insert-only change
+                (relysium--apply-insert-change orig-code-start new-code)
+              ;; Normal replacement change
+              (if (< (- end start) 7)
+                  (relysium--apply-simple-change orig-code-start orig-code-end orig-code new-code)
+                (relysium--apply-refined-change orig-code-start orig-code-end orig-code new-code)))
 
             ;; Update offset - We need to recalculate the total lines now
             (let* ((new-line-count (count-lines orig-code-start (point)))
-                   (original-line-count (- end start -1)) ; -1 because line range is inclusive
+                   (original-line-count (- end start)) ;; For exclusive ranges
                    (line-diff (- new-line-count original-line-count)))
               (setq offset (+ offset line-diff)))))))
     (run-hooks 'relysium-apply-changes-hook)))
+
+(defun relysium--apply-insert-change (position new-code)
+  "Handle insert-only changes with conflict markers.
+Insert at POSITION a conflict section containing just the NEW-CODE."
+  (goto-char position)
+  (insert (concat "<<<<<<< HEAD\n"
+                  "=======\n"
+                  new-code
+                  "\n>>>>>>> Relysium \n")))
 
 (defun relysium--apply-simple-change (start end orig-code new-code)
   "Apply a simple change with conflict markers.
@@ -178,170 +199,8 @@ against NEW-CODE, using conflict markers for each meaningful chunk."
   (delete-region start end)
   (goto-char start)
 
-  ;; Split both code blocks into lines
-  (let* ((orig-lines (split-string orig-code "\n"))
-         (new-lines (split-string new-code "\n"))
-         (chunks (relysium--create-diff-chunks orig-lines new-lines)))
-
-    ;; Insert each chunk with appropriate conflict markers
-    (dolist (chunk chunks)
-      (let ((chunk-type (car chunk))
-            (orig-chunk-lines (nth 1 chunk))
-            (new-chunk-lines (nth 2 chunk)))
-
-        (cond
-         ;; Lines that are the same in both versions - no conflict needed
-         ((eq chunk-type 'same)
-          (let ((text (string-join orig-chunk-lines "\n")))
-            (insert text)
-            (when (> (length text) 0)
-              (insert "\n"))))
-
-         ;; Lines that differ - add conflict markers
-         ((eq chunk-type 'diff)
-          (let ((orig-text (string-join orig-chunk-lines "\n"))
-                (new-text (string-join new-chunk-lines "\n")))
-            (insert "<<<<<<< HEAD\n")
-            (when (> (length orig-text) 0)
-              (insert orig-text "\n"))
-            (insert "=======\n")
-            (when (> (length new-text) 0)
-              (insert new-text "\n"))
-            (insert ">>>>>>> Relysium\n"))))))))
-
-(defun relysium--create-diff-chunks (orig-lines new-lines)
-  "Create a list of diff chunks between ORIG-LINES and NEW-LINES.
-Each chunk is of the form (TYPE ORIG-CHUNK NEW-CHUNK) where:
-- TYPE is either 'same or 'diff
-- ORIG-CHUNK is a list of lines from the original text
-- NEW-CHUNK is a list of lines from the new text
-
-For 'same chunks, ORIG-CHUNK and NEW-CHUNK contain the same lines."
-  (let ((chunks nil)
-        (i 0)
-        (j 0)
-        (orig-len (length orig-lines))
-        (new-len (length new-lines))
-        (current-chunk-type nil)
-        (current-orig-chunk nil)
-        (current-new-chunk nil))
-
-    ;; Compare lines and build chunks
-    (while (or (< i orig-len) (< j new-len))
-      (let ((orig-line (when (< i orig-len) (nth i orig-lines)))
-            (new-line (when (< j new-len) (nth j new-lines)))
-            (lines-match (and (< i orig-len)
-                              (< j new-len)
-                              (string= (nth i orig-lines) (nth j new-lines)))))
-
-        (if lines-match
-            ;; Lines match - they're part of a 'same' chunk
-            (progn
-              ;; If we were in a 'diff' chunk, finalize it
-              (when (eq current-chunk-type 'diff)
-                (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-                (setq current-orig-chunk nil
-                      current-new-chunk nil))
-
-              ;; Add to or start a 'same' chunk
-              (if (eq current-chunk-type 'same)
-                  (progn
-                    (push orig-line current-orig-chunk)
-                    (push new-line current-new-chunk))
-                (setq current-chunk-type 'same
-                      current-orig-chunk (list orig-line)
-                      current-new-chunk (list new-line)))
-
-              ;; Move to next lines
-              (cl-incf i)
-              (cl-incf j))
-
-          ;; Lines don't match - they're part of a 'diff' chunk
-          (progn
-            ;; If we were in a 'same' chunk, finalize it
-            (when (eq current-chunk-type 'same)
-              ;; Reverse the lists to restore order
-              (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-              (setq current-orig-chunk nil
-                    current-new-chunk nil))
-
-            ;; Add to or start a 'diff' chunk
-            (setq current-chunk-type 'diff)
-
-            ;; The heuristic below finds the 'best' way to advance through the diff
-            ;; Look ahead to find matching lines
-            (let ((match-distance-i nil)
-                  (match-distance-j nil))
-
-              ;; Look ahead in orig-lines to find a match with current new-line
-              (when (and new-line (< i orig-len))
-                (let ((k 0))
-                  (while (and (< (+ i k) orig-len)
-                              (< k 10) ; Limit how far we look ahead
-                              (not match-distance-i))
-                    (when (string= (nth (+ i k) orig-lines) new-line)
-                      (setq match-distance-i k))
-                    (cl-incf k))))
-
-              ;; Look ahead in new-lines to find a match with current orig-line
-              (when (and orig-line (< j new-len))
-                (let ((k 0))
-                  (while (and (< (+ j k) new-len)
-                              (< k 10) ; Limit how far we look ahead
-                              (not match-distance-j))
-                    (when (string= (nth (+ j k) new-lines) orig-line)
-                      (setq match-distance-j k))
-                    (cl-incf k))))
-
-              ;; Decide which way to advance based on match distances
-              (cond
-               ;; If we're at the end of either list, consume the other
-               ((>= i orig-len)
-                (when new-line
-                  (push new-line current-new-chunk)
-                  (cl-incf j)))
-               ((>= j new-len)
-                (when orig-line
-                  (push orig-line current-orig-chunk)
-                  (cl-incf i)))
-
-               ;; If we found a match in both directions, take the shortest path
-               ((and match-distance-i match-distance-j)
-                (if (< match-distance-i match-distance-j)
-                    (progn
-                      (push orig-line current-orig-chunk)
-                      (cl-incf i))
-                  (push new-line current-new-chunk)
-                  (cl-incf j)))
-
-               ;; If we found a match in just one direction, go that way
-               (match-distance-i
-                (push orig-line current-orig-chunk)
-                (cl-incf i))
-               (match-distance-j
-                (push new-line current-new-chunk)
-                (cl-incf j))
-
-               ;; No match found, just advance both
-               (t
-                (when orig-line
-                  (push orig-line current-orig-chunk))
-                (when new-line
-                  (push new-line current-new-chunk))
-                (cl-incf i)
-                (cl-incf j)))))))
-
-      ;; End of main loop
-      )
-
-    ;; Finalize the last chunk
-    (when current-chunk-type
-      (if (eq current-chunk-type 'same)
-          (push (list 'same (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)
-        (push (list 'diff (reverse current-orig-chunk) (reverse current-new-chunk)) chunks)))
-
-    ;; Return the chunks in correct order
-    (reverse chunks)))
+  (insert (simple-diff-merge-strings orig-code new-code "HEAD" "Relysium"))
+  )
 
 (provide 'relysium-utils)
 ;;; relysium-utils.el ends here
