@@ -10,7 +10,6 @@
 (require 'init-treemacs)
 (require 'init-evil)
 (require 'init-better-emacs)
-(require 'init-org)
 (require 'init-git)
 (require 'init-multi-cursor)
 (require 'init-copilot)

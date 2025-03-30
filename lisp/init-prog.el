@@ -6,88 +6,133 @@
   (setq eldoc-echo-area-use-multiline-p nil)
   (setq eldoc-idle-delay 0.4))
 
-;; (use-package eldoc-box
-;;   :diminish eldoc-box-hover-mode
-;;   :hook (prog-mode . eldoc-box-hover-mode))
-
 ;; Highlight indentions
 (use-package highlight-indent-guides
   :diminish
   :hook (prog-mode . highlight-indent-guides-mode)
-  ;; (highlight-indent-guides-mode . (lambda ()
-  ;;                                   ))
   :config
   (setq highlight-indent-guides-method 'character)
-  ;; (set-face-background 'highlight-indent-guides-odd-face "darkgray")
-  ;; (set-face-background 'highlight-indent-guides-even-face "dimgray")
-  ;; (set-face-foreground 'highlight-indent-guides-character-face "gray90")
   )
 
 ;; Flycheck
 ;; A modern on-the-fly syntax checking extension – absolute essential
 (use-package flycheck
   :hook (prog-mode . flycheck-mode))
-;; :config
-;; (global-flycheck-mode +1))
+
+;; Auto format code on save
+(use-package apheleia
+  :init
+  (apheleia-global-mode +1)
+  )
+
+;; (unless (display-graphic-p)
+;;   (quelpa '(popon :fetcher git :url "https://codeberg.org/akib/emacs-popon.git"))
+;;   (quelpa '(acm-terminal :fetcher github :repo "twlz0ne/acm-terminal")))
 
 
-(setq treesit-language-source-alist
-      '((typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src"))
-        (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
-        (elixir . ("https://github.com/elixir-lang/tree-sitter-elixir"))
-        (heex . ("https://github.com/phoenixframework/tree-sitter-heex"))
-        ))
-
-(dolist (source treesit-language-source-alist)
-  (unless (treesit-language-available-p (car source))
-    (treesit-install-language-grammar (car source))))
-
-;; (use-package eglot
-;;   :ensure nil)
-
-;; (use-package eglot-booster
-;;   :quelpa (eglot-booster :fetcher github :repo "jdtsmith/eglot-booster")
-;;   :after eglot
-;;   :config	(eglot-booster-mode))
-
-;; lSP bridge
-(use-package lsp-bridge
-  :quelpa (lsp-bridge :fetcher github :repo "manateelazycat/lsp-bridge"
-                      :files ("*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources"))
-  :bind (:map evil-normal-state-map
-              ;; ("gd" . lsp-bridge-find-def)
-              ;; ("gD" . lsp-bridge-find-def-other-window)
-              ;; ("gr" . lsp-bridge-find-references)
-              ("K" . lsp-bridge-show-documentation))
-  :hook
-  (prog-mode . lsp-bridge-mode)
-  (before-save . lsp-bridge-code-format)
-  (gfm-view-mode . (lambda ()
-                     (evil-define-key* '(normal visual) gfm-view-mode-map
-                       (kbd "q") '(lambda()
-                                    (interactive)
-                                     (kill-current-buffer)
-                                     (ace-delete-window))
-                       )))
+(use-package lsp-mode
+  :diminish "LSP"
+  :commands (lsp lsp-deferred)
+  :hook ((lsp-mode . lsp-diagnostics-mode)
+         (lsp-mode . lsp-enable-which-key-integration)
+         ;; (lsp-mode . lsp-completion-mode)
+         )
   :custom
-  (lsp-bridge-elixir-lsp-server 'lexical)
-  (acm-enable-search-file-words nil)
-  (acm-enable-tabnine nil)
-  (acm-enable-copilot nil)
-  (acm-enable-citre nil))
+  (lsp-keymap-prefix "C-c l")           ; Prefix for LSP actions
+  (lsp-completion-provider :none)       ; Using Corfu as the provider
+  (lsp-diagnostics-provider :flycheck)
+  (lsp-session-file (locate-user-emacs-file ".lsp-session"))
+  (lsp-log-io nil)                      ; IMPORTANT! Use only for debugging! Drastically affects performance
+  (lsp-keep-workspace-alive nil)        ; Close LSP server if all project buffers are closed
+  (lsp-idle-delay 0.5)                  ; Debounce timer for `after-change-function'
+  ;; core
+  (lsp-enable-xref t)                   ; Use xref to find references
+  (lsp-auto-configure t)                ; Used to decide between current active servers
+  (lsp-eldoc-enable-hover t)            ; Display signature information in the echo area
+  (lsp-enable-dap-auto-configure t)     ; Debug support
+  (lsp-enable-file-watchers nil)
+  (lsp-enable-folding nil)              ; I disable folding since I use origami
+  (lsp-enable-imenu t)
+  (lsp-enable-indentation nil)          ; I use prettier
+  (lsp-enable-links nil)                ; No need since we have `browse-url'
+  (lsp-enable-on-type-formatting nil)   ; Prettier handles this
+  (lsp-enable-suggest-server-download t) ; Useful prompt to download LSP providers
+  (lsp-enable-symbol-highlighting t)     ; Shows usages of symbol at point in the current buffer
+  (lsp-enable-text-document-color nil)   ; This is Treesitter's job
 
+  (lsp-ui-sideline-show-hover nil)      ; Sideline used only for diagnostics
+  (lsp-ui-sideline-diagnostic-max-lines 20) ; 20 lines since typescript errors can be quite big
+  ;; completion
+  (lsp-completion-enable t)
+  (lsp-completion-enable-additional-text-edit t) ; Ex: auto-insert an import for a completion candidate
+  (lsp-enable-snippet t)                         ; Important to provide full JSX completion
+  (lsp-completion-show-kind t)                   ; Optional
+  ;; headerline
+  (lsp-headerline-breadcrumb-enable t)  ; Optional, I like the breadcrumbs
+  (lsp-headerline-breadcrumb-enable-diagnostics nil) ; Don't make them red, too noisy
+  (lsp-headerline-breadcrumb-enable-symbol-numbers nil)
+  (lsp-headerline-breadcrumb-icons-enable nil)
+  ;; modeline
+  (lsp-modeline-code-actions-enable nil) ; Modeline should be relatively clean
+  (lsp-modeline-diagnostics-enable nil)  ; Already supported through `flycheck'
+  (lsp-modeline-workspace-status-enable nil) ; Modeline displays "LSP" when lsp-mode is enabled
+  (lsp-signature-doc-lines 1)                ; Don't raise the echo area. It's distracting
+  (lsp-ui-doc-use-childframe t)              ; Show docs for symbol at point
+  (lsp-eldoc-render-all nil)            ; This would be very useful if it would respect `lsp-signature-doc-lines', currently it's distracting
+  ;; lens
+  (lsp-lens-enable nil)                 ; Optional, I don't need it
+  ;; semantic
+  (lsp-semantic-tokens-enable nil)      ; Related to highlighting, and we defer to treesitter
 
-(use-package format-all
-  :hook (prog-mode . format-all-mode))
+  :init
+  (setq lsp-use-plists t)
+  (setq lsp-log-io t)
+  :preface
+  (defun lsp-booster--advice-json-parse (old-fn &rest args)
+    "Try to parse bytecode instead of json."
+    (or
+     (when (equal (following-char) ?#)
 
-(unless (display-graphic-p)
-  (quelpa '(popon :fetcher git :url "https://codeberg.org/akib/emacs-popon.git"))
-  (quelpa '(acm-terminal :fetcher github :repo "twlz0ne/acm-terminal")))
+       (let ((bytecode (read (current-buffer))))
+         (when (byte-code-function-p bytecode)
+           (funcall bytecode))))
+     (apply old-fn args)))
+  (defun lsp-booster--advice-final-command (old-fn cmd &optional test?)
+    "Prepend emacs-lsp-booster command to lsp CMD."
+    (let ((orig-result (funcall old-fn cmd test?)))
+      (if (and (not test?)                             ;; for check lsp-server-present?
+               (not (file-remote-p default-directory)) ;; see lsp-resolve-final-command, it would add extra shell wrapper
+               lsp-use-plists
+               (not (functionp 'json-rpc-connection))  ;; native json-rpc
+               (executable-find "emacs-lsp-booster"))
+          (progn
+            (message "Using emacs-lsp-booster for %s!" orig-result)
+            (cons "emacs-lsp-booster" orig-result))
+        orig-result)))
+  :init
+  (setq lsp-use-plists t)
+  ;; Initiate https://github.com/blahgeek/emacs-lsp-booster for performance
+  (advice-add (if (progn (require 'json)
+                         (fboundp 'json-parse-buffer))
+                  'json-parse-buffer
+                'json-read)
+              :around
+              #'lsp-booster--advice-json-parse)
+  (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command))
 
-
-;; quick evaluate code
-(use-package quickrun
-  :defer t)
+(use-package lsp-ui
+  :ensure t
+  :commands
+  (lsp-ui-doc-show
+   lsp-ui-doc-glance)
+  :bind (:map lsp-mode-map
+              ("C-c C-d" . 'lsp-ui-doc-glance))
+  :after (lsp-mode evil)
+  :config (setq lsp-ui-doc-enable t
+                evil-lookup-func #'lsp-ui-doc-glance ; Makes K in evil-mode toggle the doc for symbol at point
+                lsp-ui-doc-show-with-cursor nil      ; Don't show doc when cursor is over symbol - too distracting
+                lsp-ui-doc-include-signature t       ; Show signature
+                lsp-ui-doc-position 'at-point))
 
 ;; ---
 
@@ -95,42 +140,41 @@
 (use-package origami
   :hook (prog-mode . origami-mode))
 
-;;
-(use-package citre
-  :defer t
-  :init
-  (require 'citre-config)
-  ;; in `citre-mode-map' so you can only use them when `citre-mode' is enabled.
-  (global-set-key (kbd "C-x c j") 'citre-jump)
-  (global-set-key (kbd "C-x c J") 'citre-jump-back)
-  (global-set-key (kbd "C-x c p") 'citre-ace-peek)
-  (global-set-key (kbd "C-x c u") 'citre-update-this-tags-file)
-  (define-key evil-normal-state-map (kbd "g d") 'citre-jump)
-  :config
-  (setq
-   ;; Set these if readtags/ctags is not in your PATH.
-   ;; citre-readtags-program "/path/to/readtags"
-   citre-ctags-program "/opt/homebrew/bin/ctags"
-   ;; Set these if gtags/global is not in your PATH (and you want to use the
-   ;; global backend)
-   ;; citre-gtags-program "/path/to/gtags"
-   ;; citre-global-program "/path/to/global"
-   ;; Set this if you use project management plugin like projectile.  It's
-   ;; used for things like displaying paths relatively, see its docstring.
-   citre-project-root-function (lambda ()
-                                 (interactive)
-                                 (let ((project (project-current (buffer-file-name))))
-                                     (expand-file-name (project-root project))))
+;; ;;
+;; (use-package citre
+;;   :defer t
+;;   :init
+;;   (require 'citre-config)
+;;   ;; in `citre-mode-map' so you can only use them when `citre-mode' is enabled.
+;;   (global-set-key (kbd "C-x c j") 'citre-jump)
+;;   (global-set-key (kbd "C-x c J") 'citre-jump-back)
+;;   (global-set-key (kbd "C-x c p") 'citre-ace-peek)
+;;   (global-set-key (kbd "C-x c u") 'citre-update-this-tags-file)
+;;   :config
+;;   (setq
+;;    ;; Set these if readtags/ctags is not in your PATH.
+;;    ;; citre-readtags-program "/path/to/readtags"
+;;    citre-ctags-program "/opt/homebrew/bin/ctags"
+;;    ;; Set these if gtags/global is not in your PATH (and you want to use the
+;;    ;; global backend)
+;;    ;; citre-gtags-program "/path/to/gtags"
+;;    ;; citre-global-program "/path/to/global"
+;;    ;; Set this if you use project management plugin like projectile.  It's
+;;    ;; used for things like displaying paths relatively, see its docstring.
+;;    citre-project-root-function (lambda ()
+;;                                  (interactive)
+;;                                  (let ((project (project-current (buffer-file-name))))
+;;                                    (expand-file-name (project-root project))))
 
-   ;; Set this if you want to always use one location to create a tags file.
-   ;; citre-default-create-tags-file-location 'global-cache
-   ;; Set this if you'd like to use ctags options generated by Citre
-   ;; directly, rather than further editing them.
-   ;; citre-edit-ctags-options-manually nil
-   ;; If you only want the auto enabling citre-mode behavior to work for
-   ;; certain modes (like `prog-mode'), set it like this.
-   ;; citre-auto-enable-citre-mode-modes '(prog-mode)
-   ))
+;;    ;; Set this if you want to always use one location to create a tags file.
+;;    ;; citre-default-create-tags-file-location 'global-cache
+;;    ;; Set this if you'd like to use ctags options generated by Citre
+;;    ;; directly, rather than further editing them.
+;;    ;; citre-edit-ctags-options-manually nil
+;;    ;; If you only want the auto enabling citre-mode behavior to work for
+;;    ;; certain modes (like `prog-mode'), set it like this.
+;;    ;; citre-auto-enable-citre-mode-modes '(prog-mode)
+;;    ))
 
 (use-package devdocs
   :bind ("C-h D" . devdocs-lookup))

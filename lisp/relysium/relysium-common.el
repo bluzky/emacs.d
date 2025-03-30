@@ -88,7 +88,7 @@ Must be a number between 0 and 1, exclusive."
       (insert (format "```%s\n%s\n```" code-buffer-language content))
       (insert "\n"))))
 
-(defun relysium-keep-all-suggested-changes ()
+(defun relysium-keep-all-changes ()
   "Keep all of the LLM suggestions."
   (interactive)
   (save-excursion
@@ -99,7 +99,7 @@ Must be a number between 0 and 1, exclusive."
     (smerge-mode -1)
     (message "All suggested changes applied")))
 
-(defun relysium-discard-all-suggested-changes ()
+(defun relysium-discard-all-changes ()
   "Discard all of the LLM suggestions."
   (interactive)
   (undo)
@@ -128,25 +128,25 @@ Must be a number between 0 and 1, exclusive."
   "Keep the current suggested change and move to the next one."
   (interactive)
   (smerge-keep-lower)
-  (if (ignore-errors (not (smerge-next)))
+  (if (ignore-errors (smerge-next))
       (progn
-        (message "All changes reviewed - no more conflicts")
-        (smerge-mode -1))
-    (message "Applied change - move to next")
-    ;; Keep the transient menu active if there are more changes
-    (relysium-transient-menu)))
+        (message "Applied change - move to next")
+        ;; Keep the transient menu active if there are more changes
+        (relysium-transient-menu))
+    (message "All changes reviewed - no more conflicts")
+    (smerge-mode -1)))
 
-(defun relysium-reject-current-change ()
+(defun relysium-discard-current-change ()
   "Reject the current suggested change and move to the next one."
   (interactive)
   (smerge-keep-upper)
-  (if (ignore-errors (not (smerge-next)))
+  (if (ignore-errors (smerge-next))
       (progn
-        (message "All changes reviewed - no more conflicts")
-        (smerge-mode -1))
-    (message "Rejected change - move to next")
-    ;; Keep the transient menu active if there are more changes
-    (relysium-transient-menu)))
+        (message "Rejected change - move to next")
+        ;; Keep the transient menu active if there are more changes
+        (relysium-transient-menu))
+    (message "All changes reviewed - no more conflicts")
+    (smerge-mode -1)))
 
 
 (provide 'relysium-common)

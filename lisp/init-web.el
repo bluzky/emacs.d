@@ -30,68 +30,49 @@
 
 ;;; Code:
 
+;; install tree-sitter language grammars
+(let ((treesit-language-source-alist
+       '(
+         (css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
+         (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
+         (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.21.2" "src"))
+         (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
+         (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
+         (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
+         (prisma "https://github.com/victorhqc/tree-sitter-prisma")
+         )))
+  (dolist (source treesit-language-source-alist)
+    (unless (treesit-language-available-p (car source))
+      (treesit-install-language-grammar (car source)))))
 
-(use-package prettier
-  :hook ((js-mode js2-mode css-mode sgml-mode web-mode rjsx-mode) . prettier-mode))
-
-;; CSS
-;; (use-package css-mode
-;;   :init (setq css-indent-offset 2))
-
-;; SCSS
-;; (use-package scss-mode
-;;   :init (setq scss-compile-at-save nil))
-
-
-;; JavaScript
-(use-package js
-  :init (setq js-indent-level 2))
-
-(use-package rjsx-mode 
-  :mode (("\\.js\\'" . js-mode)
-         ("\\.jsx\\'" . js2-jsx-mode))
-  :interpreter (("node" . js2-mode)
-                ("node" . js2-jsx-mode))
-  :hook ((js2-mode . js2-minor-mode)
-         (js2-mode . js2-highlight-unused-variables-mode)))
-
-;; Format HTML, CSS and JavaScript/JSON
-;; Install: npm -g install prettier
-;; (when (executable-find "prettier")
-;;   (use-package prettier
-;;     :diminish
-;;     :hook ((js-mode js2-mode css-mode sgml-mode web-mode) . prettier-mode)
-;;     :init (setq prettier-pre-warm 'none)))
-
-;; Major mode for editing web templates
-(use-package web-mode
-  :mode "\\.\\(phtml\\|php\\|[gj]sp\\|as[cp]x\\|erb\\|djhtml\\|html?\\|hbs\\|ejs\\|jade\\|swig\\|tm?pl\\|vue\\|svelte\\)$"
-  :config
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-css-indent-offset 2)
-  (setq web-mode-code-indent-offset 2))
-
-;; Adds node_modules/.bin directory to `exec_path'
-;; (use-package add-node-modules-path
-;;   :hook ((web-mode js-mode js2-mode) . add-node-modules-path))
-
-;; REST
-;; (use-package restclient
-;;   :mode ("\\.http\\'" . restclient-mode)
-;;   :config
-;;   (use-package restclient-test
-;;     :diminish
-;;     :hook (restclient-mode . restclient-test-mode)))
-
-;; (use-package web-mode
-;;   :mode ("\\.js\\'" "\\.jsx?$"))
+;; Remap major modes
+(dolist (mapping
+         '((css-mode . css-ts-mode)
+           (typescript-mode . typescript-ts-mode)
+           (js-mode . typescript-ts-mode)
+           (js2-mode . typescript-ts-mode)
+           (css-mode . css-ts-mode)))
+  (add-to-list 'major-mode-remap-alist mapping))
 
 
-;; (use-package js2-mode
-;;   :mode ("\\.js\\'" "\\.jsx\\'")
-;;   :hook (js2-mode . eglot-ensure)
-;;   (before-save . eglot-format)
-;;   (js2-mode .(lambda () (setq ian/indent-width 2))))
+;; Add item to major-mode-remap-alist
+(let ((my-mode-alist
+       '(("\\.tsx\\'" . tsx-ts-mode)
+         ("\\.js\\'"  . typescript-ts-mode)
+         ("\\.mjs\\'" . typescript-ts-mode)
+         ("\\.mts\\'" . typescript-ts-mode)
+         ("\\.cjs\\'" . typescript-ts-mode)
+         ("\\.ts\\'"  . typescript-ts-mode)
+         ("\\.jsx\\'" . tsx-ts-mode)
+         ("\\.json\\'" .  json-ts-mode)
+         ("\\.prisma\\'" . prisma-ts-mode)
+         )))
+  (dolist (association my-mode-alist)
+    (add-to-list 'auto-mode-alist association)))
+
+(add-hook 'typescript-ts-mode-hook #'lsp-deferred)
+(add-hook 'tsx-ts-mode-hook #'lsp-deferred)
+(add-hook 'json-ts-mode-hook #'lsp-deferred)
 
 
 ;; Support functions

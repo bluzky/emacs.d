@@ -1,4 +1,3 @@
-
 ;; init.el --- Emacs init file
 ;;  Author: Ian Y.E. Pan
 ;;; Commentary:
@@ -11,7 +10,8 @@
       file-name-handler-alist nil
       site-run-file nil)
 
-(defvar ian/gc-cons-threshold 100000000)
+(setq read-process-output-max (* 10 1024 1024)) ;; 10mb
+(defvar ian/gc-cons-threshold 200000000)
 
 (add-hook 'emacs-startup-hook ; hook run after loading init files
           (lambda ()

@@ -69,9 +69,9 @@
    ("n" "Next" relysium-navigate-next-change)
    ("p" "Prev" relysium-navigate-prev-change)
    ("a" "Accept" relysium-keep-current-change)
-   ("d" "Reject" relysium-reject-current-change)
-   ("RET" "Accept all" relysium-keep-all-suggested-changes)
-   ("x" "Discard all" relysium-discard-all-suggested-changes)
+   ("d" "Reject" relysium-discard-current-change)
+   ("RET" "Accept all" relysium-keep-all-changes)
+   ("x" "Discard all" relysium-discard-all-changes)
    ("r" "Retry" relysium-retry-query)
    ("q" "Quit" transient-quit-one)])
 

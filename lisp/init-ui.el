@@ -47,8 +47,7 @@
 ;; Or if you have use-package installed
 (use-package kaolin-themes
   :config
-  (load-theme 'ellas t)
-  (kaolin-treemacs-theme))
+  (load-theme 'ellas t))
 
 ;; (use-package doom-themes
 ;;   :config
