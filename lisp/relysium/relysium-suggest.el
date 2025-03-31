@@ -25,7 +25,7 @@ Your task is to suggest code modifications at the cursor position. Follow these 
     Each JSON array item is a map with 3 fields:
       start_row: The starting row of the code snippet you want to replace, start from 1, inclusive
       end_row: The ending row of the code snippet you want to replace, start from 1, exclusive
-      content: The suggested code you want to replace the original code with
+      content: The suggested code you want to replace the original code with, the content MUST BE encoded.
   3. JSON must be wrapped with <suggestions></suggestions> tags, for example:
     <suggestions>
       [
@@ -71,7 +71,9 @@ Guidelines:
   13. If there are no recommended modifications, return an empty list.
   14. Remember to ONLY RETURN the suggested code snippet, without any additional formatting or explanation.
   15. The returned code must satisfy the context, especially the context where the current cursor is located.
-  16. Each line in the returned code snippet is complete code; do not include incomplete code.")
+  16. Each line in the returned code snippet is complete code; do not include incomplete code.
+  17. DO NOT return line number in the suggestion.
+  18. Combine multiple siblings suggestions into one if possible.")
 
 
 ;;;###autoload

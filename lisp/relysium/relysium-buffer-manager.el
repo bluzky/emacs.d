@@ -36,7 +36,24 @@ Must be a number between 0 and 1, exclusive."
                (buffer-live-p relysium--buffer-chat))
     (let* ((code-buffer-name (buffer-name))
            (chat-buffer-name (format "*relysium:%s*" code-buffer-name)))
-      (setq relysium--buffer-chat (gptel chat-buffer-name))))
+      ;; Create the chat buffer
+      (setq relysium--buffer-chat (gptel chat-buffer-name))
+      ;; Hide it from buffer list
+      (with-current-buffer relysium--buffer-chat
+        ;; Using buffer-list nil hides the buffer from buffer-list functions
+        (setq-local buffer-list-update-hook
+                    (cons (lambda () (setq list-buffers-directory nil))
+                          buffer-list-update-hook))
+        (set-buffer-modified-p nil)
+        ;; Mark the buffer as auxiliary (hidden in many UIs)
+        (when (fboundp 'doom-mark-buffer-as-real-h)
+          (unwind-protect
+              (doom-mark-buffer-as-real-h)
+                                        ; avoid error if using doom
+            (ignore-errors 'doom-mark-buffer-as-real-h)))
+        (set-buffer-modified-p nil))
+      ;; Return the newly created and configured buffer
+      relysium--buffer-chat))
   relysium--buffer-chat)
 
 ;;;###autoload

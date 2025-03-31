@@ -28,16 +28,22 @@
     :key ai-gemini-api-key
     :stream t)
 
-  (gptel-make-openai "Github Models" ;Any name you want
+  (gptel-make-openai "Github Models"
     :host "models.inference.ai.azure.com"
     :endpoint "/chat/completions?api-version=2024-05-01-preview"
     :stream t
-    :key ai-github-api-key             ;can be a function that returns the key
+    :key ai-github-api-key
     :models '(gpt-4o
               o1))
 
-  ;; Groq offers an OpenAI compatible API
+  (gptel-make-openai "DeepSeek"
+    :host "api.deepseek.com"
+    :endpoint "/chat/completions"
+    :stream t
+    :key ai-deepseek-api-key
+    :models '(deepseek-chat deepseek-coder))
 
+  ;; Groq offers an OpenAI compatible API
   (setq gptel-model  'qwen-2.5-coder-32b
         gptel-backend
         (gptel-make-openai "Groq"
@@ -46,17 +52,10 @@
           :stream t
           :key groq-api-key
           :models '(qwen-2.5-coder-32b
+                    deepseek-r1-distill-llama-70b
+                    deepseek-r1-distill-qwen-32b
                     llama-3.3-70b-versatile))
         )
-
-  ;; (setq gptel-model   'deepseek-chat
-  ;;       gptel-backend
-  ;;       (gptel-make-openai "DeepSeek"     ;Any name you want
-  ;;         :host "api.deepseek.com"
-  ;;         :endpoint "/chat/completions"
-  ;;         :stream t
-  ;;         :key ai-deepseek-api-key             ;can be a function that returns the key
-  ;;         :models '(deepseek-chat deepseek-coder)))
   )
 
 (require 'relysium)
