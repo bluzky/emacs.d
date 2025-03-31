@@ -58,6 +58,14 @@
         )
   )
 
+(defconst relysium-directory
+  (expand-file-name "relysium"
+                    (file-name-directory (or load-file-name buffer-file-name)))
+  "Directory containing the relysium component files.")
+
+;; Add the directory to load path
+(add-to-list 'load-path relysium-directory)
+
 (require 'relysium)
 (add-hook 'prog-mode-hook 'relysium-prog-mode)
 
