@@ -47,6 +47,7 @@
 
 ;; Load all the relysium modules
 (require 'relysium-utils)
+(require 'relysium-buffer-manager)
 (require 'relysium-common)
 (require 'relysium-ask)
 (require 'relysium-edit)
@@ -84,14 +85,15 @@ Provides keybindings and integration for elysium code assistance."
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "C-<return>") 'relysium-edit-dwim)
             (define-key map (kbd "C-c a") 'relysium-ask)
-            (define-key map (kbd "C-c e t") 'relysium-toggle-window)
-            (define-key map (kbd "C-c e b") 'relysium-add-context)
+            (define-key map (kbd "C-c e t") 'relysium-buffer-toggle-window)  ;; Update
+            (define-key map (kbd "C-c e b") 'relysium-buffer-add-context)    ;; Update
             (define-key map (kbd "C-c e a") 'relysium-ask)
-            (define-key map (kbd "C-c e c") 'relysium-clear-buffer)
+            (define-key map (kbd "C-c e c") 'relysium-buffer-clear)          ;; Update
             (define-key map (kbd "C-c e D") 'relysium-toggle-debug-mode)
             (define-key map (kbd "C-c e d") 'relysium-debug-log)
             (define-key map (kbd "C-c e m") 'relysium-transient-menu)
             (define-key map (kbd "C-c e s") 'relysium-suggest)
+            (define-key map (kbd "C-c e w") 'relysium-buffer-switch-to-chat) ;; Add this
             map))
 
 (provide 'relysium)

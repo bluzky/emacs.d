@@ -38,7 +38,7 @@
 
   ;; Groq offers an OpenAI compatible API
 
-  (setq gptel-model  'gpt-4o
+  (setq gptel-model  'qwen-2.5-coder-32b
         gptel-backend
         (gptel-make-openai "Groq"
           :host "api.groq.com"

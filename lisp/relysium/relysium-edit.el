@@ -9,6 +9,7 @@
 
 (require 'gptel)
 (require 'relysium-utils)
+(require 'relysium-buffer-manager)
 (require 'relysium-common)
 
 (defvar relysium--last-query nil
@@ -74,11 +75,9 @@ def add(a, b):
 (defun relysium-edit (user-query)
   "Send USER-QUERY to elysium from the current buffer."
   (interactive (list (read-string "User Query: ")))
-  (unless (buffer-live-p relysium--chat-buffer)
-    (setq relysium--chat-buffer (gptel "*relysium*")))
 
   (let* ((code-buffer (current-buffer))
-         (chat-buffer relysium--chat-buffer)
+         (chat-buffer (relysium-buffer-get-chat-buffer))
          (using-region (use-region-p))
          (current-cursor-line (line-number-at-pos (point)))
          ;; Get buffer content (whole or region)
@@ -140,11 +139,7 @@ def add(a, b):
     (setq-local relysium--region-start-line final-start-line)
     (setq-local relysium--region-end-line final-end-line)
 
-    (with-current-buffer chat-buffer
-      (goto-char (point-max))
-      (insert "\n\n### USER:\n")
-      (insert full-query)
-      (insert "\n"))
+    (relysium-buffer-append-user-message full-query)
 
     (gptel--update-status " Waiting..." 'warning)
     (message "Querying %s for lines %d-%d..."
@@ -166,20 +161,16 @@ INFO is passed into this function from the `gptel-request' function."
     (relysium-debug-log "LLM Response:\n%s" response)
 
     ;; Add this section to show the full response in the chat buffer
-    (with-current-buffer relysium--chat-buffer
-      (goto-char (point-max))
-      (insert "\n\n### ASSISTANT:\n")
-      (insert response)
-      (insert "\n\n### "))
+    (relysium-buffer-append-assistant-message response)
 
     (let ((code-change (relysium-extract-edit-changes response))
           (using-region (buffer-local-value 'relysium--using-region code-buffer)))
 
       ;; Log the extracted code if debug mode is enabled
-        (relysium-debug-log "Extracted code change: %s"
-                            (if code-change
-                                (format "%s" code-change)
-                              "None found"))
+      (relysium-debug-log "Extracted code change: %s"
+                          (if code-change
+                              (format "%s" code-change)
+                            "None found"))
 
       ;; mark undo boundary
       (with-current-buffer code-buffer
@@ -195,7 +186,7 @@ INFO is passed into this function from the `gptel-request' function."
                                current-line))
                  (end-line (if using-region
                                (1+(buffer-local-value 'relysium--region-end-line code-buffer))
-                               (1+ current-line))) ;; Use exclusive range, end=start+1 for single-line
+                             (1+ current-line))) ;; Use exclusive range, end=start+1 for single-line
                  ;; Special handling for insertion at current line
                  (is-insertion (not using-region))
                  (end-line (if is-insertion start-line end-line)) ;; end=start for insert
@@ -212,9 +203,12 @@ INFO is passed into this function from the `gptel-request' function."
             (relysium-transient-menu))))
 
       ;; Update status
-      (with-current-buffer relysium--chat-buffer
-        (gptel--sanitize-model)
-        (gptel--update-status " Ready" 'success)))))
+      (let ((chat-buffer (relysium-buffer-get-chat-buffer)))
+        (with-current-buffer chat-buffer
+          (gptel--sanitize-model)
+          (gptel--update-status " Ready" 'success)))
+      )))
+
 
 (defun relysium-extract-edit-changes (response)
   "Extract the code from the first <code> block in RESPONSE.

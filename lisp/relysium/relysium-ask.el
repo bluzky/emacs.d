@@ -9,6 +9,7 @@
 
 (require 'gptel)
 (require 'relysium-utils)
+(require 'relysium-buffer-manager)
 (require 'relysium-common)
 
 (defvar relysium-ask-prompt
@@ -24,11 +25,8 @@ Your answer should be short and focus ONLY on the questions asked.")
   (interactive "sAsk about code: ")
   (if (not (use-region-p))
       (message "Please select a region of code first")
-    ;; Region is selected, proceed with LLM query
-    (unless (buffer-live-p relysium--chat-buffer)
-      (setq relysium--chat-buffer (gptel "*relysium*")))
 
-    (let* ((chat-buffer relysium--chat-buffer)
+    (let* ((chat-buffer (relysium-buffer-get-chat-buffer))
            (selected-code (buffer-substring-no-properties (region-beginning) (region-end)))
            (file-type (symbol-name major-mode))
            (lang-name (replace-regexp-in-string "-mode$\\|-ts-mode$" "" file-type))
@@ -40,14 +38,10 @@ Your answer should be short and focus ONLY on the questions asked.")
                                 user-prompt)))
 
       ;; Update chat buffer with the query
-      (with-current-buffer chat-buffer
-        (goto-char (point-max))
-        (insert "\n\n### USER:\n")
-        (insert full-prompt)
-        (insert "\n"))
+      (relysium-buffer-append-user-message full-prompt)
 
-      ;; Show the chat window
-      (relysium-setup-windows)
+      ;; Show the chat window, and focus back to the code buffer
+      (relysium-buffer-setup-windows t)
 
       ;; Update status and send request
       (gptel--update-status " Waiting..." 'warning)
@@ -62,16 +56,17 @@ Your answer should be short and focus ONLY on the questions asked.")
 (defun relysium-ask-callback (response _info)
   "Handle the RESPONSE from LLM for relysium-ask.
 _INFO is unused but required by the gptel callback interface."
+  (relysium-debug-log "LLM Response:\n%s" response)
   (when response
-    (with-current-buffer relysium--chat-buffer
-      (goto-char (point-max))
-      (insert "\n\n### ASSISTANT:\n")
-      (insert response)
-      (insert "\n")
+    ;; Append the response to the chat buffer
+    (relysium-buffer-append-assistant-message response)
 
-      ;; Update status
-      (gptel--sanitize-model)
-      (gptel--update-status " Ready" 'success))
+    ;; Update status in the chat buffer, not in the current buffer
+    (let ((chat-buffer (relysium-buffer-get-chat-buffer)))
+      (with-current-buffer chat-buffer
+        (gptel--sanitize-model)
+        (gptel--update-status " Ready" 'success)))
+
     (message "LLM response received")))
 
 

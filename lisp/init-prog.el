@@ -125,8 +125,6 @@
   :commands
   (lsp-ui-doc-show
    lsp-ui-doc-glance)
-  :bind (:map lsp-mode-map
-              ("C-c C-d" . 'lsp-ui-doc-glance))
   :after (lsp-mode evil)
   :config (setq lsp-ui-doc-enable t
                 evil-lookup-func #'lsp-ui-doc-glance ; Makes K in evil-mode toggle the doc for symbol at point

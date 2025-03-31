@@ -20,7 +20,6 @@
 
 
 ;; By default, the scrolling is way too fast to be precise and helpful, let’s tune it down a little bit.
-
 (use-package mwheel
   :ensure nil
   :config (setq mouse-wheel-scroll-amount '(2 ((shift) . 1))
@@ -49,18 +48,16 @@
   :config
   (load-theme 'ellas t))
 
-;; (use-package doom-themes
-;;   :config
-;;   ;; Global settings (defaults)
-;;   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-;;         doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-;;   (load-theme 'doom-oksolar-light t)
+;; auto dark theme
+(defun me/apply-theme (appearance)
+  "Load theme, taking current system APPEARANCE into consideration."
+  (mapc #'disable-theme custom-enabled-themes)
+  (pcase appearance
+    ('light (load-theme 'ellas t))
+    ('dark (load-theme 'kaolin-dark t))))
 
-;;   ;; Enable flashing mode-line on errors
-;;   (doom-themes-visual-bell-config)
-;;   ;; Corrects (and improves) org-mode's native fontification.
-;;   (doom-themes-org-config))
+(add-hook 'ns-system-appearance-change-functions #'me/apply-theme)
 
 
 ;; Dashboard welcome page
@@ -102,15 +99,5 @@
 (use-package hydra)
 (use-package pretty-hydra
   :after hydra)
-
-;; Highlight symbol
-
-(use-package symbol-overlay
-  :diminish
-  :hook (prog-mode . symbol-overlay-mode)
-  :config
-  (setq symbol-overlay-idle-time 0.1)
-  :bind ("s-." . symbol-overlay-put)
- )
 
 (provide 'init-ui)

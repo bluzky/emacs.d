@@ -10,6 +10,7 @@
 (require 'gptel)
 (require 'json)
 (require 'relysium-utils)
+(require 'relysium-buffer-manager)
 (require 'relysium-common)
 
 (setq relysium-suggest-prompt "Act as an expert software developer.
@@ -79,11 +80,9 @@ Guidelines:
 The LLM will return suggestions in JSON format that will be applied to the buffer.
 ADDITIONAL-PROMPT allows users to provide specific instructions."
   (interactive "sAdditional instructions (optional): ")
-  (unless (buffer-live-p relysium--chat-buffer)
-    (setq relysium--chat-buffer (gptel "*relysium*")))
 
   (let* ((code-buffer (current-buffer))
-         (chat-buffer relysium--chat-buffer)
+         (chat-buffer (relysium-buffer-get-chat-buffer))
          (code-content (buffer-substring-no-properties (point-min) (point-max)))
          (current-cursor-line (line-number-at-pos (point)))
          (file-type (symbol-name major-mode))
@@ -104,12 +103,7 @@ ADDITIONAL-PROMPT allows users to provide specific instructions."
                               instruction-text)))
 
     (setq relysium--last-code-buffer code-buffer)
-
-    (with-current-buffer chat-buffer
-      (goto-char (point-max))
-      (insert "\n\n### USER:\n")
-      (insert full-prompt)
-      (insert "\n"))
+    (relysium-buffer-append-user-message full-prompt)
 
     (gptel--update-status " Waiting..." 'warning)
     (message "Requesting code suggestions from %s..." (gptel-backend-name gptel-backend))
@@ -128,11 +122,7 @@ INFO is passed from the `gptel-request' function."
     (relysium-debug-log "LLM Suggestion Response:\n%s" response)
 
     ;; Add response to the chat buffer
-    (with-current-buffer relysium--chat-buffer
-      (goto-char (point-max))
-      (insert "\n\n### ASSISTANT:\n")
-      (insert response)
-      (insert "\n\n### "))
+    (relysium-buffer-append-assistant-message response)
 
     ;; Extract and process suggestions
     (let ((suggestions (relysium-extract-suggestions response)))
@@ -167,9 +157,12 @@ INFO is passed from the `gptel-request' function."
         (message "No applicable suggestions found.")))
 
     ;; Update status
-    (with-current-buffer relysium--chat-buffer
-      (gptel--sanitize-model)
-      (gptel--update-status " Ready" 'success))))
+
+    (let ((chat-buffer (relysium-buffer-get-chat-buffer)))
+      (with-current-buffer chat-buffer
+        (gptel--sanitize-model)
+        (gptel--update-status " Ready" 'success)))
+    ))
 
 (defun relysium-extract-suggestions (response)
   "Extract JSON suggestions from LLM RESPONSE.
@@ -178,8 +171,8 @@ Returns a list of suggestion plists or nil if no suggestions found."
         (end (string-match "</suggestions>" response)))
     (when (and start end (< start end))
       (let ((json-str (substring response
-                                (+ start (length "<suggestions>"))
-                                end)))
+                                 (+ start (length "<suggestions>"))
+                                 end)))
         (condition-case err
             (let ((json-array-type 'list)
                   (json-object-type 'plist))
