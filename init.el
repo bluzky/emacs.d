@@ -29,3 +29,4 @@
 (require 'init-writing)
 
 (provide 'init)
+(put 'narrow-to-region 'disabled nil)

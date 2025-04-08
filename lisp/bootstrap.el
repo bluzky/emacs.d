@@ -60,7 +60,7 @@
    :url "https://github.com/quelpa/quelpa-use-package.git"))
 (require 'quelpa-use-package)
 
-;; (setq use-package-ensure-function 'quelpa)
+(setq use-package-ensure-function 'quelpa)
 
 ;; ;; Setup straight package manager
 ;; (defvar bootstrap-version)

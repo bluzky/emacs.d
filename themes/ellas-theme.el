@@ -30,7 +30,7 @@
       (sky-blue-athens      "#074a96")
       (nice-light-blue      "#497fc1")
 
-      (modeline-padding 6))
+      (modeline-padding 2))
 
   (deftheme ellas "A trip to Greece")
 
@@ -102,10 +102,10 @@
    '(show-paren-match ((t (:inverse-video t))))
 
    ;; Clickable elements
-   `(link ((t (:foreground ,warm-grey :underline t ))))
-   `(custom-button ((t (:foreground ,warm-grey :box (:line-width 3 :style ,warm-grey) :height 0.9 ))))
-   `(custom-button-mouse ((t (:foreground ,bleached-silk :box (:line-width 3 :style ,bleached-silk) :height 0.9 ))))
-   `(custom-button-mouse ((t (:foreground ,bleached-silk :box (:line-width 3 :style ,bleached-silk) :height 0.9 ))))
+   `(link ((t (:foreground ,warm-grey :underline t))))
+   `(custom-button ((t (:foreground ,warm-grey :box (:line-width 3 :style released-button :color ,warm-grey) :height 0.9))))
+   `(custom-button-mouse ((t (:foreground ,bleached-silk :box (:line-width 3 :style released-button :color ,bleached-silk) :height 0.9))))
+   `(custom-button-pressed ((t (:foreground ,bleached-silk :box (:line-width 3 :style pressed-button :color ,bleached-silk) :height 0.9))))
 
    ;; Org mode
    `(org-code ((t (:foreground ,sky-blue-athens ))))
@@ -120,6 +120,9 @@
    `(org-agenda-date ((t (:inherit nil :foreground ,ellas-blue ))))
    `(org-agenda-date-today ((t (:inherit nil :underline t :foreground ,ellas-blue ))))
    `(org-agenda-diary ((t (:foreground ,olive-green-darker ))))
+
+   ;; Markdown
+
 
    ;; Eshell
    `(eshell-prompt ((t (:foreground ,charming-red :bold t ))))
@@ -138,8 +141,8 @@
 
    ;; Tab bars
    `(tab-bar ((t (:background ,main-bg :foreground ,main-fg
-                  :underline ,athens-sculpture-1
-                  :height 1.0))))
+                              :underline ,athens-sculpture-1
+                              :height 1.0))))
    `(tab-bar-tab ((t (:background ,athens-sculpture-1 :box ,athens-sculpture-1 ))))
    `(tab-bar-tab-inactive ((t (:background ,main-bg :box nil ))))
    )

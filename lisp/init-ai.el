@@ -14,16 +14,34 @@
 ;;; Code:
 
 (require 'variables)
+(require 'gptel-tools)
 
 (use-package gptel
   :init
   (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
   (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
+  :hook
+  (gptel-mode . (lambda ()
+                  (if (fboundp 'markdown-toggle-markup-hiding)
+                      (markdown-toggle-markup-hiding)
+                    (message "not markdown mode"))
+                  (setf (alist-get 'markdown-mode gptel-prompt-prefix-alist) "--- \n### 🎙️ USER: ")
+                  (setf (alist-get 'markdown-mode gptel-response-prefix-alist) "### 🤖 ASSISTANT:\n")))
   :bind
+
   (("C-c g" . gptel)
    :map gptel-mode-map
    ("C-<return>" . gptel-send))
   :config
+  (setq gptel-use-tools t)
+
+  (add-to-list 'gptel-tools (use-tool-read-file))
+  (add-to-list 'gptel-tools (use-tool-list-directory))
+  (add-to-list 'gptel-tools (use-tool-make-directory))
+  (add-to-list 'gptel-tools (use-tool-create-file))
+  (add-to-list 'gptel-tools (use-tool-run-command))
+  (add-to-list 'gptel-tools (use-tool-read-url))
+
   (gptel-make-gemini "Gemini"
     :key ai-gemini-api-key
     :stream t)
@@ -44,7 +62,7 @@
     :models '(deepseek-chat deepseek-coder))
 
   ;; Groq offers an OpenAI compatible API
-  (setq gptel-model  'qwen-2.5-coder-32b
+  (setq gptel-model  'llama-3.3-70b-versatile
         gptel-backend
         (gptel-make-openai "Groq"
           :host "api.groq.com"
@@ -72,7 +90,8 @@
 ;; (use-package relysium
 ;;   :quelpa (relysium :fetcher github
 ;;                     :repo "bluzky/relysium"
-;;                     :branch "main")
+;;                     :branch "main"
+;;                     :files ("*.el"))
 ;;   :hook (prog-mode . relysium-prog-mode))
 
 (provide 'init-ai)

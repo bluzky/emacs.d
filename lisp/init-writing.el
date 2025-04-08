@@ -9,6 +9,11 @@
 
 (use-package org-bullets :hook (org-mode . org-bullets-mode))
 
+
+(require 'org-slash-commands)
+(add-hook 'org-mode-hook 'org-slash-commands-enable)
+
+;; Denote is a note-taking package for Emacs that focuses on simplicity and
 (use-package denote
   :ensure t
   :bind
@@ -59,5 +64,49 @@
   :config
   (setenv "D2_LAYOUT" "dagre")
   (setq d2-output-format ".png"))
+
+
+(defun color-is-light-p (hex-color)
+  "Calculate the luminance of a hex color string like #RRGGBB.
+Returns a value between 0.0 (dark) and 1.0 (light)."
+  (let* ((hex (if (string-prefix-p "#" hex-color)
+                  (substring hex-color 1)
+                hex-color))
+         (r (string-to-number (substring hex 0 2) 16))
+         (g (string-to-number (substring hex 2 4) 16))
+         (b (string-to-number (substring hex 4 6) 16)))
+    (>(/ (+ (* r 0.299)
+            (* g 0.587)
+            (* b 0.114))
+         255.0) 0.5)))
+
+;; customize markdown-mode faces based on the current theme
+;; Create a function that will be called when markdown-mode loads
+(defun my-markdown-theme-integration ()
+  ;; Define a function to update faces based on current theme
+  (defun my-update-markdown-faces ()
+
+    (let ((bg-color (face-background 'default nil t)))
+      (if (color-is-light-p bg-color)
+          ;; Set the background color for light mode
+          (custom-set-faces
+           '(markdown-code-face ((t (:background "#FDF6E3" :extend t)))))
+
+        ;; Set the background color for dark mode
+        (custom-set-faces
+         '(markdown-code-face ((t (:background "#282C34" :extend t))))))
+      ))
+
+
+  ;; Add it to theme hooks
+  (advice-add 'load-theme :after
+              (lambda (&rest _) (when (featurep 'markdown-mode) (my-update-markdown-faces))))
+
+  ;; Run once for initial setup
+  (my-update-markdown-faces))
+
+;; Set up the hook to run when markdown-mode loads
+(with-eval-after-load 'markdown-mode
+  (my-markdown-theme-integration))
 
 (provide 'init-writing)
