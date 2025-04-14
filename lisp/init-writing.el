@@ -18,8 +18,8 @@
 (slash-commands-for-mode 'org-mode
                          '(("todo" . (lambda () (org-todo "TODO")))
                            ("done" . (lambda () (org-todo "DONE")))
-                           ("heading" . (lambda () (org-insert-heading)))
-                           ("subheading" . (lambda () (org-insert-subheading nil)))
+                           ("heading 1" . (lambda () (org-insert-heading)))
+                           ("heading 2" . (lambda () (org-insert-subheading nil)))
                            ("checkbox" . (lambda () (insert "[ ] ")))
                            ("table" . (lambda () (org-table-create "3x3")))
                            ("link" . (lambda () (org-insert-link)))
