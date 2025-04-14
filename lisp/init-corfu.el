@@ -1,14 +1,14 @@
-(use-package corfu
-  :custom
-  (corfu-auto t)
-  (corfu-auto-prefix 2)
-  (corfu-preview-current t)
-  (corfu-auto-delay 0.1)
-  (corfu-popupinfo-delay '(0.2 . 0.1))
-  :custom-face
-  (corfu-border ((t (:inherit region :background unspecified))))
-  :init
-  (global-corfu-mode))
+;; (use-package corfu
+;;   :custom
+;;   (corfu-auto t)
+;;   (corfu-auto-prefix 2)
+;;   (corfu-preview-current t)
+;;   (corfu-auto-delay 0.1)
+;;   (corfu-popupinfo-delay '(0.2 . 0.1))
+;;   :custom-face
+;;   (corfu-border ((t (:inherit region :background unspecified))))
+;;   :init
+;;   (global-corfu-mode))
 
 ;; (unless (display-graphic-p)
 ;;   (use-package corfu-terminal
