@@ -1,4 +1,4 @@
-;;; slash-commands.el --- User-configurable slash commands for any mode
+;;; slash-commands-bk.el --- User-configurable slash commands for any mode
 ;;; Commentary:
 ;; Type a slash to trigger custom commands.
 ;; Configure commands per mode with `slash-commands-for-mode`.
@@ -170,5 +170,5 @@ If minibuffer is empty, abort and remove the slash character."
   (remove-hook 'post-command-hook #'slash-post-command-hook)
   (slash-cancel-timer))
 
-(provide 'slash-commands)
-;;; slash-commands.el ends here
+(provide 'slash-commands-bk)
+;;; slash-commands-bk.el ends here
