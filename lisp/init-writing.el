@@ -1,17 +1,35 @@
 (setq org-directory "~/Library/Mobile Documents/com~apple~CloudDocs/notes")
+
+
+(require 'slash-commands-corfu)
+;; Define org-mode slash commands
+
 (use-package org
   :config
   (add-to-list 'org-src-lang-modes '("elixir" . elixr-ts))
-
+  :hook (org-mode . slash-commands-mode)
   :custom
   (org-default-notes-file (concat org-directory "/Inbox.org"))
-  )
+  :config
+  (slash-commands-for-mode 'org-mode
+                           '(("todo" . (lambda () (org-todo "TODO")))
+                             ("done" . (lambda () (org-todo "DONE")))
+                             ("heading" . (lambda () (org-insert-heading)))
+                             ("subheading" . (lambda () (org-insert-subheading nil)))
+                             ("checkbox" . (lambda () (insert "[ ] ")))
+                             ("table" . (lambda () (org-table-create "3x3")))
+                             ("link" . (lambda () (org-insert-link)))
+                             ("code" . (lambda ()
+                                         (insert "#+BEGIN_SRC \n\n#+END_SRC")
+                                         (forward-line -1)))
+                             ("quote" . (lambda ()
+                                          (insert "#+BEGIN_QUOTE\n\n#+END_QUOTE")
+                                          (forward-line -1)))
+                             ("today" . (lambda () (insert (format-time-string "%d-%m-%Y"))))
+                             ("now" . (lambda () (insert (format-time-string "%H:%M:%S"))))
+                             )))
 
 (use-package org-bullets :hook (org-mode . org-bullets-mode))
-
-
-(require 'org-slash-commands)
-(add-hook 'org-mode-hook 'org-slash-commands-enable)
 
 ;; Denote is a note-taking package for Emacs that focuses on simplicity and
 (use-package denote
