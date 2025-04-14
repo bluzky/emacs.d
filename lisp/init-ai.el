@@ -22,6 +22,7 @@
   (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
   :hook
   (gptel-mode . (lambda ()
+                  (display-line-numbers-mode 0)
                   (if (fboundp 'markdown-toggle-markup-hiding)
                       (markdown-toggle-markup-hiding)
                     (message "not markdown mode"))
@@ -60,6 +61,11 @@
     :stream t
     :key ai-deepseek-api-key
     :models '(deepseek-chat deepseek-coder))
+
+  (gptel-make-anthropic "Claude"          ;Any name you want
+    :stream t                             ;Streaming responses
+    :key ai-anthropic-api-key
+    :models '(claude-3-5-sonnet-20241022 claude-3-7-sonnet-20250219))
 
   ;; Groq offers an OpenAI compatible API
   (setq gptel-model  'llama-3.3-70b-versatile
