@@ -90,6 +90,12 @@ An alist with these keys:
     (define-key map [escape] #'slash-popup-cancel)
     (define-key map (kbd "ESC") #'slash-popup-cancel)
     (define-key map "\C-g" #'slash-popup-cancel)
+
+    ;; submenu
+    ;; Add a key binding for going back
+    (define-key map (kbd "<backspace>") #'slash-popup-back-command)
+    (define-key map (kbd "DEL") #'slash-popup-back-command)
+
     map)
   "Keymap active when slash popup is displayed.")
 
@@ -161,31 +167,94 @@ If BUFFER is nil, use the current buffer."
       (setf (alist-get 'selected-index slash-popup--state) new-index)
       (slash-popup--update-display))))
 
+;; Define submenu as a special symbol
+(defvar slash-popup-submenu-symbol 'submenu
+  "Symbol used to identify submenu commands.")
+
+;; Helper function to ensure state is extended for nested commands
+(defun slash-popup--extend-state ()
+  "Add necessary state variables for nested commands."
+  ;; Add command path to track where we are in the hierarchy
+  (unless (assq 'command-path slash-popup--state)
+    (setf (alist-get 'command-path slash-popup--state) nil))
+
+  ;; Add parent commands stack to allow going back
+  (unless (assq 'parent-commands slash-popup--state)
+    (setf (alist-get 'parent-commands slash-popup--state) nil)))
+
 (defun slash-popup-select-command ()
-  "Execute the currently selected command."
+  "Execute the currently selected command or navigate to a sub-menu."
   (interactive)
   (when (alist-get 'active slash-popup--state)
     (let* ((commands (alist-get 'commands slash-popup--state))
            (index (alist-get 'selected-index slash-popup--state 0))
            (cmd-data (nth index commands))
+           (cmd-name (car cmd-data))
            (cmd-fn (cdr cmd-data))
            (buffer (alist-get 'buffer slash-popup--state))
            (start-pos (when (markerp (alist-get 'start-point slash-popup--state))
                         (marker-position (alist-get 'start-point slash-popup--state)))))
 
-      ;; First, close the popup and clean up state
-      (slash-popup--close)
+      ;; Ensure we have the extended state
+      (slash-popup--extend-state)
 
-      ;; Switch to the original buffer
-      (when (buffer-live-p buffer)
-        (with-current-buffer buffer
-          ;; Now remove the command text if we have valid positions
-          (when start-pos
-            (delete-region start-pos (point)))
+      ;; Check if this is a submenu by checking if cmd-fn is a list with 'submenu as the first element
+      (if (and (listp cmd-fn) (eq (car-safe cmd-fn) slash-popup-submenu-symbol))
+          ;; Handle submenu - cmd-fn is (submenu . commands-list)
+          (let ((submenu-commands (cdr cmd-fn)))
+            ;; Save current state to parent stack
+            (push (cons (alist-get 'commands slash-popup--state)
+                        (alist-get 'input slash-popup--state ""))
+                  (alist-get 'parent-commands slash-popup--state))
 
-          ;; Execute the command function
-          (when (functionp cmd-fn)
-            (funcall cmd-fn)))))))
+            ;; Update command path
+            (push cmd-name (alist-get 'command-path slash-popup--state))
+
+            ;; Set new commands and reset selection state
+            (setf (alist-get 'commands slash-popup--state) submenu-commands)
+            (setf (alist-get 'selected-index slash-popup--state) 0)
+            (setf (alist-get 'input slash-popup--state) "")
+
+            (message "Commands: %s" (alist-get 'commands slash-popup--state))
+
+            ;; Update the display
+            (slash-popup--update-display))
+
+        ;; Regular command execution
+        (slash-popup--close)
+
+        ;; Switch to the original buffer
+        (when (buffer-live-p buffer)
+          (with-current-buffer buffer
+            ;; Remove the command text
+            (when start-pos
+              (delete-region start-pos (point)))
+
+            ;; Execute the command function
+            (when (functionp cmd-fn)
+              (funcall cmd-fn))))))))
+
+;; Add a back command to return to the parent menu
+(defun slash-popup-back-command ()
+  "Go back to the parent menu if in a submenu."
+  (interactive)
+  (when (and (alist-get 'active slash-popup--state)
+             (alist-get 'parent-commands slash-popup--state))
+    (let* ((parent-state (pop (alist-get 'parent-commands slash-popup--state)))
+           (parent-commands (car parent-state))
+           (parent-input (cdr parent-state)))
+
+      ;; Pop from command path
+      (pop (alist-get 'command-path slash-popup--state))
+
+      ;; Restore parent commands and input
+      (setf (alist-get 'commands slash-popup--state) parent-commands)
+      (setf (alist-get 'selected-index slash-popup--state) 0)
+      (setf (alist-get 'input slash-popup--state) parent-input)
+
+      ;; Update the display
+      (slash-popup--update-display))))
+
 
 (defun slash-popup-cancel ()
   "Cancel the slash command popup."
@@ -195,8 +264,7 @@ If BUFFER is nil, use the current buffer."
 
 (defun slash-popup--filter-commands (input)
   "Filter available commands based on INPUT string."
-  (let ((commands (with-current-buffer (alist-get 'buffer slash-popup--state)
-                    (slash-popup--get-available-commands)))
+  (let ((commands (alist-get 'commands slash-popup--state))
         (case-fold-search t)) ;; Make search case-insensitive
 
     (cond
@@ -219,9 +287,13 @@ If BUFFER is nil, use the current buffer."
 (defun slash-popup--update-display ()
   "Update the popup display with filtered commands."
   (when (alist-get 'active slash-popup--state)
+    ;; Ensure nested command state is initialized
+    (slash-popup--extend-state)
+
     (let* ((input (alist-get 'input slash-popup--state ""))
            (filtered-commands (slash-popup--filter-commands input))
            (selected-index (alist-get 'selected-index slash-popup--state 0))
+           (command-path (alist-get 'command-path slash-popup--state))
            ;; Ensure selected index is in bounds
            (selected-index (min (if filtered-commands
                                     (max 0 (1- (length filtered-commands)))
@@ -237,6 +309,14 @@ If BUFFER is nil, use the current buffer."
         (let ((inhibit-read-only t))
           (erase-buffer)
 
+          ;; Show the command path if we're in a submenu
+          (when command-path
+            (insert (propertize (concat "/"
+                                        (mapconcat #'identity (reverse command-path) "/")
+                                        "/")
+                                'face 'font-lock-comment-face))
+            (insert "\n\n"))
+
           ;; If no commands match, show a message
           (if (null filtered-commands)
               (insert (propertize "No matching commands" 'face 'italic))
@@ -246,14 +326,20 @@ If BUFFER is nil, use the current buffer."
               (dotimes (i (length display-commands))
                 (let* ((cmd (nth i display-commands))
                        (cmd-name (car cmd))
+                       (cmd-fn (cdr cmd))
                        (selected (= i selected-index))
+                       (is-submenu (and (listp cmd-fn)
+                                        (eq (car-safe cmd-fn) slash-popup-submenu-symbol)))
                        (prefix (if selected " > " "   "))
-                       (content (concat prefix cmd-name "\n"))) ; Use "> " for selected items, "  " for non-selected
+                       ;; Add an indicator for submenus
+                       (suffix (if is-submenu " »" ""))
+                       (content (concat prefix cmd-name suffix "\n")))
 
                   ;; Insert command with proper formatting
-                  (insert (propertize content 'face (if selected 'slash-popup-face-selected nil)))))))))
+                  (insert (propertize content
+                                      'face (if selected 'slash-popup-face-selected nil)))))))))
 
-      ;; Get theme-aware colors for background and foreground
+      ;; Get theme-aware colors
       (let ((bg-color (slash-popup--get-background-color))
             (fg-color (slash-popup--get-foreground-color))
             (border-color (slash-popup--get-border-color)))
@@ -266,7 +352,7 @@ If BUFFER is nil, use the current buffer."
                                        (point)))
                        :width slash-popup-width
                        :min-width 20
-                       :max-width (min 30 (- (frame-width) 10))
+                       :max-width (min 40 (- (frame-width) 10))
                        :internal-border-width slash-popup-border-width
                        :internal-border-color border-color
                        :background-color bg-color
@@ -302,8 +388,8 @@ If BUFFER is nil, use the current buffer."
         ;; Continue with normal processing in the original buffer
         (cond
          ;; If RET was pressed, select the current command
-         ((and last-command-event-char (memq last-command-event-char '(?\r ?\n)))
-          (slash-popup-select-command))
+         ;; ((and last-command-event-char (memq last-command-event-char '(?\r ?\n)))
+         ;;  (slash-popup-select-command))
 
          ;; If point moved before the slash, close the popup
          ((let ((start-point (alist-get 'start-point slash-popup--state)))
@@ -344,6 +430,8 @@ If BUFFER is nil, use the current buffer."
                 (commands . ,(slash-popup--get-available-commands))
                 (selected-index . 0)
                 (popup-buffer . ,slash-popup--buffer-name)
+                (command-path . nil)            ; Path for nested commands
+                (parent-commands . nil)         ; Stack for parent menus
                 (active . t)))
 
         ;; Display the initial popup with all commands
@@ -353,7 +441,6 @@ If BUFFER is nil, use the current buffer."
         (add-hook 'post-command-hook #'slash-popup--post-command-hook)
 
         ;; Use overriding-terminal-local-map for higher priority
-        ;; This makes our keymap take precedence over all other keymaps
         (setq overriding-terminal-local-map slash-popup--keymap)
 
         ;; Also set up a cleanup function for when the keymap is deactivated
