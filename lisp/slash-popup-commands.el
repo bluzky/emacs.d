@@ -14,6 +14,9 @@
 ;; with a popup interface using posframe.
 ;; Type a slash at the beginning of a line or after whitespace to trigger
 ;; the popup command interface.
+;;
+;; Commands can be registered per-buffer, allowing different buffers of
+;; the same major mode to have different slash commands.
 
 ;;; Code:
 
@@ -27,15 +30,6 @@
   "Popup slash commands configuration options."
   :group 'convenience
   :prefix "slash-popup-")
-
-(defcustom slash-popup-commands-alist nil
-  "Mode-specific slash command definitions.
-An alist where each entry is (MAJOR-MODE . COMMANDS-ALIST).
-COMMANDS-ALIST is itself an alist of (COMMAND-NAME . FUNCTION)."
-  :type '(alist :key-type symbol
-                :value-type (alist :key-type string
-                                   :value-type function))
-  :group 'slash-popup-commands)
 
 (defcustom slash-popup-max-items 10
   "Maximum number of items to show in the popup."
@@ -64,7 +58,13 @@ or after whitespace (space or tab)."
   "Face for the selected command in the popup."
   :group 'slash-popup-commands)
 
-;; Global State (replacing buffer-local variables)
+;; Buffer-local variables
+
+(defvar-local slash-popup-buffer-commands nil
+  "Buffer-local slash commands.
+An alist where each entry is (COMMAND-NAME . FUNCTION).")
+
+;; Global State
 
 (defvar slash-popup--state nil
   "Global state for slash popups.
@@ -107,25 +107,29 @@ An alist with these keys:
   "Get the foreground color from the current theme."
   (slash-popup--get-face-attribute 'default :foreground t))
 
-
 (defun slash-popup--get-border-color ()
   "Get the background color from the current theme."
   (slash-popup--get-face-attribute 'highlight :background t))
 
-
 ;; Core Functions
 
-(defun slash-popup-commands-for-mode (mode commands-alist)
-  "Define slash commands for MODE.
-COMMANDS-ALIST is an alist where each entry is (COMMAND-NAME . PLIST).
-PLIST should include :function and :description keys, and optionally :icon."
-  (setq slash-popup-commands-alist
-        (cons (cons mode commands-alist)
-              (assq-delete-all mode slash-popup-commands-alist))))
+(defun slash-popup-set-buffer-commands (commands-alist &optional buffer)
+  "Set slash commands for the specified BUFFER.
+COMMANDS-ALIST is an alist where each entry is (COMMAND-NAME . FUNCTION).
+If BUFFER is nil, use the current buffer.
+This replaces any existing commands for the buffer."
+  (with-current-buffer (or buffer (current-buffer))
+    (setq slash-popup-buffer-commands commands-alist)))
 
-(defun slash-popup--get-for-current-mode ()
-  "Get the slash commands for the current major mode."
-  (cdr (assq major-mode slash-popup-commands-alist)))
+(defun slash-popup-clear-buffer-commands (&optional buffer)
+  "Clear all slash commands for the specified BUFFER.
+If BUFFER is nil, use the current buffer."
+  (with-current-buffer (or buffer (current-buffer))
+    (setq slash-popup-buffer-commands nil)))
+
+(defun slash-popup--get-available-commands ()
+  "Get all available slash commands for the current buffer."
+  slash-popup-buffer-commands)
 
 (defun slash-popup--can-trigger-p ()
   "Return non-nil if slash command can be triggered at point."
@@ -135,7 +139,7 @@ PLIST should include :function and :description keys, and optionally :icon."
        ;; Check if after the slash, there's whitespace or end of line
        (or (eolp)
            (memq (char-after) slash-popup-trigger-chars))
-       (slash-popup--get-for-current-mode)))  ; commands exist for this mode
+       slash-popup-buffer-commands))  ; commands exist for this buffer
 
 (defun slash-popup-next-command ()
   "Select the next command in the popup."
@@ -192,7 +196,7 @@ PLIST should include :function and :description keys, and optionally :icon."
 (defun slash-popup--filter-commands (input)
   "Filter available commands based on INPUT string."
   (let ((commands (with-current-buffer (alist-get 'buffer slash-popup--state)
-                    (slash-popup--get-for-current-mode)))
+                    (slash-popup--get-available-commands)))
         (case-fold-search t)) ;; Make search case-insensitive
 
     (cond
@@ -337,7 +341,7 @@ PLIST should include :function and :description keys, and optionally :icon."
               `((buffer . ,(current-buffer))
                 (start-point . ,(copy-marker (1- (point))))
                 (input . "")
-                (commands . ,(slash-popup--get-for-current-mode))
+                (commands . ,(slash-popup--get-available-commands))
                 (selected-index . 0)
                 (popup-buffer . ,slash-popup--buffer-name)
                 (active . t)))
@@ -396,6 +400,8 @@ With prefix argument ARG, turn on if positive, otherwise off."
 
 ;; Add pre-command hook globally to intercept newline
 (add-hook 'pre-command-hook #'slash-popup--inhibit-self-insert)
+
+
 
 (provide 'slash-popup-commands)
 ;;; slash-popup-commands.el ends here
