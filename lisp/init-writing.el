@@ -15,57 +15,39 @@
 
 
 ;; Set up org-mode slash commands
-;; (add-hook 'org-mode-hook
-;;           (lambda ()
-;;             (slash-popup-set-buffer-commands
-;;              '(("todo" . (lambda () (org-todo "TODO")))
-;;                ("done" . (lambda () (org-todo "DONE")))
-;;                ("heading 1" . (lambda () (org-insert-heading)))
-;;                ("heading 2" . (lambda () (org-insert-subheading nil)))
-;;                ("checkbox" . (lambda () (insert "[ ] ")))
-;;                ("table" . (lambda () (org-table-create "3x3")))
-;;                ("link" . (lambda () (org-insert-link)))
-;;                ("code" . (lambda ()
-;;                            (insert "#+BEGIN_SRC \n\n#+END_SRC")
-;;                            (forward-line -1)))
-;;                ("quote" . (lambda ()
-;;                             (insert "#+BEGIN_QUOTE\n\n#+END_QUOTE")
-;;                             (forward-line -1)))
-;;                ("today" . (lambda () (insert (format-time-string "%d-%m-%Y"))))
-;;                ("now" . (lambda () (insert (format-time-string "%H:%M:%S"))))
-;;                ("6 times book" . (lambda()
-;;                                    (insert "- 🥲 \n- 🥲 \n- ✅ \n- ✅ \n- TODOs:\n  + [ ] \n  + [ ] \n")
-;;                                    (forward-line -7)
-;;                                    (forward-char 4)))))))
-
 (add-hook 'org-mode-hook
           (lambda ()
             (slash-popup-set-buffer-commands
-             '(("templates" . (submenu
+             '(("todo" . (lambda () (org-todo "TODO")))
+               ("done" . (lambda () (org-todo "DONE")))
+               ("heading" . (submenu
+                             ("H1" . (lambda () (org-insert-heading)))
+                             ("H2" . (lambda () (org-insert-subheading nil)))
+                             ))
+               ("checkbox" . (lambda () (insert "[ ] ")))
+               ("table" . (lambda () (org-table-create "3x3")))
+               ("insert" .(submenu
+                           ("code" . (lambda ()
+                                       (insert "#+BEGIN_SRC \n\n#+END_SRC")
+                                       (forward-line -1)))
+                           ("quote" . (lambda ()
+                                        (insert "#+BEGIN_QUOTE\n\n#+END_QUOTE")
+                                        (forward-line -1)))
+                           ))
+               ("today" . (lambda () (insert (format-time-string "%d-%m-%Y"))))
+               ("now" . (lambda () (insert (format-time-string "%H:%M:%S"))))
+               ("templates" . (submenu
+                               ("6 times book" . (lambda()
+                                                   (insert "- 🥲 \n- 🥲 \n- ✅ \n- ✅ \n- TODOs:\n  + [ ] \n  + [ ] \n")
+                                                   (forward-line -7)
+                                                   (forward-char 4)))
                                ("meeting" . (lambda ()
                                               (insert "* Meeting Notes\n** Attendees\n\n** Agenda\n\n** Action Items\n\n")))
                                ("project" . (lambda ()
                                               (insert "* Project: \n** Description\n\n** Tasks\n\n** Timeline\n\n")))
                                ("weekly" . (lambda ()
-                                             (insert "* Weekly Review\n** Achievements\n\n** Challenges\n\n** Next Week\n\n")))))
-
-               ("insert" . (submenu
-                            ("table" . (submenu
-                                        ("3x3" . (lambda () (org-table-create "3x3")))
-                                        ("5x2" . (lambda () (org-table-create "5x2")))))
-                            ("code" . (submenu
-                                       ("elisp" . (lambda ()
-                                                    (insert "#+BEGIN_SRC emacs-lisp\n\n#+END_SRC")
-                                                    (forward-line -1)))
-                                       ("python" . (lambda ()
-                                                     (insert "#+BEGIN_SRC python\n\n#+END_SRC")
-                                                     (forward-line -1)))
-                                       ("shell" . (lambda ()
-                                                    (insert "#+BEGIN_SRC shell\n\n#+END_SRC")
-                                                    (forward-line -1)))))))
-
-               ("todo" . (lambda () (org-todo "TODO")))
-               ("link" . (lambda () (org-insert-link)))))))
+                                             (insert "* Weekly Review\n** Achievements\n\n** Challenges\n\n** Next Week\n\n")))
+                               ))))))
 
 ;; Set up markdown-mode slash commands
 (add-hook 'markdown-mode-hook
