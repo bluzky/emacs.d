@@ -231,7 +231,9 @@ If BUFFER is nil, use the current buffer."
     (slash-popup--close)))
 
 (defun slash-popup--filter-commands (input)
-  "Filter available commands based on INPUT string."
+  "Filter available commands based on INPUT string.
+Sort filtered commands by the position of the matched string,
+commands that match at the beginning of the name appear first."
   (let ((commands (alist-get 'command-list slash-popup--state))
         (case-fold-search t)) ;; Make search case-insensitive
 
@@ -242,15 +244,25 @@ If BUFFER is nil, use the current buffer."
      ;; If input is empty, return all commands
      ((string-empty-p input) commands)
 
-     ;; Filter commands by input
+     ;; Filter commands by input and sort by match position
      (t
-      (cl-remove-if-not
-       (lambda (cmd)
-         (let ((cmd-name (car cmd)))
-           (and cmd-name
-                (stringp cmd-name)
-                (string-match-p (regexp-quote input) cmd-name))))
-       commands)))))
+      (let ((filtered-commands
+             (cl-remove-if-not
+              (lambda (cmd)
+                (let ((cmd-name (car cmd)))
+                  (and cmd-name
+                       (stringp cmd-name)
+                       (string-match-p (regexp-quote input) cmd-name))))
+              commands)))
+
+        ;; Sort filtered commands by match position
+        (sort filtered-commands
+              (lambda (a b)
+                (let* ((name-a (car a))
+                       (name-b (car b))
+                       (pos-a (string-match (regexp-quote input) name-a))
+                       (pos-b (string-match (regexp-quote input) name-b)))
+                  (< pos-a pos-b)))))))))
 
 (defun slash-popup--update-display ()
   "Update the popup display with filtered commands.
@@ -268,8 +280,6 @@ Closes the popup if no commands match the filter."
 
       (setf (alist-get 'commands slash-popup--state) filtered-commands)
 
-      (message ">>> input %s" input)
-      (message ">>> Filtered commands: %s" filtered-commands)
       ;; If no commands match, close the popup
       (if (null filtered-commands)
           ;; (insert (propertize "No matching commands" 'face 'italic))
@@ -350,16 +360,13 @@ Closes the popup if no commands match the filter."
 (defun slash-popup--post-command-hook ()
   "Monitor user actions to update or close the popup as needed."
   (cl-block slash-popup--post-command-hook
-    (message ">> inside hook %s" (alist-get 'active slash-popup--state))
     (when (alist-get 'active slash-popup--state)
       (let* ((buffer (alist-get 'buffer slash-popup--state)))
-        (message "inside hook2 %s %s"  buffer (current-buffer))
         ;; Check if we've switched to a different buffer
         (when (not (eq (current-buffer) buffer))
           (slash-popup--close)
           (cl-return-from slash-popup--post-command-hook))
 
-        (message "Continue")
         ;; Continue with normal processing in the original buffer
         (cond
          ;; If RET was pressed, select the current command
@@ -372,7 +379,6 @@ Closes the popup if no commands match the filter."
                 (< (point) start-point)
                 ;; If user deleted the slash character, close the popup
                 (not (eq (char-after start-point) ?/))))
-          (message ">> close point moving")
           (slash-popup--close))
 
          ;; Otherwise, update current input and filter commands
@@ -384,7 +390,6 @@ Closes the popup if no commands match the filter."
                  (old-input (alist-get 'input slash-popup--state "")))
 
 
-            (message "go display")
             ;; Only reset selection if the input changed
             (when (not (string= old-input new-input))
               (setf (alist-get 'input slash-popup--state) new-input)
