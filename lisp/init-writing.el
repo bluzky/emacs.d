@@ -1,8 +1,12 @@
 (setq org-directory "~/Library/Mobile Documents/com~apple~CloudDocs/notes")
 
 
-(require 'slash-popup-commands)
-;; Define org-mode slash commands
+;; (require 'slash-commands)
+(use-package slash-commands
+  :quelpa (slash-commands :repo "bluzky/slash-commands" :fetcher github)
+  :config
+  (global-slash-commands-mode)
+  )
 
 (use-package org
   :config
@@ -17,7 +21,7 @@
 ;; Set up org-mode slash commands
 (add-hook 'org-mode-hook
           (lambda ()
-            (slash-popup-set-buffer-commands
+            (slash-commands-register-commands
              '(("todo" . (lambda () (org-todo "TODO")))
                ("done" . (lambda () (org-todo "DONE")))
                ("heading" . (submenu
@@ -52,18 +56,23 @@
 ;; Set up markdown-mode slash commands
 (add-hook 'markdown-mode-hook
           (lambda ()
-            (slash-popup-set-buffer-commands
+            (slash-commands-register-commands
              '(("h1" . (lambda () (insert "# ")))
                ("h2" . (lambda () (insert "## ")))
                ("h3" . (lambda () (insert "### ")))
                ("code" . (lambda () (insert "```\n\n```") (forward-line -1)))
                ("link" . (lambda () (insert "[]()") (backward-char 3)))
                ("image" . (lambda () (insert "![]()") (backward-char 3)))
-               ("quote" . (lambda () (insert "> ")))))))
+               ("quote" . (lambda () (insert "> ")))
+               ("export word" . (lambda ()
+                                  (shell-command (format "pandoc -s \"%s\" -o \"%s.docx\"" (buffer-file-name) (file-name-sans-extension (buffer-file-name))))
+                                  (shell-command (format "open \"%s.docx\"" (file-name-sans-extension (buffer-file-name))))))))))
+
+
 
 ;; Enable the minor mode in specific major modes
-(add-hook 'org-mode-hook 'slash-popup-mode)
-(add-hook 'markdown-mode-hook 'slash-popup-mode)
+;; (add-hook 'org-mode-hook 'slash-commands-mode)
+;; (add-hook 'markdown-mode-hook 'slash-commands-mode)
 
 ;; Denote is a note-taking package for Emacs that focuses on simplicity and
 (use-package denote

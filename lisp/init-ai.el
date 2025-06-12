@@ -33,6 +33,9 @@
   (("C-c g" . gptel)
    :map gptel-mode-map
    ("C-<return>" . gptel-send))
+  :custom
+  (gptel-temperature 0.7)
+  (gptel-cache t)
   :config
   (setq gptel-use-tools t)
 
@@ -42,6 +45,15 @@
   (add-to-list 'gptel-tools (use-tool-create-file))
   (add-to-list 'gptel-tools (use-tool-run-command))
   (add-to-list 'gptel-tools (use-tool-read-url))
+
+  (add-to-list 'gptel-directives '(default . "You are a large language model living in Emacs and a helpful assistant. Respond concisely.
+
+## Tools usage guidelines:
+
+- DON'T be so aggressive in using tools, only used when necessary, as many tasks can be better completed without tools.
+- Before using tools, explain shortly what you are going to do and why.
+- After using tools, explain what you have done and what failed. And list the files locations if there are files/directories changes."))
+
 
   (gptel-make-gemini "Gemini"
     :key ai-gemini-api-key
@@ -62,6 +74,7 @@
     :key ai-deepseek-api-key
     :models '(deepseek-chat deepseek-coder))
 
+
   (gptel-make-anthropic "Claude"          ;Any name you want
     :stream t                             ;Streaming responses
     :key ai-anthropic-api-key
@@ -80,6 +93,15 @@
                     deepseek-r1-distill-qwen-32b
                     llama-3.3-70b-versatile))
         )
+
+  ;; (setq gptel-model 'claude-3-5-sonnet-20241022
+  ;;       gpt-backend (gptel-make-openai "MistralCode"  ;Any name you want
+  ;;                     :host "api.mistral.ai"
+  ;;                     :endpoint "/v1/chat/completions"
+  ;;                     :protocol "https"
+  ;;                     :key mistral-api-key               ;can be a function that returns the key
+  ;;                     :models '(codestral-latest mistral-large-latest))
+  ;;       )
   )
 
 (defconst relysium-directory

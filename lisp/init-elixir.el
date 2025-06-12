@@ -1,6 +1,9 @@
 (use-package
   heex-ts-mode
   :mode "\\.heex\\'"
+  :config
+  (add-to-list 'apheleia-mode-alist
+               '(heex-ts-mode . mix-format))
   )
 
 (use-package

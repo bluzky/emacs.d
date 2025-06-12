@@ -44,9 +44,9 @@
 
 
 ;; Or if you have use-package installed
-(use-package kaolin-themes
+(use-package ef-themes
   :config
-  (load-theme 'ellas t))
+  (load-theme 'ef-day t))
 
 
 ;; auto dark theme
@@ -54,8 +54,8 @@
   "Load theme, taking current system APPEARANCE into consideration."
   (mapc #'disable-theme custom-enabled-themes)
   (pcase appearance
-    ('light (load-theme 'ellas t))
-    ('dark (load-theme 'kaolin-dark t))))
+    ('light (load-theme 'ef-day t))
+    ('dark (load-theme 'ef-owl t))))
 
 (add-hook 'ns-system-appearance-change-functions #'me/apply-theme)
 
