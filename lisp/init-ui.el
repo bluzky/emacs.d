@@ -32,8 +32,8 @@
   :preface
   (defun ian/set-default-font ()
     (interactive)
-    (when (member "Source Code Pro" (font-family-list))
-      (set-face-attribute 'default nil :family "JetBrains Mono NL" :height 150)))
+    (when (member "JetBrains Mono" (font-family-list))
+      (set-face-attribute 'default nil :family "JetBrains Mono" :height 150)))
   :ensure nil
   :config
   (setq initial-frame-alist '((fullscreen . maximized)))

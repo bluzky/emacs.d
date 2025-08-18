@@ -81,14 +81,15 @@
     :models '(claude-3-5-sonnet-20241022 claude-3-7-sonnet-20250219))
 
   ;; Groq offers an OpenAI compatible API
-  (setq gptel-model  'llama-3.3-70b-versatile
+  (setq gptel-model  'moonshotai/kimi-k2-instruct
         gptel-backend
         (gptel-make-openai "Groq"
           :host "api.groq.com"
           :endpoint "/openai/v1/chat/completions"
           :stream t
           :key groq-api-key
-          :models '(qwen-2.5-coder-32b
+          :models '(moonshotai/kimi-k2-instruct
+                    qwen-2.5-coder-32b
                     deepseek-r1-distill-llama-70b
                     deepseek-r1-distill-qwen-32b
                     llama-3.3-70b-versatile))
@@ -121,6 +122,7 @@
 ;;                     :branch "main"
 ;;                     :files ("*.el"))
 ;;   :hook (prog-mode . relysium-prog-mode))
+
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

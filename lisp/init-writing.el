@@ -10,10 +10,12 @@
 
 (use-package org
   :config
-  (add-to-list 'org-src-lang-modes '("elixir" . elixr-ts))
+  (add-to-list 'org-src-lang-modes '("elixir" . elixir-ts))
+  :hook (org-mode . (lambda () (toggle-truncate-lines nil)))
   :custom
   (org-default-notes-file (concat org-directory "/Inbox.org"))
   )
+
 
 (use-package org-bullets :hook (org-mode . org-bullets-mode))
 
