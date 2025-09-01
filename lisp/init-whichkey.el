@@ -1,4 +1,4 @@
-;; Configure whichkey and setup keybindings Which-key ; Code:
+;; Configure whichkey and setup keybindings ; Code:
 
 ;; Unbind unneeded keys
 (global-set-key (kbd "C-z") nil)
@@ -15,7 +15,6 @@
   :config
   (setq which-key-idle-delay 0.4
         which-key-idle-secondary-delay 0.4
-        which-key-allow-evil-operators t
         which-key-add-column-padding 1
         which-key-allow-multiple-replacements t
         which-key-echo-keystrokes 0.02
@@ -29,141 +28,148 @@
         which-key-special-keys nil
         which-key-use-C-h-for-paging t))
 
-(defun setup-key-bindings()
-  "Setup my custom keybindings"
-  (evil-leader/set-key
-    "'" 'vterm-toggle
-    "e" 'treemacs
-    "E" 'treemacs-select-window
-    "Q" 'save-buffers-kill-emacs
-    "R" 'restart-emacs
 
-    ;; File
-    "f" '("File" . (keymap))
-    "ff" '("Find in project" . project-find-file)
-    "fF" '("Find file at point" . me/find-file-at-point-with-line)
-    "fg" '("Find file with line" . me/find-file-with-line)
-    "fr" '("Recent files" . consult-recent-file)
-    "fD" '("Delete" . me/delete-buffer-file)
-    "fR" '("Rename" . rename-visited-file)
-    "fS" '("Save as" . write-file)
-    "fy" '("Copy file path" . me/copy-buffer-relative-path)
-    "fY" '("Copy file path" . me/copy-buffer-abs-path)
+;; Create a direct leader keymap
+(defvar my-leader-map (make-sparse-keymap)
+  "Direct leader keymap for SPC bindings")
 
-    ;; Ask/AI
-    "a" '("AI/Application" . (keymap))
-    "aa" '("Ask Gptel" . gptel)
-    "am" '("Gptel Menu" . gptel-menu)
+(defun setup-meow-key-bindings()
+  "Setup custom keybindings for meow with direct SPC leader"
+  
+  ;; Define which-key groups
+  (which-key-add-keymap-based-replacements my-leader-map
+    "f" "files"
+    "a" "AI" 
+    "b" "buffers"
+    "c" "code"
+    "e" "relysium"
+    "j" "jump"
+    "g" "git"
+    "h" "help"
+    "n" "notes"
+    "i" "insert"
+    "s" "search"
+    "o" "open"
+    "l" "links"
+    "x" "extra"
+    "w" "windows")
+  
+  ;; Top level bindings
+  (define-key my-leader-map (kbd "'") 'vterm-toggle)
+  (define-key my-leader-map (kbd "Q") 'save-buffers-kill-emacs)
+  (define-key my-leader-map (kbd "R") 'restart-emacs)
 
+  ;; File operations
+  (define-key my-leader-map (kbd "f f") 'project-find-file)
+  (define-key my-leader-map (kbd "f F") 'me/find-file-at-point-with-line)
+  (define-key my-leader-map (kbd "f g") 'me/find-file-with-line)
+  (define-key my-leader-map (kbd "f r") 'consult-recent-file)
+  (define-key my-leader-map (kbd "f D") 'me/delete-buffer-file)
+  (define-key my-leader-map (kbd "f R") 'rename-visited-file)
+  (define-key my-leader-map (kbd "f S") 'write-file)
+  (define-key my-leader-map (kbd "f y") 'me/copy-buffer-relative-path)
+  (define-key my-leader-map (kbd "f Y") 'me/copy-buffer-abs-path)
 
-    "e" '("Relysium" . (keymap))
-    "ea" '("Ask about code" . relysium-ask)
-    "ee" '("Complete at point" . relysium-edit-dwim)
-    "eb" '("Add context" . relysium-buffer-add-context)
-    "ec" '("Clear chat buffer" . relysium-buffer-clear)
-    "ed" '("Show debug log" . relysium-debug-log)
-    "eD" '("Toggle debug mode" . relysium-toggle-debug-mode)
-    "eg" '("Generate from comments" . relysium-generate-from-comments)
-    "es" '("Suggest code" . relysium-suggest)
-    "et" '("Toggle chat window" . relysium-buffer-toggle-window)
+  ;; AI operations
+  (define-key my-leader-map (kbd "a a") 'gptel)
+  (define-key my-leader-map (kbd "a m") 'gptel-menu)
 
+  ;; Relysium operations (moved from "a e" to "e")
+  (define-key my-leader-map (kbd "e a") 'relysium-ask)
+  (define-key my-leader-map (kbd "e e") 'relysium-edit-dwim)
+  (define-key my-leader-map (kbd "e b") 'relysium-buffer-add-context)
+  (define-key my-leader-map (kbd "e c") 'relysium-buffer-clear)
+  (define-key my-leader-map (kbd "e d") 'relysium-debug-log)
+  (define-key my-leader-map (kbd "e D") 'relysium-toggle-debug-mode)
+  (define-key my-leader-map (kbd "e g") 'relysium-generate-from-comments)
+  (define-key my-leader-map (kbd "e s") 'relysium-suggest)
+  (define-key my-leader-map (kbd "e t") 'relysium-buffer-toggle-window)
 
-    ;;  Buffer
-    "b" '("Buffer" . (keymap))
-    ;; "bs" '("Save" . save-buffer)
-    "bb" '("Switch buffer" . consult-buffer)
-    "bd" '("Close current buffer" . kill-buffer)
-    "bs" '("Open scratch" . (lambda () (interactive) (find-file "~/.scratch")))
-    "bS" '("Save all buffers" . save-some-buffers)
-    "bn" '("New" . evil-buffer-new)
-    "bt" '("Open in new tab" . tab-new)
+  ;; Buffer operations
+  (define-key my-leader-map (kbd "b b") 'consult-buffer)
+  (define-key my-leader-map (kbd "b d") 'kill-buffer)
+  (define-key my-leader-map (kbd "b s") (lambda () (interactive) (find-file "~/.scratch")))
+  (define-key my-leader-map (kbd "b S") 'save-some-buffers)
+  (define-key my-leader-map (kbd "b n") 'evil-buffer-new)
+  (define-key my-leader-map (kbd "b t") 'tab-new)
 
-    ;; Code
-    "c" '("Code" . (keymap))
-    "cf" '("Format buffer" . lsp-bridge-code-format)
-    "ca" '("Code action" . lsp-bridge-code-action)
-    "cx" '("Execute code" . quickrun)
-    "cX" '("Execute code region" . quickrun-region)
-    "ci" '("Function outline" . imenu-list-smart-toggle)
-    "ce" '("next error" . flymake-goto-next-error)
-    "cE" '("previous error" . flymake-goto-prev-error)
+  ;; Code operations
+  (define-key my-leader-map (kbd "c f") 'lsp-bridge-code-format)
+  (define-key my-leader-map (kbd "c a") 'lsp-bridge-code-action)
+  (define-key my-leader-map (kbd "c x") 'quickrun)
+  (define-key my-leader-map (kbd "c X") 'quickrun-region)
+  (define-key my-leader-map (kbd "c i") 'imenu-list-smart-toggle)
+  (define-key my-leader-map (kbd "c e") 'flymake-goto-next-error)
+  (define-key my-leader-map (kbd "c E") 'flymake-goto-prev-error)
 
-    ;; Jump
-    "j" '("Jump" . (keymap))
-    "jd" '("Find definition" . citre-jump)
-    "jr" '("Find references" . xref-find-references)
-    "ji" '("Buffer's symbols" . consult-imenu)
-    "jj" '("avy jump" . avy-goto-char-timer)
-    "jl" '("avy line" . avy-goto-line)
-    "jw" '("avy word" . avy-goto-word-0)
+  ;; Jump operations
+  (define-key my-leader-map (kbd "j d") 'citre-jump)
+  (define-key my-leader-map (kbd "j r") 'xref-find-references)
+  (define-key my-leader-map (kbd "j i") 'consult-imenu)
+  (define-key my-leader-map (kbd "j j") 'avy-goto-char-timer)
+  (define-key my-leader-map (kbd "j l") 'avy-goto-line)
+  (define-key my-leader-map (kbd "j w") 'avy-goto-word-0)
 
-    "g" '("Magit" . (keymap))
-    "gs" '("status" . magit-status)
-    "gp" '("create PR" . me/visit-pull-request-url)
-    "gb" '("blame" . magit-blame-addition)
-    "gl" '("log current file" . magit-log-buffer-file)
-    "gd" '("diff changed" . magit-diff-unstaged)
-    "gr" '("PR review" . pr-review-search)
-    "gR" '("PR review open" . pr-review)
+  ;; Git operations
+  (define-key my-leader-map (kbd "g s") 'magit-status)
+  (define-key my-leader-map (kbd "g p") 'me/visit-pull-request-url)
+  (define-key my-leader-map (kbd "g b") 'magit-blame-addition)
+  (define-key my-leader-map (kbd "g l") 'magit-log-buffer-file)
+  (define-key my-leader-map (kbd "g d") 'magit-diff-unstaged)
+  (define-key my-leader-map (kbd "g r") 'pr-review-search)
+  (define-key my-leader-map (kbd "g R") 'pr-review)
 
-    "h" '("Help" . (keymap))
-    "hf" '("function" . describe-function)
-    "hk" '("key" . describe-key)
-    "ht" '("change theme" . consult-theme)
-    "hv" '("variable" . describe-variable)
-    "hl" '("absolute line number" . (lambda () (interactive) (setq display-line-numbers t)))
-    "hL" '("relative line number" . (lambda () (interactive) (setq display-line-numbers 'relative)))
+  ;; Help operations
+  (define-key my-leader-map (kbd "h f") 'describe-function)
+  (define-key my-leader-map (kbd "h k") 'describe-key)
+  (define-key my-leader-map (kbd "h t") 'consult-theme)
+  (define-key my-leader-map (kbd "h v") 'describe-variable)
+  (define-key my-leader-map (kbd "h l") (lambda () (interactive) (setq display-line-numbers t)))
+  (define-key my-leader-map (kbd "h L") (lambda () (interactive) (setq display-line-numbers 'relative)))
 
-    "n" '("Note/Writing" . (keymap))
-    "nn" '("Open or create" . denote-open-or-create)
-    "nc" '("New note" . denote)
-    "nf" '("Find file" . denote-notes-find-file)
-    "nj" '("Journal" . denote-journal-extras-new-or-existing-entry)
-    "ns" '("Search note" . denote-notes-search)
+  ;; Note operations
+  (define-key my-leader-map (kbd "n n") 'denote-open-or-create)
+  (define-key my-leader-map (kbd "n c") 'denote)
+  (define-key my-leader-map (kbd "n f") 'denote-notes-find-file)
+  (define-key my-leader-map (kbd "n j") 'denote-journal-extras-new-or-existing-entry)
+  (define-key my-leader-map (kbd "n s") 'denote-notes-search)
 
+  ;; Insert operations
+  (define-key my-leader-map (kbd "i r") 'yank-from-kill-ring)
+  (define-key my-leader-map (kbd "i y") 'consult-yasnippet)
 
-    "i" '("Insert" . (keymap))
-    "ir" '("from kill ring" . yank-from-kill-ring)
-    "iy" '("snippets" . consult-yasnippet)
+  ;; Search operations
+  (define-key my-leader-map (kbd "s s") 'swiper)
+  (define-key my-leader-map (kbd "s S") 'swiper-thing-at-point)
+  (define-key my-leader-map (kbd "s p") 'consult-ripgrep)
+  (define-key my-leader-map (kbd "s P") 'me/search-project)
+  (define-key my-leader-map (kbd "s f") 'me/search-dir)
+  (define-key my-leader-map (kbd "s F") 'me/search-dir-with-input)
+  (define-key my-leader-map (kbd "s r") 'vertico-repeat)
+  (define-key my-leader-map (kbd "s w") 'me/search-web)
 
-    "s" '("Search" . (keymap))
-    "ss" '("Search buffer" . swiper)
-    "sS" '("Search buffer with input" . swiper-thing-at-point)
-    "sp" '("Search project" . consult-ripgrep)
-    "sP" '("Search project with input" . me/search-project)
-    "sf" '("Search dir" . me/search-dir)
-    "sF" '("Search dir with input" . me/search-dir-with-input)
-    "sr" '("Resume last search" . vertico-repeat)
-    "sw" '("Search web" . me/search-web)
+  ;; Open operations
+  (define-key my-leader-map (kbd "o p") 'project-switch-project)
+  (define-key my-leader-map (kbd "o b") 'list-bookmarks)
 
-    "o" '("Open" . (keymap))
-    "op" '("project" . project-switch-project)
-    "ob" '("bookmark" . list-bookmarks)
+  ;; Link operations
+  (define-key my-leader-map (kbd "l a") (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo/actions")))
+  (define-key my-leader-map (kbd "l p") (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo/pulls?q=sort%3Aupdated-desc+is%3Apr+is%3Aopen+author%3Abluzky")))
+  (define-key my-leader-map (kbd "l s") (lambda () (interactive) (browse-url "https://duckduckgo.com")))
 
-    "l" '("Open link" . (keymap))
-    "la" '("Github action" . (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo/actions")))
-    "lp" '("My PRs" . (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo/pulls?q=sort%3Aupdated-desc+is%3Apr+is%3Aopen+author%3Abluzky")))
-    "ls" '("Ducduck go" . (lambda () (interactive) (browse-url "https://duckduckgo.com")))
+  ;; Extra operations
+  (define-key my-leader-map (kbd "x m") 'consult-kmacro)
 
-    "x" '("Extra/execute" . (keymap))
-    "xm" '("Macro" . consult-kmacro)
+  ;; Window operations
+  (define-key my-leader-map (kbd "w t") 'tab-switch)
+  (define-key my-leader-map (kbd "w w") 'ace-select-window)
+  
+  ;; Bind SPC directly to the leader map
+  (define-key meow-normal-state-keymap (kbd "SPC") my-leader-map)
+  (define-key meow-motion-state-keymap (kbd "SPC") my-leader-map))
 
-
-    "w" '("Window/tab" . (keymap))
-    "wt" '("switch tab" . tab-switch)
-    "ww" '("switch window" . ace-select-window)
-
-    ;;  "u" '("UI/UX" . (keymap))
-    ;;  "ul" '("Relative line number" . (lambda () (setq display-line-numbers 'relative)))
-    ;;  "uL" '("Relative line number" . (lambda () (setq display-line-numbers t)))
-    ))
-
-;; Set leader key to SPC
-(use-package evil-leader
-  :after evil
-  :config
-  (global-evil-leader-mode)
-  (evil-leader/set-leader "<SPC>")
-  (setup-key-bindings))
+;; Setup key bindings when meow is loaded
+(with-eval-after-load 'meow
+  (setup-meow-key-bindings))
 
 (provide 'init-whichkey)
