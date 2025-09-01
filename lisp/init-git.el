@@ -8,8 +8,13 @@
   )
 
 (use-package diff-hl
-  :hook (prog-mode . diff-hl-mode)
-  (diff-hl-mode . diff-hl-margin-mode))
+  :defer t
+  :commands (diff-hl-mode)
+  :init
+  (add-hook 'after-init-hook 
+    (lambda () 
+      (add-hook 'prog-mode-hook #'diff-hl-mode)))
+  :hook (diff-hl-mode . diff-hl-margin-mode))
 
 
 ;; Resolve diff3 conflicts

@@ -114,7 +114,9 @@
 (add-to-list 'load-path relysium-directory)
 
 (require 'relysium)
-(add-hook 'prog-mode-hook 'relysium-prog-mode)
+(add-hook 'after-init-hook 
+  (lambda () 
+    (add-hook 'prog-mode-hook 'relysium-prog-mode)))
 
 ;; (use-package relysium
 ;;   :quelpa (relysium :fetcher github

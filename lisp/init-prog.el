@@ -1,3 +1,7 @@
+(use-package treesit-auto
+  :config
+  (global-treesit-auto-mode))
+
 ;; Slightly shorten eldoc display delay.
 (use-package eldoc
   :ensure nil

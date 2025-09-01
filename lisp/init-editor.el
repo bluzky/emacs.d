@@ -45,11 +45,12 @@
 
 ;; Enable recentf mode
 (use-package recentf
-  :init
+  :defer 1
+  :config
+  (setq recentf-max-saved-items 200
+        recentf-exclude '("/tmp/" "/ssh:" "/sudo:"))
   (run-at-time nil (* 5 60) 'recentf-save-list) ;; auto save every 5 minutes
-  :hook
-  (after-init . recentf-mode)
-  )
+  (recentf-mode 1))
 
 ;; Automatically refreshes the buffer for changes outside of Emacs
 ;; Auto refreshes every 2 seconds. Don’t forget to refresh the version control status as well.
@@ -80,7 +81,12 @@
 ;; Electric-pair-mode has improved quite a bit in recent Emacs versions. No longer need an extra package for this. It also takes care of the new-line-and-push-brace feature.
 (use-package elec-pair
   :ensure nil
-  :hook (prog-mode . electric-pair-mode))
+  :defer t
+  :commands (electric-pair-mode)
+  :init
+  (add-hook 'after-init-hook 
+    (lambda () 
+      (add-hook 'prog-mode-hook #'electric-pair-mode))))
 
 ;; Clean up whitespace on save
 (use-package whitespace
@@ -90,7 +96,12 @@
 
 ;; Syntax highlighting improvement
 (use-package highlight-numbers
-  :hook (prog-mode . highlight-numbers-mode))
+  :defer t
+  :commands (highlight-numbers-mode)
+  :init
+  (add-hook 'after-init-hook 
+    (lambda () 
+      (add-hook 'prog-mode-hook #'highlight-numbers-mode))))
 
 ;; (use-package highlight-escape-sequences
 ;;   :hook (prog-mode . hes-mode))

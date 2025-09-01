@@ -4,8 +4,8 @@
 ;; (require 'slash-commands)
 (use-package slash-commands
   :quelpa (slash-commands :repo "bluzky/slash-commands" :fetcher github)
-  :config
-  (global-slash-commands-mode)
+  ;; :config
+  ;; (global-slash-commands-mode)
   )
 
 (use-package org
