@@ -101,8 +101,6 @@
   :bind (("M-<up>" . move-dup-move-lines-up)
          ("M-<down>" . move-dup-move-lines-down)))
 
-
-
 (use-package expand-region
   :bind ("C-=" . er/expand-region))
 

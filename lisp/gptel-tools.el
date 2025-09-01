@@ -31,7 +31,7 @@ The tool takes a single argument `filepath` which specifies the path of the file
                (mapconcat #'identity
                           (directory-files directory)
                           "\n"))
-   :name "list_directory"
+   :name "list_files"
    :description "List the contents of a given directory"
    :args (list '(:name "directory"
                        :type string

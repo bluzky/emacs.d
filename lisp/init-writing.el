@@ -1,15 +1,21 @@
 (setq org-directory "~/Library/Mobile Documents/com~apple~CloudDocs/notes")
 
 
-(require 'slash-popup-commands)
-;; Define org-mode slash commands
+;; (require 'slash-commands)
+(use-package slash-commands
+  :quelpa (slash-commands :repo "bluzky/slash-commands" :fetcher github)
+  :config
+  (global-slash-commands-mode)
+  )
 
 (use-package org
   :config
-  (add-to-list 'org-src-lang-modes '("elixir" . elixr-ts))
+  (add-to-list 'org-src-lang-modes '("elixir" . elixir-ts))
+  :hook (org-mode . (lambda () (toggle-truncate-lines nil)))
   :custom
   (org-default-notes-file (concat org-directory "/Inbox.org"))
   )
+
 
 (use-package org-bullets :hook (org-mode . org-bullets-mode))
 
@@ -17,42 +23,58 @@
 ;; Set up org-mode slash commands
 (add-hook 'org-mode-hook
           (lambda ()
-            (slash-popup-set-buffer-commands
+            (slash-commands-register-commands
              '(("todo" . (lambda () (org-todo "TODO")))
                ("done" . (lambda () (org-todo "DONE")))
-               ("heading 1" . (lambda () (org-insert-heading)))
-               ("heading 2" . (lambda () (org-insert-subheading nil)))
+               ("heading" . (submenu
+                             ("H1" . (lambda () (org-insert-heading)))
+                             ("H2" . (lambda () (org-insert-subheading nil)))
+                             ))
                ("checkbox" . (lambda () (insert "[ ] ")))
                ("table" . (lambda () (org-table-create "3x3")))
-               ("link" . (lambda () (org-insert-link)))
-               ("code" . (lambda ()
-                           (insert "#+BEGIN_SRC \n\n#+END_SRC")
-                           (forward-line -1)))
-               ("quote" . (lambda ()
-                            (insert "#+BEGIN_QUOTE\n\n#+END_QUOTE")
-                            (forward-line -1)))
+               ("insert" .(submenu
+                           ("code" . (lambda ()
+                                       (insert "#+BEGIN_SRC \n\n#+END_SRC")
+                                       (forward-line -1)))
+                           ("quote" . (lambda ()
+                                        (insert "#+BEGIN_QUOTE\n\n#+END_QUOTE")
+                                        (forward-line -1)))
+                           ))
                ("today" . (lambda () (insert (format-time-string "%d-%m-%Y"))))
                ("now" . (lambda () (insert (format-time-string "%H:%M:%S"))))
-               ("6 times book" . (lambda()
-                                   (insert "- 🥲 \n- 🥲 \n- ✅ \n- ✅ \n- TODOs:\n  + [ ] \n  + [ ] \n")
-                                   (forward-line -7)
-                                   (forward-char 4)))))))
+               ("templates" . (submenu
+                               ("6 times book" . (lambda()
+                                                   (insert "- 🥲 \n- 🥲 \n- ✅ \n- ✅ \n- TODOs:\n  + [ ] \n  + [ ] \n")
+                                                   (forward-line -7)
+                                                   (forward-char 4)))
+                               ("meeting" . (lambda ()
+                                              (insert "* Meeting Notes\n** Attendees\n\n** Agenda\n\n** Action Items\n\n")))
+                               ("project" . (lambda ()
+                                              (insert "* Project: \n** Description\n\n** Tasks\n\n** Timeline\n\n")))
+                               ("weekly" . (lambda ()
+                                             (insert "* Weekly Review\n** Achievements\n\n** Challenges\n\n** Next Week\n\n")))
+                               ))))))
 
 ;; Set up markdown-mode slash commands
 (add-hook 'markdown-mode-hook
           (lambda ()
-            (slash-popup-set-buffer-commands
+            (slash-commands-register-commands
              '(("h1" . (lambda () (insert "# ")))
                ("h2" . (lambda () (insert "## ")))
                ("h3" . (lambda () (insert "### ")))
                ("code" . (lambda () (insert "```\n\n```") (forward-line -1)))
                ("link" . (lambda () (insert "[]()") (backward-char 3)))
                ("image" . (lambda () (insert "![]()") (backward-char 3)))
-               ("quote" . (lambda () (insert "> ")))))))
+               ("quote" . (lambda () (insert "> ")))
+               ("export word" . (lambda ()
+                                  (shell-command (format "pandoc -s \"%s\" -o \"%s.docx\"" (buffer-file-name) (file-name-sans-extension (buffer-file-name))))
+                                  (shell-command (format "open \"%s.docx\"" (file-name-sans-extension (buffer-file-name))))))))))
+
+
 
 ;; Enable the minor mode in specific major modes
-(add-hook 'org-mode-hook 'slash-popup-mode)
-(add-hook 'markdown-mode-hook 'slash-popup-mode)
+;; (add-hook 'org-mode-hook 'slash-commands-mode)
+;; (add-hook 'markdown-mode-hook 'slash-commands-mode)
 
 ;; Denote is a note-taking package for Emacs that focuses on simplicity and
 (use-package denote

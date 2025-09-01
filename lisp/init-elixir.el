@@ -1,6 +1,9 @@
 (use-package
   heex-ts-mode
   :mode "\\.heex\\'"
+  :config
+  (add-to-list 'apheleia-mode-alist
+               '(heex-ts-mode . mix-format))
   )
 
 (use-package
@@ -8,7 +11,7 @@
   :mode ("\\.ex\\'" "\\.exs\\'" "\\.eex\\'")
   :hook (elixir-ts-mode . lsp-deferred)
   :custom
-  (lsp-elixir-server-command '("start_lexical.sh"))
+  (lsp-elixir-server-command '("/Users/flex/workspace/lexical/_build/dev/package/lexical/bin/start_lexical.sh"))
 
   :preface
   (defun mp-setup-install-grammars ()
