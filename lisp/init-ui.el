@@ -75,13 +75,6 @@
         dashboard-path-max-length 60
         dashboard-set-navigator t
         dashboard-set-footer nil)
-  ;; Format: "(icon title help action face prefix suffix)"
-  (setq dashboard-navigator-buttons
-        `(;; line1
-          (("⚡" "Opollo"
-            "GH Opollo"
-            (lambda (&rest _) (browse-url "https://github.com/onpointvn/opollo")))
-           )))
   )
 
 

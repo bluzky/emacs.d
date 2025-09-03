@@ -9,9 +9,11 @@
 (use-package
   elixir-ts-mode
   :mode ("\\.ex\\'" "\\.exs\\'" "\\.eex\\'")
-  :hook (elixir-ts-mode . lsp-deferred)
-  :custom
-  (lsp-elixir-server-command '("/Users/flex/workspace/lexical/_build/dev/package/lexical/bin/start_lexical.sh"))
+  :hook (elixir-ts-mode . eglot-ensure)
+  :config
+  ;; Configure Elixir LS server for eglot
+  (add-to-list 'eglot-server-programs
+               '((elixir-ts-mode elixir-mode) . ("/Users/flex/workspace/expert/apps/expert/burrito_out/expert_darwin_arm64")))
 
   :preface
   (defun mp-setup-install-grammars ()

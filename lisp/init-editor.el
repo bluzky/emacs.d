@@ -21,14 +21,6 @@
   (setq split-width-threshold 106)
   )
 
-;; improve the default help system
-(use-package helpful
-  :ensure t
-  :bind (("C-h f" . helpful-callable)   ; Describe function
-         ("C-h v" . helpful-variable)   ; Describe variable
-         ("C-h k" . helpful-key)        ; Describe keybinding
-         ("C-h x" . helpful-command)))  ; Describe command
-
 
 ;; enable system clipboard
 (use-package xclip
@@ -84,9 +76,9 @@
   :defer t
   :commands (electric-pair-mode)
   :init
-  (add-hook 'after-init-hook 
-    (lambda () 
-      (add-hook 'prog-mode-hook #'electric-pair-mode))))
+  (add-hook 'after-init-hook
+            (lambda ()
+              (add-hook 'prog-mode-hook #'electric-pair-mode))))
 
 ;; Clean up whitespace on save
 (use-package whitespace
@@ -99,38 +91,11 @@
   :defer t
   :commands (highlight-numbers-mode)
   :init
-  (add-hook 'after-init-hook 
-    (lambda () 
-      (add-hook 'prog-mode-hook #'highlight-numbers-mode))))
-
-;; (use-package highlight-escape-sequences
-;;   :hook (prog-mode . hes-mode))
-
-
-;; move line up/down, duplicate line/region
-(use-package move-dup
-  :bind (("M-<up>" . move-dup-move-lines-up)
-         ("M-<down>" . move-dup-move-lines-down)))
+  (add-hook 'after-init-hook
+            (lambda ()
+              (add-hook 'prog-mode-hook #'highlight-numbers-mode))))
 
 (use-package expand-region
   :bind ("C-=" . er/expand-region))
-
-;; (use-package blamer
-;;   :quelpa (blamer :fetcher github :repo "artawower/blamer.el")
-;;   :bind (("s-i" . blamer-show-commit-info)
-;;          ("C-c i" . blamer-show-posframe-commit-info))
-;;   :custom
-;;   (blamer-idle-time 0.3)
-;;   (blamer-min-offset 70)
-;;   :custom-face
-;;   (blamer-face ((t :background nil
-;;                     :height 140
-;;                     :italic t)))
-;;   :config
-;;   (global-blamer-mode 1))
-
-;; (use-package color-rg
-;;   :quelpa (color-rg :fetcher github :repo "manateelazycat/color-rg")
-;;   )
 
 (provide 'init-editor)

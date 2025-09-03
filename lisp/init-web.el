@@ -70,9 +70,9 @@
   (dolist (association my-mode-alist)
     (add-to-list 'auto-mode-alist association)))
 
-(add-hook 'typescript-ts-mode-hook #'lsp-deferred)
-(add-hook 'tsx-ts-mode-hook #'lsp-deferred)
-(add-hook 'json-ts-mode-hook #'lsp-deferred)
+(add-hook 'typescript-ts-mode-hook #'eglot-ensure)
+(add-hook 'tsx-ts-mode-hook #'eglot-ensure)
+(add-hook 'json-ts-mode-hook #'eglot-ensure)
 
 
 ;; Support functions

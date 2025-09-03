@@ -35,11 +35,11 @@
 
 (defun setup-meow-key-bindings()
   "Setup custom keybindings for meow with direct SPC leader"
-  
+
   ;; Define which-key groups
   (which-key-add-keymap-based-replacements my-leader-map
     "f" "files"
-    "a" "AI" 
+    "a" "AI"
     "b" "buffers"
     "c" "code"
     "e" "relysium"
@@ -53,7 +53,7 @@
     "l" "links"
     "x" "extra"
     "w" "windows")
-  
+
   ;; Top level bindings
   (define-key my-leader-map (kbd "'") 'vterm-toggle)
   (define-key my-leader-map (kbd "Q") 'save-buffers-kill-emacs)
@@ -163,7 +163,7 @@
   ;; Window operations
   (define-key my-leader-map (kbd "w t") 'tab-switch)
   (define-key my-leader-map (kbd "w w") 'ace-select-window)
-  
+
   ;; Bind SPC directly to the leader map
   (define-key meow-normal-state-keymap (kbd "SPC") my-leader-map)
   (define-key meow-motion-state-keymap (kbd "SPC") my-leader-map))
