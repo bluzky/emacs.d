@@ -243,7 +243,6 @@
   :bind (("C-." . embark-act)
          ("M-." . embark-dwim)
          ([remap describe-bindings] . embark-bindings)
-         ;; :map evil-normal-state-map
          ("C-." . embark-act))
   :init
   ;; Optionally replace the key help with a completing-read interface

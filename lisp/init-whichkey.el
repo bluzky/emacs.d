@@ -50,6 +50,7 @@
   ;; Top level bindings
   (define-key my-leader-map (kbd "'") 'vterm-toggle)
   (define-key my-leader-map (kbd "Q") 'save-buffers-kill-emacs)
+  (define-key my-leader-map (kbd "E") 'treemacs)
   (define-key my-leader-map (kbd "R") 'restart-emacs)
 
   ;; File operations
@@ -83,7 +84,6 @@
   (define-key my-leader-map (kbd "b d") 'kill-buffer)
   (define-key my-leader-map (kbd "b s") (lambda () (interactive) (find-file "~/.scratch")))
   (define-key my-leader-map (kbd "b S") 'save-some-buffers)
-  (define-key my-leader-map (kbd "b n") 'evil-buffer-new)
   (define-key my-leader-map (kbd "b t") 'tab-new)
 
   ;; Code operations

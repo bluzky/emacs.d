@@ -128,6 +128,7 @@
    '("&" . meow-query-replace-regexp)
    '("<escape>" . ignore))
 
+  (global-set-key (kbd "C-u") #'kill-whole-line)
   ;; Enable meow-mode
   (meow-global-mode 1)
 

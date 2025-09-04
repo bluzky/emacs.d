@@ -1,7 +1,7 @@
 ;; Git
 ;; Tell magit to automatically put us in vi-insert-mode when committing a change.
 (use-package magit
-  ;; :hook (with-editor-mode . evil-insert-state)
+  :hook (with-editor-mode . meow-insert-mode)
   :config
   ;; sort branch by last commit date
   (setq magit-list-refs-sortby "-committerdate")
@@ -11,8 +11,8 @@
   :defer t
   :commands (diff-hl-mode)
   :init
-  (add-hook 'after-init-hook 
-            (lambda () 
+  (add-hook 'after-init-hook
+            (lambda ()
               (add-hook 'prog-mode-hook #'diff-hl-mode)))
   :hook (diff-hl-mode . diff-hl-margin-mode))
 
