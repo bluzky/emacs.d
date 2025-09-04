@@ -22,10 +22,12 @@
   )
 
 
-;; enable system clipboard
-(use-package xclip
+;; enable system clipboard (built-in)
+(use-package emacs
+  :ensure nil
   :config
-  (xclip-mode 1))
+  (setq select-enable-clipboard t
+        select-enable-primary t))
 
 ;; Don’t bother confirming killing processes and don’t let backup~ files scatter around.
 (use-package files
@@ -95,7 +97,5 @@
             (lambda ()
               (add-hook 'prog-mode-hook #'highlight-numbers-mode))))
 
-(use-package expand-region
-  :bind ("C-=" . er/expand-region))
 
 (provide 'init-editor)

@@ -21,38 +21,16 @@
 (use-package smerge-mode
   :ensure nil
   :diminish
-  ;; :hook
-  ;; (prog-mode . smerge-mode)
-  :pretty-hydra
-  ((:color pink :quit-key ("q" "C-g"))
-   ("Move"
-    (("n" smerge-next "next")
-     ("p" smerge-prev "previous"))
-    "Keep"
-    (("b" smerge-keep-base "base")
-     ("u" smerge-keep-upper "upper")
-     ("l" smerge-keep-lower "lower")
-     ("a" smerge-keep-all "all")
-     ("RET" smerge-keep-current "current")
-     ("C-m" smerge-keep-current "current"))
-    "Diff"
-    (("<" smerge-diff-base-upper "upper/base")
-     ("=" smerge-diff-upper-lower "upper/lower")
-     (">" smerge-diff-base-lower "upper/lower")
-     ("R" smerge-refine "refine")
-     ("E" smerge-ediff "ediff"))
-    "Other"
-    (("C" smerge-combine-with-next "combine")
-     ("r" smerge-resolve "resolve")
-     ("k" smerge-kill-current "kill")
-     ("ZZ" (lambda ()
-             (interactive)
-             (save-buffer)
-             (bury-buffer))
-      "Save and bury buffer" :exit t))))
   :bind (:map smerge-mode-map
-              ("C-c m" . smerge-mode-hydra/body))
-  )
+              ("C-c m n" . smerge-next)
+              ("C-c m p" . smerge-prev)
+              ("C-c m b" . smerge-keep-base)
+              ("C-c m u" . smerge-keep-upper)
+              ("C-c m l" . smerge-keep-lower)
+              ("C-c m a" . smerge-keep-all)
+              ("C-c m RET" . smerge-keep-current)
+              ("C-c m r" . smerge-resolve)
+              ("C-c m e" . smerge-ediff)))
 
 (defun me/visit-pull-request-url ()
   "Visit the current branch's PR on Github."

@@ -1,6 +1,3 @@
-;; The diminish package is used to hide unimportant minor modes in the modeline. It provides the :diminish keyword we’ve been using in other use-package declarations.
-(use-package diminish
-  :demand t)
 
 ;; Modernize selection behavior
 ;; Replace the active region just by typing text, just like modern editors.
@@ -62,7 +59,7 @@
 
 ;; Dashboard welcome page
 (use-package dashboard
-  :diminish dashboard-mode
+  :diminish
   :config
   (dashboard-setup-startup-hook)
   (setq dashboard-startup-banner 'logo
@@ -88,9 +85,5 @@
 (use-package doom-modeline
   :hook (emacs-startup . doom-modeline-mode))
 
-;; hydra context menu
-(use-package hydra)
-(use-package pretty-hydra
-  :after hydra)
 
 (provide 'init-ui)

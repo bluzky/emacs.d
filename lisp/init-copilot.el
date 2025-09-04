@@ -7,7 +7,6 @@
 ;; (require 'variables)
 
 (use-package copilot
-  :defer 2
   :quelpa (copilot :fetcher github
                    :repo "copilot-emacs/copilot.el"
                    :branch "main"
