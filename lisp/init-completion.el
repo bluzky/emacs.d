@@ -299,8 +299,6 @@ targets."
   :bind (:map minibuffer-mode-map
               ("C-c C-o" . embark-export)))
 
-;; Swiper for better search within buffer
-(use-package swiper :defer t)
 
 ;; Edit search result buffer directly
 (use-package wgrep

@@ -1,12 +1,5 @@
 ;; Configure whichkey and setup keybindings ; Code:
 
-;; Unbind unneeded keys
-(global-set-key (kbd "C-z") nil)
-(global-set-key (kbd "M-z") nil)
-(global-set-key (kbd "M-m") nil)
-(global-set-key (kbd "C-x C-z") nil)
-(global-set-key (kbd "M-/") nil)
-
 (require 'functions)
 
 (use-package which-key
