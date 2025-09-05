@@ -25,10 +25,6 @@
   (apheleia-global-mode +1)
   )
 
-;; (unless (display-graphic-p)
-;;   (quelpa '(popon :fetcher git :url "https://codeberg.org/akib/emacs-popon.git"))
-;;   (quelpa '(acm-terminal :fetcher github :repo "twlz0ne/acm-terminal")))
-
 
 (use-package lsp-mode
   :diminish "LSP"

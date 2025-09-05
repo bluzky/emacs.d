@@ -11,7 +11,7 @@
 
 (use-package which-key
   :diminish which-key-mode
-  :hook (after-init . which-key-mode)
+  :hook (elpaca-after-init . which-key-mode)
   :config
   (setq which-key-idle-delay 0.4
         which-key-idle-secondary-delay 0.4

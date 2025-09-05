@@ -6,28 +6,14 @@
   ;; (text-mode . turn-on-evil-mc-mode)
   :init
   (global-evil-mc-mode 1)
-
-  :pretty-hydra
-  ((:quit-key "q" :color "red" :idle 0.5)
-   ("Match symbol"
-    (("m" evil-mc-make-all-cursors "make all")
-     ("n" evil-mc-make-and-goto-next-match "add next match")
-     ("N" evil-mc-skip-and-goto-next-match "skip and go to next match")
-     ("p" evil-mc-make-and-goto-prev-match "add prev match")
-     ("P" evil-mc-skip-and-goto-prev-match "skip and go to prev match"))
-
-    "Make cursor"
-    (("j" evil-mc-make-cursor-move-next-line "add next line")
-     ("k" evil-mc-make-cursor-move-prev-line "add prev line")
-     ("A" evil-mc-make-cursor-in-visual-selection-end "make all cursor end")
-     ("I" evil-mc-make-cursor-in-visual-selection-beg "make all cursor beginning"))
-
-    "Action"
-    (("u" evil-mc-undo-last-added-cursor "undo last added cursor")
-     ("Q" evil-mc-undo-all-cursors "clear cursor" :exit t))
-    ))
   :bind
-  ("C-," . evil-mc-hydra/body)
+  ("C-c m c" . evil-mc-make-all-cursors)
+  ("C-c m n" . evil-mc-make-and-goto-next-match)
+  ("C-c m p" . evil-mc-make-and-goto-prev-match)
+  ("C-c m j" . evil-mc-make-cursor-move-next-line)
+  ("C-c m k" . evil-mc-make-cursor-move-prev-line)
+  ("C-c m u" . evil-mc-undo-last-added-cursor)
+  ("C-c m q" . evil-mc-undo-all-cursors)
   :config
   (add-hook 'magit-mode-hook 'turn-off-evil-mc-mode)
   (setq-default evil-mc-one-cursor-show-mode-line-text nil)

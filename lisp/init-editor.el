@@ -1,7 +1,7 @@
 ;; Enable mouse
 (use-package emacs
   :ensure nil
-  :hook (after-init . global-hl-line-mode)
+  :hook (elpaca-after-init . global-hl-line-mode)
   :config
   (xterm-mouse-mode 1)
   (setq initial-scratch-message "")
@@ -45,10 +45,11 @@
 
 ;; Enable recentf mode
 (use-package recentf
-  :init
-  (run-at-time nil (* 5 60) 'recentf-save-list) ;; auto save every 5 minutes
+  :ensure nil
   :hook
-  (after-init . recentf-mode)
+  (elpaca-after-init . recentf-mode)
+  :config
+  (run-at-time nil (* 5 60) 'recentf-save-list) ;; auto save every 5 minutes
   )
 
 ;; Automatically refreshes the buffer for changes outside of Emacs
@@ -105,7 +106,7 @@
   :bind ("C-=" . er/expand-region))
 
 ;; (use-package blamer
-;;   :quelpa (blamer :fetcher github :repo "artawower/blamer.el")
+;;   :elpaca (blamer :host github :repo "artawower/blamer.el")
 ;;   :bind (("s-i" . blamer-show-commit-info)
 ;;          ("C-c i" . blamer-show-posframe-commit-info))
 ;;   :custom
@@ -119,7 +120,7 @@
 ;;   (global-blamer-mode 1))
 
 ;; (use-package color-rg
-;;   :quelpa (color-rg :fetcher github :repo "manateelazycat/color-rg")
+;;   :elpaca (color-rg :host github :repo "manateelazycat/color-rg")
 ;;   )
 
 (provide 'init-editor)
