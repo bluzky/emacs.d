@@ -3,12 +3,13 @@
 
 ;; (require 'slash-commands)
 (use-package slash-commands
-  :quelpa (slash-commands :repo "bluzky/slash-commands" :fetcher github)
-  ;; :config
-  ;; (global-slash-commands-mode)
+  :ensure (:host github :repo "bluzky/slash-commands")
+  :hook ((org-mode . slash-commands-mode)
+         (markdown-mode . slash-commands-mode))
   )
 
 (use-package org
+  :ensure nil
   :config
   (add-to-list 'org-src-lang-modes '("elixir" . elixir-ts))
   :hook (org-mode . (lambda () (toggle-truncate-lines nil)))

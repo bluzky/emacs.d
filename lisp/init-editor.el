@@ -1,7 +1,7 @@
 ;; Enable mouse
 (use-package emacs
   :ensure nil
-  :hook (after-init . global-hl-line-mode)
+  :hook (elpaca-after-init . global-hl-line-mode)
   :config
   (xterm-mouse-mode 1)
   (setq initial-scratch-message "")
@@ -39,12 +39,12 @@
 
 ;; Enable recentf mode
 (use-package recentf
-  :defer 1
+  :ensure nil
+  :hook
+  (elpaca-after-init . recentf-mode)
   :config
-  (setq recentf-max-saved-items 200
-        recentf-exclude '("/tmp/" "/ssh:" "/sudo:"))
   (run-at-time nil (* 5 60) 'recentf-save-list) ;; auto save every 5 minutes
-  (recentf-mode 1))
+  )
 
 ;; Automatically refreshes the buffer for changes outside of Emacs
 ;; Auto refreshes every 2 seconds. Don’t forget to refresh the version control status as well.

@@ -1,7 +1,12 @@
 ;; Git
 ;; Tell magit to automatically put us in vi-insert-mode when committing a change.
+(use-package transient)
+
 (use-package magit
   :hook (with-editor-mode . meow-insert-mode)
+  :bind (:map magit-status-mode-map
+              ("x" . magit-discard)
+              ("k" . nil))  ; Remove default k binding
   :config
   ;; sort branch by last commit date
   (setq magit-list-refs-sortby "-committerdate")
@@ -21,16 +26,20 @@
 (use-package smerge-mode
   :ensure nil
   :diminish
+  ;; :hook
+  ;; (prog-mode . smerge-mode)
   :bind (:map smerge-mode-map
-              ("C-c m n" . smerge-next)
-              ("C-c m p" . smerge-prev)
-              ("C-c m b" . smerge-keep-base)
-              ("C-c m u" . smerge-keep-upper)
-              ("C-c m l" . smerge-keep-lower)
-              ("C-c m a" . smerge-keep-all)
-              ("C-c m RET" . smerge-keep-current)
-              ("C-c m r" . smerge-resolve)
-              ("C-c m e" . smerge-ediff)))
+              ("C-c s n" . smerge-next)
+              ("C-c s p" . smerge-prev)
+              ("C-c s b" . smerge-keep-base)
+              ("C-c s u" . smerge-keep-upper)
+              ("C-c s l" . smerge-keep-lower)
+              ("C-c s a" . smerge-keep-all)
+              ("C-c s RET" . smerge-keep-current)
+              ("C-c s r" . smerge-resolve)
+              ("C-c s k" . smerge-kill-current)
+              ("C-c s E" . smerge-ediff))
+  )
 
 (defun me/visit-pull-request-url ()
   "Visit the current branch's PR on Github."

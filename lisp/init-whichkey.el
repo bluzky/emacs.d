@@ -4,7 +4,7 @@
 
 (use-package which-key
   :diminish which-key-mode
-  :hook (after-init . which-key-mode)
+  :hook (elpaca-after-init . which-key-mode)
   :config
   (setq which-key-idle-delay 0.4
         which-key-idle-secondary-delay 0.4
@@ -159,7 +159,14 @@
 
   ;; Bind SPC directly to the leader map
   (define-key meow-normal-state-keymap (kbd "SPC") my-leader-map)
-  (define-key meow-motion-state-keymap (kbd "SPC") my-leader-map))
+  (define-key meow-motion-state-keymap (kbd "SPC") my-leader-map)
+  
+  ;; Bind SPC to leader map in magit modes (since they use insert state)
+  (with-eval-after-load 'magit
+    (define-key magit-status-mode-map (kbd "SPC") my-leader-map)
+    (define-key magit-log-mode-map (kbd "SPC") my-leader-map)
+    (define-key magit-diff-mode-map (kbd "SPC") my-leader-map)
+    (define-key magit-revision-mode-map (kbd "SPC") my-leader-map)))
 
 ;; Setup key bindings when meow is loaded
 (with-eval-after-load 'meow

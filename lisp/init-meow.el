@@ -10,6 +10,12 @@
                           (meow-insert-exit))))
   :config
   (meow-setup-indicator)
+  
+  ;; Set magit modes to use insert state
+  (add-to-list 'meow-mode-state-list '(magit-status-mode . insert))
+  (add-to-list 'meow-mode-state-list '(magit-log-mode . insert))
+  (add-to-list 'meow-mode-state-list '(magit-diff-mode . insert))
+  (add-to-list 'meow-mode-state-list '(magit-revision-mode . insert))
   (meow-motion-overwrite-define-key
    '("j" . meow-next)
    '("k" . meow-prev)
@@ -129,6 +135,8 @@
    '("<escape>" . ignore))
 
   (global-set-key (kbd "C-u") #'kill-whole-line)
+  ;; Configure escape key to exit insert mode
+  (define-key meow-insert-state-keymap [escape] 'meow-insert-exit)
   ;; Enable meow-mode
   (meow-global-mode 1)
 
@@ -136,6 +144,4 @@
 
 ;; Configure C-[ to exit insert state only when in meow insert mode
 ;; (global-set-key (kbd "C-[")      'meow-insert-exit))
-
-(define-key meow-insert-state-keymap [escape] 'meow-insert-exit)
 (provide 'init-meow)

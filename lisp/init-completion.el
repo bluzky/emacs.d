@@ -3,6 +3,7 @@
 
 ;; A few more useful configurations...
 (use-package emacs
+  :ensure nil
   :init
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
@@ -78,7 +79,7 @@
               ("RET" . vertico-directory-enter)
               ("DEL" . vertico-directory-delete-char)
               ("M-DEL" . vertico-directory-delete-word))
-  :hook ((emacs-startup . vertico-mode)
+  :hook ((elpaca-after-init . vertico-mode)
          (rfn-eshadow-update-overlay . vertico-directory-tidy))
   :config
   (setq vertico-count 17)

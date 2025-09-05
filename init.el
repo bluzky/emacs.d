@@ -1,7 +1,7 @@
 ;;; Update load path
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
-(require 'bootstrap)
+(require 'bootstrap-elpaca)
 (require 'init-base)
 (require 'init-ui)
 (require 'init-editor)

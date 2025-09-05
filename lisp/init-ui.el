@@ -42,19 +42,19 @@
 
 ;; Or if you have use-package installed
 (use-package ef-themes
+  :ensure t
   :config
-  (load-theme 'ef-day t))
+  (load-theme 'ef-day t)
+  
+  ;; auto dark theme
+  (defun me/apply-theme (appearance)
+    "Load theme, taking current system APPEARANCE into consideration."
+    (mapc #'disable-theme custom-enabled-themes)
+    (pcase appearance
+      ('light (load-theme 'ef-day t))
+      ('dark (load-theme 'ef-owl t))))
 
-
-;; auto dark theme
-(defun me/apply-theme (appearance)
-  "Load theme, taking current system APPEARANCE into consideration."
-  (mapc #'disable-theme custom-enabled-themes)
-  (pcase appearance
-    ('light (load-theme 'ef-day t))
-    ('dark (load-theme 'ef-owl t))))
-
-(add-hook 'ns-system-appearance-change-functions #'me/apply-theme)
+  (add-hook 'ns-system-appearance-change-functions #'me/apply-theme))
 
 
 ;; Dashboard welcome page
@@ -83,7 +83,7 @@
 
 ;; Add doom fancy modeline
 (use-package doom-modeline
-  :hook (emacs-startup . doom-modeline-mode))
+  :hook (elpaca-after-init . doom-modeline-mode))
 
 
 (provide 'init-ui)

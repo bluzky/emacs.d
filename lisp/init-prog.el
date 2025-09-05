@@ -29,10 +29,6 @@
   (apheleia-global-mode +1)
   )
 
-;; (unless (display-graphic-p)
-;;   (quelpa '(popon :fetcher git :url "https://codeberg.org/akib/emacs-popon.git"))
-;;   (quelpa '(acm-terminal :fetcher github :repo "twlz0ne/acm-terminal")))
-
 
 ;; Eglot - Built-in LSP client for Emacs
 (use-package eglot
@@ -60,7 +56,7 @@
 
 ;; Eglot Booster - Performance optimization for eglot
 (use-package eglot-booster
-  :vc (:url "https://github.com/jdtsmith/eglot-booster.git")
+  :ensure (:host github :repo "jdtsmith/eglot-booster")
   :after eglot
   :config
   (eglot-booster-mode))
