@@ -4,8 +4,8 @@
 ;; (require 'slash-commands)
 (use-package slash-commands
   :ensure (:host github :repo "bluzky/slash-commands")
-  :config
-  (global-slash-commands-mode)
+  :hook ((org-mode . slash-commands-mode)
+         (markdown-mode . slash-commands-mode))
   )
 
 (use-package org
