@@ -113,8 +113,10 @@
 ;; Add the directory to load path
 (add-to-list 'load-path relysium-directory)
 
-(require 'relysium)
-(add-hook 'prog-mode-hook 'relysium-prog-mode)
+;; Load relysium after gptel is available
+(with-eval-after-load 'gptel
+  (require 'relysium)
+  (add-hook 'prog-mode-hook 'relysium-prog-mode))
 
 ;; (use-package relysium
 ;;   :elpaca (relysium :host github :repo "bluzky/relysium")

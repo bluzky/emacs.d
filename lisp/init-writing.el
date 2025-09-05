@@ -3,12 +3,13 @@
 
 ;; (require 'slash-commands)
 (use-package slash-commands
-  :elpaca (slash-commands :host github :repo "bluzky/slash-commands")
+  :ensure (:host github :repo "bluzky/slash-commands")
   :config
   (global-slash-commands-mode)
   )
 
 (use-package org
+  :ensure nil
   :config
   (add-to-list 'org-src-lang-modes '("elixir" . elixir-ts))
   :hook (org-mode . (lambda () (toggle-truncate-lines nil)))

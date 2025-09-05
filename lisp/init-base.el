@@ -41,12 +41,12 @@
   (setq delete-by-moving-to-trash t))
 
 ;; Dump custom-set-variables to a garbage file and don’t load it
-(use-package cus-edit
-  :ensure nil
-  :config
-  (setq custom-file (concat user-emacs-directory "custom_config.el"))
-  (load custom-file)
-  )
+;; (use-package cus-edit
+;;   :ensure nil
+;;   :config
+;;   (setq custom-file (concat user-emacs-directory "custom_config.el"))
+;;   (load custom-file)
+;;   )
 
 ;; Configure PATH on macOS
 (use-package exec-path-from-shell
