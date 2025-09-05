@@ -14,7 +14,7 @@
 ;;; Code:
 
 (require 'variables)
-(require 'gptel-tools)
+;; (require 'gptel-tools)
 
 (use-package gptel
   :init
@@ -37,14 +37,14 @@
   (gptel-temperature 0.7)
   (gptel-cache t)
   :config
-  (setq gptel-use-tools t)
+  ;; (setq gptel-use-tools t)
 
-  (add-to-list 'gptel-tools (use-tool-read-file))
-  (add-to-list 'gptel-tools (use-tool-list-directory))
-  (add-to-list 'gptel-tools (use-tool-make-directory))
-  (add-to-list 'gptel-tools (use-tool-create-file))
-  (add-to-list 'gptel-tools (use-tool-run-command))
-  (add-to-list 'gptel-tools (use-tool-read-url))
+  ;; (add-to-list 'gptel-tools (use-tool-read-file))
+  ;; (add-to-list 'gptel-tools (use-tool-list-directory))
+  ;; (add-to-list 'gptel-tools (use-tool-make-directory))
+  ;; (add-to-list 'gptel-tools (use-tool-create-file))
+  ;; (add-to-list 'gptel-tools (use-tool-run-command))
+  ;; (add-to-list 'gptel-tools (use-tool-read-url))
 
   (add-to-list 'gptel-directives '(default . "You are a large language model living in Emacs and a helpful assistant. Respond concisely.
 
@@ -117,10 +117,7 @@
 (add-hook 'prog-mode-hook 'relysium-prog-mode)
 
 ;; (use-package relysium
-;;   :quelpa (relysium :fetcher github
-;;                     :repo "bluzky/relysium"
-;;                     :branch "main"
-;;                     :files ("*.el"))
+;;   :elpaca (relysium :host github :repo "bluzky/relysium")
 ;;   :hook (prog-mode . relysium-prog-mode))
 
 

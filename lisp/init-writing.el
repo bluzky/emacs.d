@@ -3,7 +3,7 @@
 
 ;; (require 'slash-commands)
 (use-package slash-commands
-  :quelpa (slash-commands :repo "bluzky/slash-commands" :fetcher github)
+  :elpaca (slash-commands :host github :repo "bluzky/slash-commands")
   :config
   (global-slash-commands-mode)
   )

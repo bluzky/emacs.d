@@ -1,5 +1,7 @@
 ;; Git
 ;; Tell magit to automatically put us in vi-insert-mode when committing a change.
+(use-package transient)
+
 (use-package magit
   :hook (with-editor-mode . evil-insert-state)
   :config
@@ -18,35 +20,17 @@
   :diminish
   ;; :hook
   ;; (prog-mode . smerge-mode)
-  :pretty-hydra
-  ((:color pink :quit-key ("q" "C-g"))
-   ("Move"
-    (("n" smerge-next "next")
-     ("p" smerge-prev "previous"))
-    "Keep"
-    (("b" smerge-keep-base "base")
-     ("u" smerge-keep-upper "upper")
-     ("l" smerge-keep-lower "lower")
-     ("a" smerge-keep-all "all")
-     ("RET" smerge-keep-current "current")
-     ("C-m" smerge-keep-current "current"))
-    "Diff"
-    (("<" smerge-diff-base-upper "upper/base")
-     ("=" smerge-diff-upper-lower "upper/lower")
-     (">" smerge-diff-base-lower "upper/lower")
-     ("R" smerge-refine "refine")
-     ("E" smerge-ediff "ediff"))
-    "Other"
-    (("C" smerge-combine-with-next "combine")
-     ("r" smerge-resolve "resolve")
-     ("k" smerge-kill-current "kill")
-     ("ZZ" (lambda ()
-             (interactive)
-             (save-buffer)
-             (bury-buffer))
-      "Save and bury buffer" :exit t))))
   :bind (:map smerge-mode-map
-              ("C-c m" . smerge-mode-hydra/body))
+              ("C-c s n" . smerge-next)
+              ("C-c s p" . smerge-prev)
+              ("C-c s b" . smerge-keep-base)
+              ("C-c s u" . smerge-keep-upper)
+              ("C-c s l" . smerge-keep-lower)
+              ("C-c s a" . smerge-keep-all)
+              ("C-c s RET" . smerge-keep-current)
+              ("C-c s r" . smerge-resolve)
+              ("C-c s k" . smerge-kill-current)
+              ("C-c s E" . smerge-ediff))
   )
 
 (defun me/visit-pull-request-url ()

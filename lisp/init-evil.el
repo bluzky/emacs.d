@@ -4,7 +4,7 @@
   (setq evil-want-C-u-scroll t
         evil-want-keybinding nil
         evil-shift-width ian/indent-width)
-  :hook (after-init . evil-mode)
+  :hook (elpaca-after-init . evil-mode)
   (after-save . evil-normal-state)
   :config
   (setq evil-emacs-state-cursor    '("red" box)

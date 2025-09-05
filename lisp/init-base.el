@@ -1,4 +1,5 @@
 (use-package emacs
+  :ensure nil
   :preface
   (defvar ian/indent-width 2) ; change this value to your preferred width
   :config
