@@ -75,5 +75,20 @@
         (message "Relative path copied: %s" relative-path))
     (message "Buffer is not associated with a file or not in a project.")))
 
+(defun me/consult-line-thing-at-point ()
+  "Search current buffer with consult-line using thing at point as initial input."
+  (interactive)
+  (let ((initial-input (if (region-active-p)
+                           (buffer-substring-no-properties
+                            (region-beginning) (region-end))
+                         (thing-at-point 'symbol t))))
+    (consult-line initial-input)))
+
+(defun me/define-keys (keymap &rest key-command-pairs)
+  "Define multiple keys in KEYMAP with KEY-COMMAND-PAIRS.
+Usage: (me/define-keys keymap \"key1\" 'command1 \"key2\" 'command2 ...)"
+  (while key-command-pairs
+    (define-key keymap (kbd (pop key-command-pairs)) (pop key-command-pairs))))
+
 (provide 'functions)
 ;;; functions.el ends here

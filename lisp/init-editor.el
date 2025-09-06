@@ -21,19 +21,13 @@
   (setq split-width-threshold 106)
   )
 
-;; improve the default help system
-(use-package helpful
-  :ensure t
-  :bind (("C-h f" . helpful-callable)   ; Describe function
-         ("C-h v" . helpful-variable)   ; Describe variable
-         ("C-h k" . helpful-key)        ; Describe keybinding
-         ("C-h x" . helpful-command)))  ; Describe command
 
-
-;; enable system clipboard
-(use-package xclip
+;; enable system clipboard (built-in)
+(use-package emacs
+  :ensure nil
   :config
-  (xclip-mode 1))
+  (setq select-enable-clipboard t
+        select-enable-primary t))
 
 ;; Don’t bother confirming killing processes and don’t let backup~ files scatter around.
 (use-package files
@@ -81,7 +75,12 @@
 ;; Electric-pair-mode has improved quite a bit in recent Emacs versions. No longer need an extra package for this. It also takes care of the new-line-and-push-brace feature.
 (use-package elec-pair
   :ensure nil
-  :hook (prog-mode . electric-pair-mode))
+  :defer t
+  :commands (electric-pair-mode)
+  :init
+  (add-hook 'after-init-hook
+            (lambda ()
+              (add-hook 'prog-mode-hook #'electric-pair-mode))))
 
 ;; Clean up whitespace on save
 (use-package whitespace
@@ -91,36 +90,12 @@
 
 ;; Syntax highlighting improvement
 (use-package highlight-numbers
-  :hook (prog-mode . highlight-numbers-mode))
+  :defer t
+  :commands (highlight-numbers-mode)
+  :init
+  (add-hook 'after-init-hook
+            (lambda ()
+              (add-hook 'prog-mode-hook #'highlight-numbers-mode))))
 
-;; (use-package highlight-escape-sequences
-;;   :hook (prog-mode . hes-mode))
-
-
-;; move line up/down, duplicate line/region
-(use-package move-dup
-  :bind (("M-<up>" . move-dup-move-lines-up)
-         ("M-<down>" . move-dup-move-lines-down)))
-
-(use-package expand-region
-  :bind ("C-=" . er/expand-region))
-
-;; (use-package blamer
-;;   :elpaca (blamer :host github :repo "artawower/blamer.el")
-;;   :bind (("s-i" . blamer-show-commit-info)
-;;          ("C-c i" . blamer-show-posframe-commit-info))
-;;   :custom
-;;   (blamer-idle-time 0.3)
-;;   (blamer-min-offset 70)
-;;   :custom-face
-;;   (blamer-face ((t :background nil
-;;                     :height 140
-;;                     :italic t)))
-;;   :config
-;;   (global-blamer-mode 1))
-
-;; (use-package color-rg
-;;   :elpaca (color-rg :host github :repo "manateelazycat/color-rg")
-;;   )
 
 (provide 'init-editor)

@@ -1,6 +1,3 @@
-;; The diminish package is used to hide unimportant minor modes in the modeline. It provides the :diminish keyword we’ve been using in other use-package declarations.
-(use-package diminish
-  :demand t)
 
 ;; Modernize selection behavior
 ;; Replace the active region just by typing text, just like modern editors.
@@ -62,7 +59,7 @@
 
 ;; Dashboard welcome page
 (use-package dashboard
-  :diminish dashboard-mode
+  :diminish
   :config
   (dashboard-setup-startup-hook)
   (setq dashboard-startup-banner 'logo
@@ -75,13 +72,6 @@
         dashboard-path-max-length 60
         dashboard-set-navigator t
         dashboard-set-footer nil)
-  ;; Format: "(icon title help action face prefix suffix)"
-  (setq dashboard-navigator-buttons
-        `(;; line1
-          (("⚡" "Opollo"
-            "GH Opollo"
-            (lambda (&rest _) (browse-url "https://github.com/onpointvn/opollo")))
-           )))
   )
 
 

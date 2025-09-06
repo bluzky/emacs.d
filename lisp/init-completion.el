@@ -205,9 +205,9 @@
 (defun me/search-project ()
   "Search in current project."
   (interactive)
-    (let* ((pr (project-current t))
+  (let* ((pr (project-current t))
          (root (project-root pr)))
-  (me/ripgrep-search t root)))
+    (me/ripgrep-search t root)))
 
 (defun me/search-dir ()
   "Choose folder to search."
@@ -223,30 +223,29 @@
 ;;   :bind ("M-g s" . consult-flyspell))
 
 (use-package yasnippet
+  :defer t
   :hook
   ;; set yasnippet for prog-mode as minor mode.
   (prog-mode . yas-minor-mode)
   :config
-  ;; (yas-global-mode t)
-  (yas-reload-all)
   ;; user snippets directory
   (setq-default yas-snippet-dirs '("~/.emacs.d/snippets"))
+  ;; load snippets only once when yasnippet is first loaded
+  (yas-reload-all)
   )
 
-(use-package yasnippet-snippets)
+(use-package yasnippet-snippets
+  :defer t)
 
 ;; yasnippet support for consult
 (use-package consult-yasnippet
-  :bind ("M-g y" . consult-yasnippet)
-  :hook ((prog-mode org-mode) . yas-global-mode))
+  :bind ("M-g y" . consult-yasnippet))
 
 ;; Embark provides a sort of context sensitive mini interface to act on
 (use-package embark
-  :after evil
   :bind (("C-." . embark-act)
          ("M-." . embark-dwim)
          ([remap describe-bindings] . embark-bindings)
-         :map evil-normal-state-map
          ("C-." . embark-act))
   :init
   ;; Optionally replace the key help with a completing-read interface
@@ -302,11 +301,14 @@ targets."
   :bind (:map minibuffer-mode-map
               ("C-c C-o" . embark-export)))
 
-;; Swiper for better search within buffer
-(use-package swiper :defer t)
 
 ;; Edit search result buffer directly
-(use-package wgrep)
+(use-package wgrep
+  :config
+  (setq wgrep-auto-save-buffer t)
+  (setq wgrep-enable-key "i")
+  )
+
 
 (provide 'init-completion)
 

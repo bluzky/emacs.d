@@ -3,15 +3,23 @@
 (use-package transient)
 
 (use-package magit
-  :hook (with-editor-mode . evil-insert-state)
+  :hook (with-editor-mode . meow-insert-mode)
+  :bind (:map magit-status-mode-map
+              ("x" . magit-discard)
+              ("k" . nil))  ; Remove default k binding
   :config
   ;; sort branch by last commit date
   (setq magit-list-refs-sortby "-committerdate")
   )
 
 (use-package diff-hl
-  :hook (prog-mode . diff-hl-mode)
-  (diff-hl-mode . diff-hl-margin-mode))
+  :defer t
+  :commands (diff-hl-mode)
+  :init
+  (add-hook 'after-init-hook
+            (lambda ()
+              (add-hook 'prog-mode-hook #'diff-hl-mode)))
+  :hook (diff-hl-mode . diff-hl-margin-mode))
 
 
 ;; Resolve diff3 conflicts
@@ -35,11 +43,11 @@
 
 (defun me/visit-pull-request-url ()
   "Visit the current branch's PR on Github."
-    (interactive)
+  (interactive)
   (let ((repo (magit-get "remote" (magit-get-push-remote) "url")))
     (if (string-match "github\\.com" repo)
-    (visit-gh-pull-request repo)
-  (visit-bb-pull-request repo))))
+        (visit-gh-pull-request repo)
+      (visit-bb-pull-request repo))))
 
 
 
@@ -48,10 +56,10 @@
   (interactive)
   (browse-url
    (format "https://github.com/%s/pull/new/%s"
-     (replace-regexp-in-string
-      "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
-      repo)
-    (magit-get-current-branch))))
+           (replace-regexp-in-string
+            "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
+            repo)
+           (magit-get-current-branch))))
 
 
 

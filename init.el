@@ -8,7 +8,7 @@
 (require 'init-completion)
 (require 'init-corfu)
 (require 'init-treemacs)
-(require 'init-evil)
+(require 'init-meow)
 (require 'init-better-emacs)
 (require 'init-git)
 (require 'init-multi-cursor)

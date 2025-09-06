@@ -22,9 +22,6 @@
 
 (use-package eat
   :config
-  (add-hook 'eat-mode-hook
-            (lambda ()
-              (run-with-idle-timer 0.1 nil 'turn-off-evil-mode)))
   :bind
   (("C-c t" . eat-project)
    ("C-c T" . eat-project-other-window)))
