@@ -5,8 +5,7 @@
 (use-package magit
   :hook (with-editor-mode . meow-insert-mode)
   :bind (:map magit-status-mode-map
-              ("x" . magit-discard)
-              ("k" . nil))  ; Remove default k binding
+              ("x" . magit-discard))
   :config
   ;; sort branch by last commit date
   (setq magit-list-refs-sortby "-committerdate")

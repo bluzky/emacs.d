@@ -11,6 +11,14 @@
   :config
   (meow-setup-indicator)
   
+  ;; Define custom replace function
+  (defun meow-replace-with-kill-ring ()
+    "Replace selection with head of kill-ring"
+    (interactive)
+    (when (region-active-p)
+      (delete-region (region-beginning) (region-end))
+      (yank)))
+  
   ;; Set magit modes to use insert state
   (add-to-list 'meow-mode-state-list '(magit-status-mode . insert))
   (add-to-list 'meow-mode-state-list '(magit-log-mode . insert))
@@ -109,7 +117,7 @@
    '("p" . meow-yank)
    '("P" . meow-yank-pop)
    '("q" . meow-quit)
-   '("Q" . meow-goto-line)
+   '(":" . meow-goto-line)
    '("r" . meow-replace)
    '("R" . meow-swap-grab)
    '("s" . meow-kill)
@@ -132,11 +140,25 @@
    '("\"" . meow-comment)
    '("%" . meow-query-replace)
    '("&" . meow-query-replace-regexp)
+   '("{" . backward-paragraph)
+   '("}" . forward-paragraph)
    '("<escape>" . ignore))
 
   (global-set-key (kbd "C-u") #'kill-whole-line)
-  ;; Configure escape key to exit insert mode
-  (define-key meow-insert-state-keymap [escape] 'meow-insert-exit)
+  
+  ;; Separate C-i from Tab and C-[ from ESC
+  (define-key input-decode-map (kbd "C-i") (kbd "H-i"))
+  (define-key input-decode-map (kbd "C-[") (kbd "H-["))
+  
+  ;; Configure jump list navigation for both normal and insert states
+  (define-key meow-normal-state-keymap (kbd "C-o") 'meow-pop-to-mark)
+  (define-key meow-normal-state-keymap (kbd "H-i") 'meow-unpop-to-mark)
+  (define-key meow-insert-state-keymap (kbd "C-o") 'meow-pop-to-mark)
+  (define-key meow-insert-state-keymap (kbd "H-i") 'meow-unpop-to-mark)
+  
+  ;; Configure H-[ (C-[) to exit insert mode
+  (define-key meow-insert-state-keymap (kbd "H-[") 'meow-insert-exit)
+  
   ;; Enable meow-mode
   (meow-global-mode 1)
 
