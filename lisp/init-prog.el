@@ -62,11 +62,6 @@
   (eglot-booster-mode))
 
 
-;; code folding
-(use-package origami
-  :hook (prog-mode . origami-mode))
-
-;;
 (use-package citre
   :defer t
   :init

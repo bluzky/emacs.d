@@ -75,11 +75,6 @@
     :models '(deepseek-chat deepseek-coder))
 
 
-  (gptel-make-anthropic "Claude"          ;Any name you want
-    :stream t                             ;Streaming responses
-    :key ai-anthropic-api-key
-    :models '(claude-3-5-sonnet-20241022 claude-3-7-sonnet-20250219))
-
   ;; Groq offers an OpenAI compatible API
   (setq gptel-model  'moonshotai/kimi-k2-instruct
         gptel-backend
@@ -88,39 +83,30 @@
           :endpoint "/openai/v1/chat/completions"
           :stream t
           :key groq-api-key
-          :models '(moonshotai/kimi-k2-instruct
-                    qwen-2.5-coder-32b
+          :models '(moonshotai/kimi-k2-instruct-0905
+                    moonshotai/kimi-k2-instruct
+                    qwen/qwen3-32b
                     deepseek-r1-distill-llama-70b
                     deepseek-r1-distill-qwen-32b
                     llama-3.3-70b-versatile))
         )
-
-  ;; (setq gptel-model 'claude-3-5-sonnet-20241022
-  ;;       gpt-backend (gptel-make-openai "MistralCode"  ;Any name you want
-  ;;                     :host "api.mistral.ai"
-  ;;                     :endpoint "/v1/chat/completions"
-  ;;                     :protocol "https"
-  ;;                     :key mistral-api-key               ;can be a function that returns the key
-  ;;                     :models '(codestral-latest mistral-large-latest))
-  ;;       )
   )
 
-(defconst relysium-directory
-  (expand-file-name "relysium"
-                    (file-name-directory (or load-file-name buffer-file-name)))
-  "Directory containing the relysium component files.")
-
-;; Add the directory to load path
-(add-to-list 'load-path relysium-directory)
-
-;; Load relysium after gptel is available
-(with-eval-after-load 'gptel
-  (require 'relysium)
-  (add-hook 'prog-mode-hook 'relysium-prog-mode))
-
-;; (use-package relysium
-;;   :elpaca (relysium :host github :repo "bluzky/relysium")
-;;   :hook (prog-mode . relysium-prog-mode))
+(use-package relysium
+  :elpaca (:host github :repo "bluzky/relysium")
+  :hook (prog-mode . relysium-prog-mode)
+  :commands (relysium-ask
+             relysium-edit-dwim
+             relysium-buffer-add-context
+             relysium-buffer-clear
+             relysium-debug-log
+             relysium-toggle-debug-mode
+             relysium-generate-from-comments
+             relysium-suggest
+             relysium-buffer-toggle-window)
+  :config
+  ;; Add any additional relysium configuration here
+  )
 
 
 (provide 'init-ai)

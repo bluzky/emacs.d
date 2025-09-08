@@ -132,8 +132,8 @@
   (define-key my-leader-map (kbd "i y") 'consult-yasnippet)
 
   ;; Search operations
-  (define-key my-leader-map (kbd "s s") 'swiper)
-  (define-key my-leader-map (kbd "s S") 'swiper-thing-at-point)
+  (define-key my-leader-map (kbd "s s") 'consult-line)
+  (define-key my-leader-map (kbd "s S") 'me/consult-line-thing-at-point)
   (define-key my-leader-map (kbd "s p") 'consult-ripgrep)
   (define-key my-leader-map (kbd "s P") 'me/search-project)
   (define-key my-leader-map (kbd "s f") 'me/search-dir)

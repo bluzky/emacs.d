@@ -1,4 +1,3 @@
-
 ;; Modernize selection behavior
 ;; Replace the active region just by typing text, just like modern editors.
 (use-package delsel
@@ -36,16 +35,12 @@
   (setq initial-frame-alist '((fullscreen . maximized)))
   (ian/set-default-font))
 
-;; custom theme
-(add-to-list 'custom-theme-load-path (concat user-emacs-directory "themes/"))
-
-
 ;; Or if you have use-package installed
 (use-package ef-themes
   :ensure t
   :config
   (load-theme 'ef-day t)
-  
+
   ;; auto dark theme
   (defun me/apply-theme (appearance)
     "Load theme, taking current system APPEARANCE into consideration."

@@ -5,6 +5,8 @@
   :config
   (xterm-mouse-mode 1)
   (setq initial-scratch-message "")
+  ;; enable system clipboard
+  (setq select-enable-clipboard t)
 
   ;; disable auto-save
   (auto-save-mode -1)
@@ -21,13 +23,6 @@
   (setq split-width-threshold 106)
   )
 
-
-;; enable system clipboard (built-in)
-(use-package emacs
-  :ensure nil
-  :config
-  (setq select-enable-clipboard t
-        select-enable-primary t))
 
 ;; Don’t bother confirming killing processes and don’t let backup~ files scatter around.
 (use-package files
@@ -82,20 +77,9 @@
             (lambda ()
               (add-hook 'prog-mode-hook #'electric-pair-mode))))
 
-;; Clean up whitespace on save
-(use-package whitespace
-  :ensure nil
-  :hook (before-save . whitespace-cleanup))
-
-
 ;; Syntax highlighting improvement
 (use-package highlight-numbers
   :defer t
-  :commands (highlight-numbers-mode)
-  :init
-  (add-hook 'after-init-hook
-            (lambda ()
-              (add-hook 'prog-mode-hook #'highlight-numbers-mode))))
-
+  :hook (prog-mode . highlight-numbers-mode))
 
 (provide 'init-editor)
