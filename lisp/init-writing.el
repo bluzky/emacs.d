@@ -145,32 +145,41 @@ Returns a value between 0.0 (dark) and 1.0 (light)."
          255.0) 0.5)))
 
 ;; customize markdown-mode faces based on the current theme
-;; Create a function that will be called when markdown-mode loads
-(defun my-markdown-theme-integration ()
-  ;; Define a function to update faces based on current theme
-  (defun my-update-markdown-faces ()
 
-    (let ((bg-color (face-background 'default nil t)))
-      (if (color-is-light-p bg-color)
-          ;; Set the background color for light mode
-          (custom-set-faces
-           '(markdown-code-face ((t (:background "#FDF6E3" :extend t)))))
+;; Define a function to update faces based on current theme
+(defun my-update-markdown-faces ()
+  (let ((bg-color (face-background 'default nil t)))
+    (if (color-is-light-p bg-color)
+        ;; Set the background color for light mode
+        (set-face-attribute 'markdown-code-face nil
+                            :background "#FDF6E3"
+                            :extend t)
+      ;; Set the background color for dark mode
+      (set-face-attribute 'markdown-code-face nil
+                          :background "#282C34"
+                          :extend t))))
 
-        ;; Set the background color for dark mode
-        (custom-set-faces
-         '(markdown-code-face ((t (:background "#282C34" :extend t))))))
-      ))
+;; Hook to update faces when theme changes
+(defun my-markdown-theme-hook (&rest _args)
+  "Update markdown faces after theme change."
+  (when (fboundp 'my-update-markdown-faces)
+    ;; Force update in all markdown buffers
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when (eq major-mode 'markdown-mode)
+          (my-update-markdown-faces))))))
 
-
-  ;; Add it to theme hooks
-  (advice-add 'load-theme :after
-              (lambda (&rest _) (when (featurep 'markdown-mode) (my-update-markdown-faces))))
-
-  ;; Run once for initial setup
-  (my-update-markdown-faces))
+;; Add hooks for theme changes
+(add-hook 'enable-theme-functions #'my-markdown-theme-hook)
+(add-hook 'disable-theme-functions #'my-markdown-theme-hook)
+(advice-add 'load-theme :after #'my-markdown-theme-hook)
 
 ;; Set up the hook to run when markdown-mode loads
-(with-eval-after-load 'markdown-mode
-  (my-markdown-theme-integration))
+(defun my-markdown-mode-setup ()
+  "Setup for markdown-mode."
+  (my-update-markdown-faces))
+
+;; Add to markdown-mode hook
+(add-hook 'markdown-mode-hook #'my-markdown-mode-setup)
 
 (provide 'init-writing)

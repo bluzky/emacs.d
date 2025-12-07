@@ -35,11 +35,15 @@
   (setq initial-frame-alist '((fullscreen . maximized)))
   (ian/set-default-font))
 
+(use-package doric-themes
+  :ensure t)
+
+
 ;; Or if you have use-package installed
 (use-package ef-themes
   :ensure t
   :config
-  (load-theme 'ef-day t)
+  (load-theme 'ef-owl t)
 
   ;; auto dark theme
   (defun me/apply-theme (appearance)
@@ -50,6 +54,8 @@
       ('dark (load-theme 'ef-owl t))))
 
   (add-hook 'ns-system-appearance-change-functions #'me/apply-theme))
+
+
 
 
 ;; Dashboard welcome page
@@ -79,6 +85,13 @@
 ;; Add doom fancy modeline
 (use-package doom-modeline
   :hook (elpaca-after-init . doom-modeline-mode))
+
+;; Add padding around windows and frames for a more spacious look
+(use-package spacious-padding
+  :ensure t
+  :config
+  (spacious-padding-mode +1))
+
 
 
 (provide 'init-ui)

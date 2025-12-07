@@ -55,28 +55,8 @@
 - After using tools, explain what you have done and what failed. And list the files locations if there are files/directories changes."))
 
 
-  (gptel-make-gemini "Gemini"
-    :key ai-gemini-api-key
-    :stream t)
-
-  (gptel-make-openai "Github Models"
-    :host "models.inference.ai.azure.com"
-    :endpoint "/chat/completions?api-version=2024-05-01-preview"
-    :stream t
-    :key ai-github-api-key
-    :models '(gpt-4o
-              o1))
-
-  (gptel-make-openai "DeepSeek"
-    :host "api.deepseek.com"
-    :endpoint "/chat/completions"
-    :stream t
-    :key ai-deepseek-api-key
-    :models '(deepseek-chat deepseek-coder))
-
-
   ;; Groq offers an OpenAI compatible API
-  (setq gptel-model  'moonshotai/kimi-k2-instruct
+  (setq gptel-model  'moonshotai/kimi-k2-instruct-0905
         gptel-backend
         (gptel-make-openai "Groq"
           :host "api.groq.com"
@@ -84,16 +64,13 @@
           :stream t
           :key groq-api-key
           :models '(moonshotai/kimi-k2-instruct-0905
-                    moonshotai/kimi-k2-instruct
                     qwen/qwen3-32b
-                    deepseek-r1-distill-llama-70b
-                    deepseek-r1-distill-qwen-32b
                     llama-3.3-70b-versatile))
         )
   )
 
 (use-package relysium
-  :elpaca (:host github :repo "bluzky/relysium")
+  :ensure (:host github :repo "bluzky/relysium")
   :hook (prog-mode . relysium-prog-mode)
   :commands (relysium-ask
              relysium-edit-dwim
@@ -106,6 +83,22 @@
              relysium-buffer-toggle-window)
   :config
   ;; Add any additional relysium configuration here
+  )
+
+(use-package eca
+  :ensure (:host github :repo "editor-code-assistant/eca-emacs" :files ("*.el")))
+
+(use-package shell-maker
+  :ensure t)
+
+(use-package acp
+  :ensure (:host github :repo "xenodium/acp.el"))
+
+(use-package agent-shell
+  :ensure (:host github :repo "xenodium/agent-shell")
+  :config
+  (setq agent-shell-anthropic-authentication
+        (agent-shell-anthropic-make-authentication :login t))
   )
 
 

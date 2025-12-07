@@ -11,14 +11,6 @@
   :config
   (meow-setup-indicator)
   
-  ;; Define custom replace function
-  (defun meow-replace-with-kill-ring ()
-    "Replace selection with head of kill-ring"
-    (interactive)
-    (when (region-active-p)
-      (delete-region (region-beginning) (region-end))
-      (yank)))
-  
   ;; Set magit modes to use insert state
   (add-to-list 'meow-mode-state-list '(magit-status-mode . insert))
   (add-to-list 'meow-mode-state-list '(magit-log-mode . insert))
@@ -112,7 +104,8 @@
    '("M" . meow-delete-join)
    '("n" . meow-search)
    '("N" . meow-pop-search)
-   '("o" . meow-block)
+   '("o" . meow-open-below)
+   ;; '("o" . meow-block)
    '("O" . meow-to-block)
    '("p" . meow-yank)
    '("P" . meow-yank-pop)
@@ -126,8 +119,10 @@
    '("T" . meow-till-expand)
    '("u" . meow-undo)
    '("U" . meow-undo-in-selection)
-   '("v" . meow-visit)
-   '("V" . meow-kmacro-matches)
+   ;; '("v" . meow-visit)
+   ;; '("V" . meow-kmacro-matches)
+   '("v" . set-mark-command)
+   '("V" . meow-line)
    '("w" . meow-mark-word)
    '("W" . meow-mark-symbol)
    '("x" . meow-line)
@@ -146,24 +141,17 @@
 
   (global-set-key (kbd "C-u") #'kill-whole-line)
   
-  ;; Separate C-i from Tab and C-[ from ESC
-  (define-key input-decode-map (kbd "C-i") (kbd "H-i"))
-  (define-key input-decode-map (kbd "C-[") (kbd "H-["))
-  
-  ;; Configure jump list navigation for both normal and insert states
-  (define-key meow-normal-state-keymap (kbd "C-o") 'meow-pop-to-mark)
-  (define-key meow-normal-state-keymap (kbd "H-i") 'meow-unpop-to-mark)
-  (define-key meow-insert-state-keymap (kbd "C-o") 'meow-pop-to-mark)
-  (define-key meow-insert-state-keymap (kbd "H-i") 'meow-unpop-to-mark)
-  
-  ;; Configure H-[ (C-[) to exit insert mode
-  (define-key meow-insert-state-keymap (kbd "H-[") 'meow-insert-exit)
-  
-  ;; Enable meow-mode
+  ;; ;; Enable meow-mode
   (meow-global-mode 1)
 
   )
 
-;; Configure C-[ to exit insert state only when in meow insert mode
-;; (global-set-key (kbd "C-[")      'meow-insert-exit))
+;; Use key-chord to exit insert mode with "jj"
+(use-package key-chord
+  :config
+  (key-chord-define meow-insert-state-keymap "jj" 'meow-insert-exit)
+  (key-chord-mode 1))
+
+
+
 (provide 'init-meow)

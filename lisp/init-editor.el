@@ -7,6 +7,9 @@
   (setq initial-scratch-message "")
   ;; enable system clipboard
   (setq select-enable-clipboard t)
+  ;; enable mouse selection clipboard support in terminal emacs
+  (setq xterm-extra-capabilities '(getSelection setSelection modifyOtherKeys))
+
 
   ;; disable auto-save
   (auto-save-mode -1)
@@ -81,5 +84,9 @@
 (use-package highlight-numbers
   :defer t
   :hook (prog-mode . highlight-numbers-mode))
+
+(use-package expand-region
+  :defer t
+  :bind ("C-=" . er/expand-region))
 
 (provide 'init-editor)
