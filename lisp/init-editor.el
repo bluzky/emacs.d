@@ -89,4 +89,19 @@
   :defer t
   :bind ("C-=" . er/expand-region))
 
+;; Emacs Anywhere - Edit text in any app using Emacs
+(use-package emacs-anywhere
+  :ensure (:host github :repo "nohzafk/emacs-anywhere")
+  :custom
+  ;; Custom frame size and position (position is overridden by mouse location)
+  (emacs-anywhere-frame-parameters
+   '((name . "emacs-anywhere")
+     (width . 80)
+     (height . 20)))
+  :config
+  (when (display-graphic-p)
+    (require 'emacs-anywhere))
+  (server-start)
+  )
+
 (provide 'init-editor)
