@@ -46,7 +46,9 @@
   ;; Enable use-package :elpaca support.
   (elpaca-use-package-mode)
   ;; Assume :elpaca t unless otherwise specified.
-  (setq elpaca-use-package-by-default t))
+  (setq elpaca-use-package-by-default t)
+  ;; Defer all packages by default for faster startup
+  (setq use-package-always-defer t))
 
 ;; Block until current queue processed.
 (elpaca-wait)

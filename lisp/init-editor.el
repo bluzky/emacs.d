@@ -1,18 +1,15 @@
-;; Enable mouse
+;; Enable mouse and clipboard
 (use-package emacs
   :ensure nil
-  :hook (elpaca-after-init . global-hl-line-mode)
-  :config
-  (xterm-mouse-mode 1)
+  :init
+  ;; Settings that must be available immediately
   (setq initial-scratch-message "")
   ;; enable system clipboard
   (setq select-enable-clipboard t)
   ;; enable mouse selection clipboard support in terminal emacs
   (setq xterm-extra-capabilities '(getSelection setSelection modifyOtherKeys))
 
-
   ;; disable auto-save
-  (auto-save-mode -1)
   (setq auto-save-default nil)
 
   ;; config answer y/n
@@ -24,13 +21,38 @@
   ;; prefer vertical split
   (setq split-height-threshold 60)
   (setq split-width-threshold 106)
+
+  ;; Enable system clipboard in terminal mode on macOS
+  ;; Must be in :init to work before any copy/paste operations
+  (unless (display-graphic-p)
+    (when (eq system-type 'darwin)
+      ;; Use pbcopy/pbpaste for clipboard integration
+      (defun my/paste-from-osx ()
+        (shell-command-to-string "pbpaste"))
+
+      (defun my/copy-to-osx (text &optional push)
+        (let ((process-connection-type nil))
+          (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
+            (process-send-string proc text)
+            (process-send-eof proc))))
+
+      (setq interprogram-cut-function 'my/copy-to-osx)
+      (setq interprogram-paste-function 'my/paste-from-osx)))
+
+  :hook
+  (elpaca-after-init . global-hl-line-mode)
+  (elpaca-after-init . (lambda ()
+                         (when (fboundp 'xterm-mouse-mode)
+                           (xterm-mouse-mode 1))
+                         (when (fboundp 'auto-save-mode)
+                           (auto-save-mode -1))))
   )
 
 
-;; Don’t bother confirming killing processes and don’t let backup~ files scatter around.
+;; Don't bother confirming killing processes and don't let backup~ files scatter around.
 (use-package files
   :ensure nil
-  :config
+  :init
   (setq confirm-kill-processes nil
         create-lockfiles nil ; don't create .# files (crashes 'npm start')
         make-backup-files nil))
@@ -45,11 +67,11 @@
   )
 
 ;; Automatically refreshes the buffer for changes outside of Emacs
-;; Auto refreshes every 2 seconds. Don’t forget to refresh the version control status as well.
+;; Auto refreshes every 2 seconds. Don't forget to refresh the version control status as well.
 (use-package autorevert
   :ensure nil
-  :config
-  (global-auto-revert-mode +1)
+  :hook (elpaca-after-init . global-auto-revert-mode)
+  :init
   (setq auto-revert-interval 2
         auto-revert-check-vc-info t
         global-auto-revert-non-file-buffers t
@@ -59,8 +81,8 @@
 ;; Reduce the highlight delay to instantly.
 (use-package paren
   :ensure nil
-  :init (setq show-paren-delay 0)
-  :config (show-paren-mode +1))
+  :hook (prog-mode . show-paren-mode)
+  :init (setq show-paren-delay 0))
 
 ;; Enter ediff with side-by-side buffers to better compare the differences.
 (use-package ediff
@@ -73,12 +95,7 @@
 ;; Electric-pair-mode has improved quite a bit in recent Emacs versions. No longer need an extra package for this. It also takes care of the new-line-and-push-brace feature.
 (use-package elec-pair
   :ensure nil
-  :defer t
-  :commands (electric-pair-mode)
-  :init
-  (add-hook 'after-init-hook
-            (lambda ()
-              (add-hook 'prog-mode-hook #'electric-pair-mode))))
+  :hook (prog-mode . electric-pair-mode))
 
 ;; Syntax highlighting improvement
 (use-package highlight-numbers
