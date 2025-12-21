@@ -10,32 +10,33 @@
 
 ;;; Code:
 
-;; increase gc threshold to 100 MB during init, 20 MB after. But do
-;; note that emacs maintainer John Wigley would suggest resetting to
-;; default rather than 20 MB.
-(setq gc-cons-threshold (* 100 1024 1024))
+;; Maximize GC threshold during init for fastest startup, then reset to 512 MB.
+;; This prevents garbage collection from slowing down the init process.
+(setq gc-cons-threshold most-positive-fixnum)
 (defun my/reset-gc ()
-    (setq gc-cons-threshold (* 20 1024 1024)))
+    (setq gc-cons-threshold (* 512 1024 1024)))
 (add-hook 'emacs-startup-hook #'my/reset-gc)
 
 ;; Don't use package.el
 (setq package-enable-at-startup nil)
 
-;; Native comp generates tons of warnings I don't care about.
-(setq native-comp-async-report-warnings-errors nil
-      native-comp-async-query-on-exit t
-      native-comp-deferred-compilation nil)
+;; Native compilation settings for performance
+(setq native-comp-async-report-warnings-errors nil  ; Suppress warning popups
+      native-comp-async-query-on-exit t             ; Prompt before killing compilation
+      native-comp-deferred-compilation t            ; Enable async compilation
+      native-comp-speed 3                           ; Maximum optimization level
+      native-comp-async-jobs-number 8)              ; Parallel compilation jobs
 (setq load-prefer-newer noninteractive)
 
 ;; Turn off some things I never use
 (setq inhibit-startup-message t
       inhibit-startup-echo-area-message t
       initial-scratch-message "")
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-(fringe-mode '(1 . 1)) ;; TODO: is this fringe what I want?
-(blink-cursor-mode -1) ;; TODO: do I want a non-blinking cursor?
+(when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+(when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(when (fboundp 'fringe-mode) (fringe-mode '(1 . 1))) ;; TODO: is this fringe what I want?
+(when (fboundp 'blink-cursor-mode) (blink-cursor-mode -1)) ;; TODO: do I want a non-blinking cursor?
 
 ;; Set up how new frames should look
 ;; (add-to-list 'initial-frame-alist '(fullscreen . maximized))

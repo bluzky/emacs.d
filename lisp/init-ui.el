@@ -2,7 +2,7 @@
 ;; Replace the active region just by typing text, just like modern editors.
 (use-package delsel
   :ensure nil
-  :config (delete-selection-mode +1))
+  :hook (elpaca-after-init . delete-selection-mode))
 
 ;; Disable scroll-bar
 (use-package scroll-bar
@@ -12,7 +12,7 @@
 ;; Enable column numbers
 (use-package simple
   :ensure nil
-  :config (column-number-mode +1))
+  :hook (elpaca-after-init . column-number-mode))
 
 
 ;; By default, the scrolling is way too fast to be precise and helpful, let’s tune it down a little bit.
@@ -31,9 +31,9 @@
     (when (member "JetBrains Mono" (font-family-list))
       (set-face-attribute 'default nil :family "JetBrains Mono" :height 150)))
   :ensure nil
-  :config
+  :init
   (setq initial-frame-alist '((fullscreen . maximized)))
-  (ian/set-default-font))
+  :hook (elpaca-after-init . ian/set-default-font))
 
 (use-package doric-themes
   :ensure t)
@@ -42,6 +42,7 @@
 ;; Or if you have use-package installed
 (use-package ef-themes
   :ensure t
+  :demand t  ; Load immediately to avoid visual flash
   :config
   (load-theme 'ef-owl t)
 
@@ -61,6 +62,7 @@
 ;; Dashboard welcome page
 (use-package dashboard
   :diminish
+  :demand t  ; Load immediately to show dashboard on startup
   :config
   (dashboard-setup-startup-hook)
   (setq dashboard-startup-banner 'logo
@@ -89,8 +91,7 @@
 ;; Add padding around windows and frames for a more spacious look
 (use-package spacious-padding
   :ensure t
-  :config
-  (spacious-padding-mode +1))
+  :hook (elpaca-after-init . spacious-padding-mode))
 
 
 

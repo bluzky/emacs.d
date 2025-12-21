@@ -2,16 +2,12 @@
   :ensure nil
   :preface
   (defvar ian/indent-width 2) ; change this value to your preferred width
-  :config
+  :init
+  ;; Settings that must be set before loading
   (setq frame-title-format '("Do something good!") ; Yayyyyy Evil!
         ring-bell-function 'ignore       ; minimize distraction
         frame-resize-pixelwise t
         default-directory "~/")
-
-  (tool-bar-mode -1)
-  (menu-bar-mode -1)
-  (blink-cursor-mode 0)
-  (global-display-line-numbers-mode)
 
   ;; only pop up window if error
   (setq warning-minimum-level :error)
@@ -27,14 +23,20 @@
                 tab-width ian/indent-width)
 
   ;; Omit default startup screen
-  (setq inhibit-startup-screen t))
+  (setq inhibit-startup-screen t)
+
+  :hook
+  ;; Enable UI elements after elpaca finishes
+  (elpaca-after-init . (lambda ()
+                         (when (fboundp 'global-display-line-numbers-mode)
+                           (global-display-line-numbers-mode)))))
 
 
 ;; Dired tweaks
 ;; Delete intermediate buffers when navigating through dired.
 (use-package dired
   :ensure nil
-  :defer t
+  :defer t  ; OK to defer - loads when dired is opened
   :hook
   (dired-mode . dired-hide-details-mode)
   :config
@@ -50,6 +52,7 @@
 
 ;; Configure PATH on macOS
 (use-package exec-path-from-shell
+  :demand t  ; Load immediately on macOS to ensure PATH is correct
   :config (when (memq window-system '(mac ns x))
             (exec-path-from-shell-initialize)))
 

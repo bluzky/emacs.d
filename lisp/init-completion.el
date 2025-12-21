@@ -21,6 +21,7 @@
 
 ;; Optionally use the `orderless' completion style.
 (use-package orderless
+  :demand t  ; Load immediately - required for completion to work
   ;; :custom
   ;; (completion-category-overrides '((file (styles basic partial-completion))))
   ;; (orderless-component-separator #'orderless-escapable-split-on-space)
@@ -75,12 +76,14 @@
 ;;    completion-category-overrides nil))
 
 (use-package vertico
+  :demand t  ; Load immediately - core completion UI
   :bind (:map vertico-map
               ("RET" . vertico-directory-enter)
               ("DEL" . vertico-directory-delete-char)
               ("M-DEL" . vertico-directory-delete-word))
-  :hook ((elpaca-after-init . vertico-mode)
-         (rfn-eshadow-update-overlay . vertico-directory-tidy))
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
+  :init
+  (vertico-mode 1)
   :config
   (setq vertico-count 17)
   (setq completion-category-overrides '((file (styles . (partial-completion)))))
@@ -116,6 +119,7 @@
 ;; Enable richer annotations using the Marginalia package
 (use-package marginalia
   :after vertico
+  :demand t  ; Load after vertico
   :config (marginalia-mode))
 
 ;;;; Prefix current candidate with arrow
@@ -137,6 +141,7 @@
 
 ;; Setup consult
 (use-package consult
+  :demand t  ; Load immediately - remaps critical search commands
   :bind (([remap Info-search]        . consult-info)
          ([remap imenu]              . consult-imenu)
          ([remap isearch-forward]    . consult-line)
