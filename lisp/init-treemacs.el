@@ -85,6 +85,7 @@
         ("C-x t M-t" . treemacs-find-tag)))
 
 (use-package treemacs-nerd-icons
+  :if (display-graphic-p)  ; Only in GUI mode for performance
   :after (treemacs)
   :config
   (treemacs-load-theme "nerd-icons"))

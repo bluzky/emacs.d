@@ -101,7 +101,7 @@
    '("l" . meow-right)
    '("L" . meow-right-expand)
    '("m" . meow-join)
-   '("M" . meow-delete-join)
+   '("M" . mc/transient-menu)
    '("n" . meow-search)
    '("N" . meow-pop-search)
    '("o" . meow-open-below)
@@ -110,7 +110,7 @@
    '("p" . meow-yank)
    '("P" . meow-yank-pop)
    '("q" . meow-quit)
-   '(":" . meow-goto-line)
+   '("G" . meow-goto-line)
    '("r" . meow-replace)
    '("R" . meow-swap-grab)
    '("s" . meow-kill)
@@ -118,11 +118,11 @@
    '("t" . meow-till)
    '("T" . meow-till-expand)
    '("u" . meow-undo)
-   '("U" . meow-undo-in-selection)
+   '("U" . meow-redo)
    ;; '("v" . meow-visit)
    ;; '("V" . meow-kmacro-matches)
    '("v" . set-mark-command)
-   '("V" . meow-line)
+   '("V" . meow-visit)
    '("w" . meow-mark-word)
    '("W" . meow-mark-symbol)
    '("x" . meow-line)
@@ -139,7 +139,6 @@
    '("}" . forward-paragraph)
    '("<escape>" . ignore))
 
-  (global-set-key (kbd "C-u") #'kill-whole-line)
   
   ;; ;; Enable meow-mode
   (meow-global-mode 1)
@@ -148,6 +147,7 @@
 
 ;; Use key-chord to exit insert mode with "jj"
 (use-package key-chord
+  :demand t
   :config
   (key-chord-define meow-insert-state-keymap "jj" 'meow-insert-exit)
   (key-chord-mode 1))

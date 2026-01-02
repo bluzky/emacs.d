@@ -20,10 +20,5 @@
 ;;        (slot . 0)))
 ;;   ) ;; end vterm-toggle.el
 
-(use-package eat
-  :config
-  :bind
-  (("C-c t" . eat-project)
-   ("C-c T" . eat-project-other-window)))
 
 (provide 'init-term)

@@ -39,7 +39,8 @@
  ;; If there is more than one, they won't work right.
  '(eglot-confirm-server-edits nil nil nil "Customized with use-package eglot")
  '(package-selected-packages
-   '(agent-shell doric-themes ef-themes indent-bars spacious-padding))
+   '(agent-shell doric-themes ef-themes indent-bars rainbow-mode
+                 spacious-padding))
  '(package-vc-selected-packages
    '((agent-shell :url "https://github.com/xenodium/agent-shell"))))
 (custom-set-faces

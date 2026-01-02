@@ -15,6 +15,7 @@
     :hook (global-corfu-mode . corfu-terminal-mode)))
 
 (use-package nerd-icons-corfu
+  :if (display-graphic-p)  ; Only in GUI mode for performance
   :after corfu
   :init (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 

@@ -35,13 +35,6 @@ tab-indent."
   (prog-mode . copilot-mode)
   (magit-mode . copilot-mode))
 
-;; (use-package claude-code-ide
-;;   :elpaca (claude-code-ide :host github :repo "manzaltu/claude-code-ide.el")
-;;   :bind ("C-c C-'" . claude-code-ide-menu) ; Set your favorite keybinding
-;;   :custom
-;;   (claude-code-ide-terminal-backend 'eat)
-;;   :config
-;;   (claude-code-ide-emacs-tools-setup))
 
 
 (provide 'init-copilot)
