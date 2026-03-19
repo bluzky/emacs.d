@@ -16,7 +16,7 @@
   :hook (prog-mode . highlight-indent-guides-mode)
   :config
   (setq highlight-indent-guides-method 'character)
-  )
+  (setq highlight-indent-guides-auto-colors t))
 
 ;; Flycheck
 ;; A modern on-the-fly syntax checking extension – absolute essential

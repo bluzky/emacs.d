@@ -1,14 +1,31 @@
 ;; Git
 ;; Tell magit to automatically put us in vi-insert-mode when committing a change.
-(use-package transient)
-
 (use-package magit
-  :hook (with-editor-mode . meow-insert-mode)
+  :hook ((with-editor-mode . meow-insert-mode)
+         (magit-mode . (lambda () (corfu-mode -1))))
   :bind (:map magit-status-mode-map
               ("x" . magit-discard))
   :config
   ;; sort branch by last commit date
   (setq magit-list-refs-sortby "-committerdate")
+
+  ;; Prioritize vertical split, then horizontal split, then same window
+  ;; (setq magit-display-buffer-function
+  ;;       (lambda (buffer)
+  ;;         (display-buffer
+  ;;          buffer
+  ;;          (cond
+  ;;           ;; If frame width > 140, split vertically
+  ;;           ((> (frame-width) 140)
+  ;;            '((display-buffer-reuse-window display-buffer-in-direction)
+  ;;              (direction . right)
+  ;;              (window-width . 0.5)))
+  ;;           ;; Else if frame height > 50, split horizontally
+  ;;           ((> (frame-height) 50)
+  ;;            '((display-buffer-reuse-window display-buffer-below-selected)
+  ;;              (window-height . 0.5)))
+  ;;           ;; Otherwise use same window
+  ;;           (t '(display-buffer-same-window))))))
   )
 
 (use-package diff-hl

@@ -44,15 +44,39 @@
   :ensure t
   :demand t  ; Load immediately to avoid visual flash
   :config
-  (load-theme 'ef-owl t)
+  (defun me/get-system-appearance ()
+    "Return 'light or 'dark based on macOS system appearance."
+    (let ((appearance (string-trim
+                       (shell-command-to-string
+                        "defaults read -g AppleInterfaceStyle 2>/dev/null"))))
+      (if (string= appearance "Dark")
+          'dark
+        'light)))
+
+  ;; Track current appearance to avoid unnecessary theme reloads
+  (defvar me/current-appearance nil
+    "Current system appearance (light or dark).")
 
   ;; auto dark theme
   (defun me/apply-theme (appearance)
     "Load theme, taking current system APPEARANCE into consideration."
-    (mapc #'disable-theme custom-enabled-themes)
-    (pcase appearance
-      ('light (load-theme 'ef-cyprus t))
-      ('dark (load-theme 'ef-owl t))))
+    (unless (eq appearance me/current-appearance)
+      (mapc #'disable-theme custom-enabled-themes)
+      (pcase appearance
+        ('light (load-theme 'ef-cyprus t))
+        ('dark (load-theme 'ef-owl t)))
+      (setq me/current-appearance appearance)))
+
+  ;; Check and update theme based on system appearance
+  (defun me/check-and-update-theme ()
+    "Check system appearance and update theme if changed."
+    (me/apply-theme (me/get-system-appearance)))
+
+  ;; Apply theme based on system appearance on startup
+  (me/check-and-update-theme)
+
+  ;; Check appearance every minute
+  (run-with-timer 60 60 #'me/check-and-update-theme)
 
   (add-hook 'ns-system-appearance-change-functions #'me/apply-theme))
 

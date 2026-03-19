@@ -39,11 +39,32 @@
       (setq interprogram-cut-function 'my/copy-to-osx)
       (setq interprogram-paste-function 'my/paste-from-osx)))
 
+  :config
+  ;; Disable focus event reporting in terminal to prevent I/O characters
+  (unless (display-graphic-p)
+    (defun disable-focus-reporting ()
+      "Disable terminal focus event reporting."
+      (when (fboundp 'send-string-to-terminal)
+        (send-string-to-terminal "\e[?1004l")))
+
+    ;; Disable immediately
+    (disable-focus-reporting)
+
+    ;; Disable after a delay to override any re-enabling
+    (run-with-timer 0.1 nil #'disable-focus-reporting)
+    (run-with-timer 0.5 nil #'disable-focus-reporting)
+
+    ;; Make Emacs ignore focus in/out escape sequences
+    (define-key input-decode-map "\e[I" [ignore])
+    (define-key input-decode-map "\e[O" [ignore]))
+
   :hook
   (elpaca-after-init . global-hl-line-mode)
   (elpaca-after-init . (lambda ()
-                         (when (fboundp 'xterm-mouse-mode)
-                           (xterm-mouse-mode 1))
+                         ;; Mouse disabled to prevent movement tracking issues in terminal
+                         ;; (when (fboundp 'xterm-mouse-mode)
+                         ;;   (xterm-mouse-mode 1))
+
                          (when (fboundp 'auto-save-mode)
                            (auto-save-mode -1))))
   )

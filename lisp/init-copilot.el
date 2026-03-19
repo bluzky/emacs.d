@@ -19,7 +19,7 @@
   :config
   ;; Set fallback indentation offset to avoid warnings
   (setq copilot-indent-offset-warning-disable t)
-  
+
   (defun me/copilot-tab ()
     "Tab command that will complet with copilot if a completion is
 available. Otherwise will try company, yasnippet or normal
@@ -32,8 +32,7 @@ tab-indent."
   (define-key copilot-completion-map (kbd "TAB") 'me/copilot-tab)
 
   :hook
-  (prog-mode . copilot-mode)
-  (magit-mode . copilot-mode))
+  (prog-mode . copilot-mode))
 
 
 

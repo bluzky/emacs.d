@@ -8,16 +8,17 @@
   :custom-face
   (corfu-border ((t (:inherit region :background unspecified))))
   :init
-  (global-corfu-mode))
+  ;; (global-corfu-mode)
+  )
 
 (unless (display-graphic-p)
   (use-package corfu-terminal
     :hook (global-corfu-mode . corfu-terminal-mode)))
 
-(use-package nerd-icons-corfu
-  :if (display-graphic-p)  ; Only in GUI mode for performance
-  :after corfu
-  :init (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+;; (use-package nerd-icons-corfu
+;;   :if (display-graphic-p)  ; Only in GUI mode for performance
+;;   :after corfu
+;;   :init (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
 ;; Add extensions
 ;; (use-package cape
