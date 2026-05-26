@@ -85,9 +85,7 @@
   :init
   (vertico-mode 1)
   :config
-  (setq vertico-count 17)
-  (setq completion-category-overrides '((file (styles . (partial-completion)))))
-  )
+  (setq vertico-count 17))
 
 ;; Scroll vertico minibuffer with mouse wheel
 (use-package vertico-mouse

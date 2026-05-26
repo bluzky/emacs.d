@@ -6,7 +6,7 @@
 (require 'init-ui)
 (require 'init-editor)
 (require 'init-completion)
-(require 'init-corfu)
+;; (require 'init-corfu)
 (require 'init-treemacs)
 (require 'init-meow)
 (require 'init-better-emacs)
@@ -17,6 +17,7 @@
 (require 'init-whichkey)
 (require 'init-ai)
 (require 'init-utils)
+(require 'init-browser)
 (require 'my-macros)
 
 ;; programming language

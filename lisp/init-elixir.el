@@ -14,9 +14,11 @@
   :hook (elixir-ts-mode . eglot-ensure)
   :config
   ;; Configure Elixir LS server for eglot
-  (add-to-list 'eglot-server-programs
-               '((elixir-ts-mode elixir-mode) . ("/Users/flex/workspace/expert/apps/expert/burrito_out/expert_darwin_arm64")))
-
+  (with-eval-after-load 'eglot
+    (setf (alist-get '(elixir-mode elixir-ts-mode heex-ts-mode)
+                     eglot-server-programs
+                     nil nil #'equal)
+          (eglot-alternatives '(("expert" "--stdio")))))
   :init
   ;; Only setup tree-sitter if available
   (when (and (fboundp 'treesit-available-p)
@@ -28,9 +30,8 @@
       (add-to-list 'treesit-language-source-alist grammar))
 
     ;; Map major modes to their tree-sitter modes
-    (setq major-mode-remap-alist
-          '((elixir-mode . elixir-ts-mode)
-            (heex-mode . heex-ts-mode))))
+    (add-to-list 'major-mode-remap-alist '(elixir-mode . elixir-ts-mode))
+    (add-to-list 'major-mode-remap-alist '(heex-mode . heex-ts-mode)))
 
   :config
   ;; Install grammars on first use if needed
@@ -40,5 +41,13 @@
       (unless (treesit-language-available-p grammar)
         (treesit-install-language-grammar grammar))))
   )
+
+(use-package po-mode
+  :ensure t
+  :mode ("\\.po\\(t\\)?\\'" . po-mode)
+  :hook (po-subedit-mode . meow-insert)
+  :bind (:map po-subedit-mode-map
+              ("C-c C-c" . po-subedit-exit)
+              ("C-c C-k" . po-subedit-abort)))
 
 (provide 'init-elixir)

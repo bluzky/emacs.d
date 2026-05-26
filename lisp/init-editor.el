@@ -22,6 +22,8 @@
   (setq split-height-threshold 60)
   (setq split-width-threshold 106)
 
+  (setq truncate-lines t)
+
   ;; Enable system clipboard in terminal mode on macOS
   ;; Must be in :init to work before any copy/paste operations
   (unless (display-graphic-p)
@@ -118,6 +120,27 @@
   :ensure nil
   :hook (prog-mode . electric-pair-mode))
 
+(use-package undo-fu
+  :config
+  (global-unset-key (kbd "C-z"))
+  (global-set-key (kbd "C-z")   'undo-fu-only-undo)
+  (global-set-key (kbd "C-S-z") 'undo-fu-only-redo)
+  (global-set-key (kbd "C-/")   'undo-fu-only-undo)
+  (global-set-key (kbd "C-S-/") 'undo-fu-only-redo))
+
+;; Built-in symbol highlighting
+(use-package hi-lock
+  :ensure nil
+  :hook (prog-mode . hi-lock-mode)
+  :config
+  (defun me/toggle-higlight-at-point ()
+    "Toggle highlighting for the symbol at point."
+    (interactive)
+    (when-let* ((regexp (find-tag-default-as-symbol-regexp)))
+      (if (member regexp (hi-lock--regexps-at-point))
+          (hi-lock-unface-buffer regexp)
+        (hi-lock-face-symbol-at-point)))))
+
 ;; Syntax highlighting improvement
 (use-package highlight-numbers
   :defer t
@@ -141,5 +164,19 @@
     (require 'emacs-anywhere))
   (server-start)
   )
+
+(defun move-line-up ()
+  (interactive)
+  (transpose-lines 1)
+  (forward-line -2))
+
+(defun move-line-down ()
+  (interactive)
+  (forward-line 1)
+  (transpose-lines 1)
+  (forward-line -1))
+
+(global-set-key (kbd "M-<up>")   #'move-line-up)
+(global-set-key (kbd "M-<down>") #'move-line-down)
 
 (provide 'init-editor)

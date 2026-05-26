@@ -1,8 +1,7 @@
 ;; Git
 ;; Tell magit to automatically put us in vi-insert-mode when committing a change.
 (use-package magit
-  :hook ((with-editor-mode . meow-insert-mode)
-         (magit-mode . (lambda () (corfu-mode -1))))
+  :hook ((with-editor-mode . meow-insert-mode))
   :bind (:map magit-status-mode-map
               ("x" . magit-discard))
   :config

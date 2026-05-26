@@ -8,8 +8,7 @@
   :custom-face
   (corfu-border ((t (:inherit region :background unspecified))))
   :init
-  ;; (global-corfu-mode)
-  )
+  (global-corfu-mode))
 
 (unless (display-graphic-p)
   (use-package corfu-terminal

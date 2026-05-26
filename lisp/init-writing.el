@@ -18,7 +18,20 @@
   )
 
 
-(use-package org-bullets :hook (org-mode . org-bullets-mode))
+(use-package org-ibullets
+  :ensure (:host github :repo "jamescherti/org-ibullets.el")
+  :hook (org-mode . org-ibullets-mode))
+
+(use-package org-modern
+  :hook (org-mode . org-modern-mode)
+  :custom
+  (org-modern-star nil)
+  (org-modern-list nil)
+  (org-modern-checkbox nil)
+  (org-modern-table nil)
+  (org-modern-timestamp nil)
+  (org-modern-statistics nil)
+  (org-modern-progress nil))
 
 
 ;; Set up org-mode slash commands
@@ -42,7 +55,7 @@
                                         (forward-line -1)))
                            ))
                ("today" . (lambda () (insert (format-time-string "%d-%m-%Y"))))
-               ("now" . (lambda () (insert (format-time-string "%H:%M:%S"))))
+               ("time" . (lambda () (insert (format-time-string "%H:%M:%S"))))
                ("templates" . (submenu
                                ("6 times book" . (lambda()
                                                    (insert "- 🥲 \n- 🥲 \n- ✅ \n- ✅ \n- TODOs:\n  + [ ] \n  + [ ] \n")
@@ -117,7 +130,6 @@
   :mode ("README\\.md\\'" . gfm-mode)
   ("\\.md\\'" . markdown-mode)
   ("\\.markdown\\'" . markdown-mode)
-  :init (setq markdown-command "multimarkdown")
   :config
   (setq markdown-fontify-code-blocks-natively t)
   (setq markdown-command "pandoc -f markdown -t html -s --mathjax --highlight-style pygments")

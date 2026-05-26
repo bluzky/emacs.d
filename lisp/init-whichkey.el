@@ -87,8 +87,8 @@
   (define-key my-leader-map (kbd "b t") 'tab-new)
 
   ;; Code operations
-  (define-key my-leader-map (kbd "c f") 'lsp-bridge-code-format)
-  (define-key my-leader-map (kbd "c a") 'lsp-bridge-code-action)
+  (define-key my-leader-map (kbd "c f") 'eglot-format)
+  (define-key my-leader-map (kbd "c a") 'eglot-code-actions)
   (define-key my-leader-map (kbd "c x") 'quickrun)
   (define-key my-leader-map (kbd "c X") 'quickrun-region)
   (define-key my-leader-map (kbd "c i") 'imenu-list-smart-toggle)
@@ -111,6 +111,7 @@
   (define-key my-leader-map (kbd "g d") 'magit-diff-unstaged)
   (define-key my-leader-map (kbd "g r") 'pr-review-search)
   (define-key my-leader-map (kbd "g R") 'pr-review)
+  (define-key my-leader-map (kbd "g S") 'magit-stage-buffer-file)
 
   ;; Help operations
   (define-key my-leader-map (kbd "h f") 'describe-function)
@@ -144,10 +145,12 @@
   ;; Open operations
   (define-key my-leader-map (kbd "o p") 'project-switch-project)
   (define-key my-leader-map (kbd "o b") 'list-bookmarks)
+  (define-key my-leader-map (kbd "o l") 'eww)
+  (define-key my-leader-map (kbd "o s") 'eww-search-words)
 
   ;; Link operations
-  (define-key my-leader-map (kbd "l a") (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo/actions")))
-  (define-key my-leader-map (kbd "l p") (lambda () (interactive) (browse-url "https://github.com/onpointvn/opollo/pulls?q=sort%3Aupdated-desc+is%3Apr+is%3Aopen+author%3Abluzky")))
+  (define-key my-leader-map (kbd "l u") (lambda () (interactive) (browse-url "https://github.com/innoshift/innoup")))
+  (define-key my-leader-map (kbd "l i") (lambda () (interactive) (browse-url "https://github.com/innoshift/innosync")))
   (define-key my-leader-map (kbd "l s") (lambda () (interactive) (browse-url "https://duckduckgo.com")))
 
   ;; Extra operations
